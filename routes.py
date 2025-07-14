@@ -7,7 +7,9 @@ from langchain_core.output_parsers import StrOutputParser
 import json
 import os
 from datetime import datetime
-
+import io
+import requests
+from flask import Flask, request, jsonify
 
 
 @app.route('/')
@@ -299,21 +301,19 @@ def save_conversation():
     if not conversation:
         return jsonify({'status': 'error', 'message': 'No conversation data provided.'}), 400
 
-    # Create a directory to save conversations if it doesn't exist
-    save_dir = 'conversations'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+    # Convert conversation to JSON and create an in-memory file
+    file_content = json.dumps(conversation, indent=4)
+    file_obj = io.BytesIO(file_content.encode('utf-8'))
 
-    # Generate a unique filename using a timestamp
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_path = os.path.join(save_dir, f'conversation_{timestamp}.json')
+    # Upload to file.io
+    files = {'file': ('conversation.json', file_obj)}
+    response = requests.post('https://file.io', files=files)
 
-    try:
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(conversation, f, indent=4)
-        return jsonify({'status': 'success', 'message': 'Conversation saved.', 'file_path': file_path}), 200
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+    if response.status_code == 200:
+        file_url = response.json().get('link')
+        return jsonify({'status': 'success', 'message': 'Conversation uploaded.', 'file_url': file_url}), 200
+    else:
+        return jsonify({'status': 'error', 'message': 'Failed to upload file.'}), 500
 
 
 @app.route('/list_conversations')
