@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Fine-Tuning LLM: LoRA + GRPO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Latar belakang abu-abu gelap dari index.html */
+            color: #d1d5db; /* Teks abu-abu terang dari index.html */
+        }
+        /* Kustomisasi scrollbar untuk tampilan yang lebih baik dari index.html */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #38bdf8, #a78bfa, #34d399, #f59e0b); /* Dari index.html */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            border-color: rgba(79, 70, 229, 0.5);
+            transform: translateY(-5px);
+        }
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.5);
+        }
+        .code-block {
+            background-color: #1f2937; /* Dari index.html */
+            border: 1px solid #374151; /* Dari index.html */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto; /* Dari index.html */
+            color: #e5e7eb; /* Dari index.html */
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap; /* Pertahankan dari lora_grpo.html */
+            word-break: break-word; /* Pertahankan dari lora_grpo.html */
+        }
+        /* Animasi */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .lora-adapter {
+            transition: all 1s ease-in-out;
+        }
+        .response-candidate {
+            transition: all 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="py-6 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto text-center">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
+                <span class="gradient-text">Simulasi Fine-Tuning LLM</span>
+            </h1>
+            <p class="mt-4 text-base sm:text-lg text-gray-400">Proses Simulasi Fine-Tuning LoRA dan Group Relative Policy Optimization (GRPO)</p>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Penjelasan Konsep -->
+        <section id="concepts">
+            <h2 class="text-3xl font-bold text-center mb-12">Konsep Kunci</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Card LoRA -->
+                <div class="card">
+                    <div class="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="text-indigo-400 mr-4 flex-shrink-0" viewBox="0 0 16 16">
+                            <path d="M6 4.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m-1.5 0a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0"/>
+                            <path d="M2 1h12a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm5.5 4a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 8a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1H5zm2 0a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1H7zm2 0a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1H9zm2 0a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1z"/>
+                        </svg>
+                        <h3 class="text-2xl font-bold">Low-Rank Adaptation (LoRA)</h3>
+                    </div>
+                    <p class="text-gray-300">
+                        LoRA adalah teknik *Parameter-Efficient Fine-Tuning* (PEFT). Alih-alih melatih miliaran parameter dari model asli, LoRA membekukan bobot asli dan menyuntikkan matriks *adapter* kecil yang dapat dilatih ke dalam setiap lapisan. Ini seperti memberi "catatan tempel" pada buku tebal. Hasilnya, proses *fine-tuning* menjadi jauh lebih hemat memori (VRAM) dan lebih cepat.
+                    </p>
+                </div>
+                <!-- Card GRPO -->
+                <div class="card">
+                    <div class="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="text-pink-400 mr-4 flex-shrink-0" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                            <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
+                        </svg>
+                        <h3 class="text-2xl font-bold">Group Relative Policy Optimization (GRPO)</h3>
+                    </div>
+                    <p class="text-gray-300">
+                        GRPO adalah algoritma *Reinforcement Learning* (RL) efisien. Model menghasilkan sekelompok respons, masing-masing diberi skor. Skor ini dibandingkan dengan rata-rata grup, dan model "dihargai" untuk menghasilkan respons di atas rata-rata, sehingga secara mandiri belajar menghasilkan penalaran yang lebih baik.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simulasi Animasi -->
+        <section id="simulation" class="mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4">Simulasi Animasi Fine-Tuning</h2>
+            <p class="text-center text-gray-400 mb-8 max-w-3xl mx-auto">Klik tombol di bawah untuk melihat visualisasi bagaimana LoRA dan GRPO bekerja sama untuk meningkatkan kemampuan penalaran LLM.</p>
+            
+            <div class="text-center mb-12">
+                <button id="start-sim-btn" class="btn bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 sm:px-8 rounded-full shadow-lg">
+                    Mulai Simulasi
+                </button>
+            </div>
+
+            <!-- **PERBAIKAN**: Menambah min-h dan mengubah overflow-hidden menjadi overflow-y-auto -->
+            <div class="relative min-h-[550px] card p-4 sm:p-8 overflow-y-auto">
+                <!-- Tahap 1: Model Dasar & LoRA -->
+                <div id="sim-step-1" class="absolute inset-0 p-4 sm:p-8 grid place-items-center transition-opacity duration-500">
+                    <div class="text-center">
+                        <h3 class="text-xl sm:text-2xl font-bold mb-2">1. Model Dasar (Pre-trained)</h3>
+                        <p class="text-gray-400 mb-6 text-sm sm:text-base">Model LLM besar dengan pengetahuan umum.</p>
+                        <div id="base-model" class="relative w-48 h-48 sm:w-64 sm:h-64 bg-gray-700 rounded-full flex items-center justify-center border-4 border-gray-600 shadow-lg animate-pulse mx-auto">
+                            <span class="text-lg sm:text-xl font-bold text-white">LLM</span>
+                            
+                            <!-- LoRA Adapters (hidden initially) -->
+                            <div id="lora-1" class="lora-adapter absolute w-20 h-8 sm:w-24 sm:h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-xs font-bold shadow-lg opacity-0" style="top: 10%; left: -50%;">Lora_Rank</div>
+                            <div id="lora-2" class="lora-adapter absolute w-20 h-8 sm:w-24 sm:h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-xs font-bold shadow-lg opacity-0" style="top: 75%; left: -50%;">LoRA_Alpha</div>
+                            <div id="lora-3" class="lora-adapter absolute w-20 h-8 sm:w-24 sm:h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-xs font-bold shadow-lg opacity-0" style="right: -50%; top: 40%;">LoRA_Dropout</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tahap 2: GRPO -->
+                <!-- **PERBAIKAN**: Mengubah justify-center menjadi justify-start dan menambah padding atas -->
+                 <div id="sim-step-2" class="absolute inset-0 p-4 sm:p-8 flex flex-col items-center justify-start pt-8 sm:pt-12 transition-opacity duration-500 opacity-0 hidden">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-2 text-center">2. Proses GRPO Dimulai</h3>
+                    <p class="text-gray-400 mb-6 text-center text-sm sm:text-base">Model yang diadaptasi LoRA menerima prompt.</p>
+                    <div class="w-full max-w-4xl">
+                        <div class=" text-center mb-8">
+                           <strong>Prompt:</strong> Mana yang lebih besar? 9.11 atau 9.9?
+                        </div>
+                        <div id="response-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Kandidat respons dan jawaban akhir akan muncul di sini -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Text -->
+                <div id="status-text" class="absolute bottom-4 left-1/2 -translate-x-1/2 w-11/12 text-center text-base sm:text-lg font-semibold text-pink-400 transition-opacity duration-500 opacity-0"></div>
+
+            </div>
+        </section>
+
+        <!-- Hasil Pengujian -->
+        <section id="results" class="mt-20">
+            <h2 class="text-3xl font-bold text-center mb-12">Hasil Pengujian</h2>
+            
+            <!-- Perbandingan Jawaban -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-semibold text-center mb-8">Perbandingan Penalaran</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="card">
+                        <h4 class="text-xl font-bold mb-4 text-red-400">Sebelum GRPO (Jawaban Salah)</h4>
+                        <div class=" text-red-300">
+                            9.9 is bigger than 9.11 because it only has one digit after the decimal point, and that digit (9) is larger than the first digit after the decimal point in 9.11 (which is 1).
+                        </div>
+                        <p class="mt-4 text-sm text-gray-400">Model terjebak pada interpretasi angka desimal yang salah.</p>
+                    </div>
+                    <div class="card border-green-400/50">
+                        <h4 class="text-xl font-bold mb-4 text-green-400">Setelah GRPO (Jawaban Benar)</h4>
+                        <div class=" text-green-300">
+                            <span class="text-yellow-400">&lt;reasoning&gt;</span><br>
+                                To determine which number is bigger between 9.11 and 9.9, we should compare the two numbers digit by digit from left to right.
+                                <br>
+                                1. First, compare the digits in the units place:
+                                - Both numbers have a 9 in the units place.
+                                <br>
+                                2. Next, compare the digits in the tenths place:
+                                - The number 9.11 has a 1 in the tenths place.
+                                - The number 9.9 has a 9 in the tenths place.
+                                Since 1 is less than 9, the number 9.11 is less than 9.9 based on the tenths place comparison.
+                                <br>
+                                3. For thoroughness, consider the hundredths place:
+                                - The number 9.11 has a 1 in the hundredths place.
+                                - The number 9.9 can be written as 9.90, which has a 0 in the hundredths place.
+                                <br>
+                                Even if we compare the hundredths place, 1 is greater than 0, but this is irrelevant since the comparison in the tenths place already determines that 9.11 is smaller than 9.9. Therefore, 9.9 is greater than 9.11.
+                            <br>
+                            <span class="text-yellow-400">&lt;/reasoning&gt;</span><br>
+                            <span class="text-yellow-400">&lt;answer&gt;</span><br>
+                            9.9 is bigger than 9.11.<br>
+                            <span class="text-yellow-400">&lt;/answer&gt;</span>
+                        </div>
+                        <p class="mt-4 text-sm text-gray-400">Model menunjukkan jejak penalaran, membandingkan digit dengan benar, dan sampai pada kesimpulan yang tepat.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Efisiensi VRAM -->
+            <div>
+                <h3 class="text-2xl font-semibold text-center mb-8">Efisiensi Penggunaan VRAM (Online DPO)</h3>
+                <div class="card p-4 sm:p-8">
+                    <p class="text-center text-gray-400 mb-6">Unsloth secara dramatis mengurangi penggunaan VRAM, memungkinkan fine-tuning pada perangkat keras yang lebih terjangkau.</p>
+                    <div class="flex justify-center items-end gap-4 sm:gap-8 h-56 sm:h-64 max-w-md mx-auto">
+                        <div class="text-center flex flex-col h-full justify-end">
+                            <div class="w-full bg-red-500 rounded-t-lg flex items-end justify-center pb-2" style="height: 100%;">
+                                <span class="font-bold text-base sm:text-lg">50 GB</span>
+                            </div>
+                            <p class="mt-2 font-semibold text-sm sm:text-base">Hugging Face + FA2</p>
+                            <p class="text-xs sm:text-sm text-gray-400">(OOM)</p>
+                        </div>
+                        <div class="text-center flex flex-col h-full justify-end">
+                            <div class="w-full bg-green-500 rounded-t-lg flex items-end justify-center pb-2" style="height: 40%;">
+                                <span class="font-bold text-base sm:text-lg">20 GB</span>
+                            </div>
+                            <p class="mt-2 font-semibold text-sm sm:text-base">Unsloth</p>
+                            <p class="text-xs sm:text-sm text-green-400">(-60%)</p>
+                        </div>
+                    </div>
+                    <p class="text-center mt-4 text-xs sm:text-sm text-gray-500">*Grafik representatif berdasarkan data untuk Online DPO pada Llama 3.1 8B.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Kesimpulan -->
+        <section class="mt-20 text-center">
+            <h2 class="text-3xl font-bold mb-4">Kesimpulan</h2>
+            <p class="max-w-3xl mx-auto text-gray-300">
+                Dengan mengintegrasikan LoRA untuk efisiensi parameter dan GRPO untuk pembelajaran berbasis imbalan, Unsloth berhasil mendemokratisasi kemampuan untuk menciptakan model LLM dengan penalaran canggih. Teknik ini tidak hanya menghemat sumber daya komputasi secara signifikan tetapi juga membuka jalan bagi model untuk secara mandiri menemukan "aha moment"—belajar berpikir lebih dalam tanpa instruksi eksplisit.
+            </p>
+        </section>
+    </main>
+
+
+    <script>
+        // --- DOM Elements ---
+        const startBtn = document.getElementById('start-sim-btn');
+        const step1Div = document.getElementById('sim-step-1');
+        const step2Div = document.getElementById('sim-step-2');
+        const statusText = document.getElementById('status-text');
+        
+        const baseModel = document.getElementById('base-model');
+        const loraAdapters = [
+            document.getElementById('lora-1'),
+            document.getElementById('lora-2'),
+            document.getElementById('lora-3')
+        ];
+        
+        const responseContainer = document.getElementById('response-container');
+
+        // --- Simulation State ---
+        let isSimulating = false;
+
+        // --- Simulation Logic ---
+        startBtn.addEventListener('click', () => {
+            if (isSimulating) return;
+            isSimulating = true;
+            startBtn.disabled = true;
+            startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            runSimulation();
+        });
+
+        function resetSimulation() {
+            step1Div.classList.remove('opacity-0');
+            step2Div.classList.add('opacity-0', 'hidden');
+            
+            loraAdapters[0].style.transform = 'translateX(0)';
+            loraAdapters[1].style.transform = 'translateX(0)';
+            loraAdapters[2].style.transform = 'translateX(0)';
+            loraAdapters.forEach(adapter => adapter.classList.add('opacity-0'));
+            
+            baseModel.style.borderColor = '#4b5563'; // gray-600
+            baseModel.classList.remove('animate-pulse');
+
+            responseContainer.innerHTML = ''; // Clear everything inside the container
+            updateStatus('', 10); // Reset status quickly
+
+            isSimulating = false;
+            startBtn.disabled = false;
+            startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            startBtn.textContent = 'Mulai Simulasi';
+        }
+
+        function updateStatus(text, duration = 2000) {
+            return new Promise(resolve => {
+                statusText.textContent = text;
+                statusText.classList.remove('opacity-0');
+                setTimeout(() => {
+                    statusText.classList.add('opacity-0');
+                    setTimeout(resolve, 500); 
+                }, duration);
+            });
+        }
+
+        async function runSimulation() {
+            resetSimulation();
+
+            // Tahap 1: Adaptasi LoRA
+            await updateStatus('Menyuntikkan LoRA Adapters...', 2000);
+            
+            loraAdapters.forEach(adapter => adapter.classList.remove('opacity-0'));
+            loraAdapters[0].style.transform = 'translateX(150%) translateY(50%)';
+            loraAdapters[1].style.transform = 'translateX(150%) translateY(-50%)';
+            loraAdapters[2].style.transform = 'translateX(-150%) translateY(0)';
+            
+            baseModel.style.borderColor = '#4f46e5'; // indigo-600
+            baseModel.classList.add('animate-pulse');
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await updateStatus('Model telah diadaptasi! Siap untuk fine-tuning.', 2000);
+
+            // Transisi ke Tahap 2
+            step1Div.classList.add('opacity-0');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            step2Div.classList.remove('hidden');
+            step2Div.classList.remove('opacity-0');
+
+            // Tahap 2: Proses GRPO
+            await updateStatus('Model menghasilkan beberapa kandidat respons...', 3000);
+
+            const responses = [
+                { text: '9.11 lebih besar karena punya lebih banyak angka.', score: 0.2, correct: false },
+                { text: '9.9 lebih besar. Angka persepuluhannya (9) lebih besar dari (1) di 9.11.', score: 1.0, correct: true },
+                { text: 'Keduanya sama saja.', score: 0.0, correct: false }
+            ];
+
+            responses.forEach((res, index) => {
+                const responseEl = document.createElement('div');
+                responseEl.className = 'response-candidate card p-4 opacity-0 transform scale-90';
+                responseEl.style.transitionDelay = `${index * 200}ms`;
+                responseEl.innerHTML = `<p class="text-sm">${res.text}</p><div class="score-box mt-2 font-bold text-base sm:text-lg opacity-0"></div>`;
+                responseContainer.appendChild(responseEl);
+                setTimeout(() => {
+                    responseEl.classList.remove('opacity-0', 'scale-90');
+                }, 100);
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 2500));
+
+            // Menilai respons
+            await updateStatus('Fungsi penilai (Reward Function) memberikan skor...', 3000);
+
+            const responseElements = document.querySelectorAll('.response-candidate');
+            responseElements.forEach((el, index) => {
+                const scoreBox = el.querySelector('.score-box');
+                scoreBox.textContent = `Skor: ${responses[index].score}`;
+                scoreBox.classList.add(responses[index].correct ? 'text-green-400' : 'text-red-400');
+                scoreBox.style.transitionDelay = `${index * 200}ms`;
+                setTimeout(() => scoreBox.classList.remove('opacity-0'), 100);
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 2500));
+
+            // Hitung rata-rata dan filter
+            const avgScore = responses.reduce((acc, r) => acc + r.score, 0) / responses.length;
+            await updateStatus(`Skor rata-rata grup: ${avgScore.toFixed(2)}. Memperkuat respons di atas rata-rata...`, 3500);
+
+            responseElements.forEach((el, index) => {
+                if (responses[index].score < avgScore) {
+                    el.classList.add('opacity-30', 'scale-95');
+                    el.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                } else {
+                    el.classList.add('scale-105');
+                    el.style.borderColor = 'rgba(52, 211, 153, 0.7)';
+                }
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            // Tampilkan hasil akhir
+            await updateStatus('"Aha Moment!" Model menemukan jawaban & penalaran terbaik.', 3000);
+
+            const finalAnswerEl = document.createElement('div');
+            finalAnswerEl.className = 'col-span-1 md:col-span-3 mt-8 card border-green-400/50 p-4 sm:p-6 opacity-0 mb-8';
+            finalAnswerEl.style.animation = 'popIn 0.5s ease forwards';
+            finalAnswerEl.innerHTML = `
+                <h4 class="text-lg sm:text-xl font-bold mb-2 text-green-400">Jawaban Akhir yang Diperkuat</h4>
+                <div class=" text-green-300 mb-4 mt-2">
+                    <span class="text-yellow-400">&lt;reasoning&gt;</span><br>
+                    Model telah belajar untuk mengidentifikasi 9.9 sebagai nilai yang lebih besar dari 9.11, berdasarkan pola yang diperkuat selama fine-tuning.<br>
+                    <span class="text-yellow-400">&lt;/reasoning&gt;</span><br>
+                    <span class="text-yellow-400">&lt;answer&gt;</span> 9.9 is bigger than 9.11. <span class="text-yellow-400">&lt;/answer&gt;</span>
+                </div>
+            `;
+            responseContainer.appendChild(finalAnswerEl);
+            
+            // Selesai
+            setTimeout(() => {
+                isSimulating = false;
+                startBtn.disabled = false;
+                startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                startBtn.textContent = 'Ulangi Simulasi';
+            }, 1000);
+        }
+    </script>
+
+</body>
+</html>
+
+{% endblock %}

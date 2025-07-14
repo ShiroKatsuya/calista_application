@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<style>
+    .action-btn-gray {
+        display: flex;
+        align-items: center;
+        padding: 6px 12px;
+        background-color: transparent;
+        color: #a0aec0; /* gray-400 */
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+    }
+    .action-btn-gray:hover {
+        background-color: #4a5568; /* gray-600 */
+        color: #ffffff;
+    }
+    .icon-btn-gray {
+        padding: 8px;
+        border-radius: 8px;
+        color: #a0aec0; /* gray-400 */
+        transition: all 0.2s ease-in-out;
+    }
+    .icon-btn-gray:hover {
+       background-color: #4a5568; /* gray-600 */
+       color: #ffffff;
+    }
+    .related-question {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #2c2c2e;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid transparent;
+        color: #d1d5db; /* gray-300 */
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    .related-question:hover {
+        background-color: #374151; /* gray-700 */
+        border-color: #4b5563; /* gray-600 */
+        color: white;
+    }
+</style>
+
+
+<style>
+    /* A dark background for demonstration */
+
+
+    /* Custom styles for the focus glow effect */
+    .search-container:focus-within {
+        box-shadow: 0 0 0 2px #22d3ee; /* cyan-400 */
+    }
+    
+    /* Custom styles for the prominent button pulse */
+    .pulse-btn {
+        animation: pulse-animation 2s infinite;
+    }
+
+    @keyframes pulse-animation {
+        0% {
+            box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(34, 211, 238, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(34, 211, 238, 0);
+        }
+    }
+</style>
+
+
+<div class="flex h-screen">
+   
+
+    
+    
+
+    <!-- Main Content Area -->
+    <div class="flex-1 main-content-enhanced flex flex-col relative">
+        <!-- Floating Background Elements -->
+        <div class="floating-elements">
+            <div class="floating-particle" style="top: 20%; left: 10%; animation-delay: 0s;"></div>
+            <div class="floating-particle" style="top: 60%; left: 80%; animation-delay: 2s;"></div>
+            <div class="floating-particle" style="top: 80%; left: 20%; animation-delay: 4s;"></div>
+            <div class="floating-particle" style="top: 30%; left: 90%; animation-delay: 1s;"></div>
+            <div class="floating-particle" style="top: 50%; left: 5%; animation-delay: 3s;"></div>
+        </div>
+       
+        <div id="initialState" class="flex-1 flex flex-col items-center justify-center p-8 min-h-screen">
+            <div class="w-full max-w-4xl animate-slide-in">
+                <div class="text-center mb-16">
+                    <h1 class="text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-float">
+                        Calista
+                    </h1>
+                    <p class="text-neutral/80 text-lg animate-bounce-subtle">Ask anything or @mention a Space</p>
+                </div>
+    
+                <div class="mb-12">
+                    <form id="searchForm" action="#" method="POST">
+                        <div class="search-container flex items-center bg-slate-800/50 backdrop-blur-xl border border-slate-700 rounded-2xl p-2 transition-all duration-300">
+                            
+                            <div class="flex items-center space-x-1 pl-2">
+                                <button type="button" class="p-2 text-cyan-400 rounded-lg" title="Search">
+                                    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+                                </button>
+                                <button type="button" class="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors" title="Quick Actions">
+                                    <i class="fa-solid fa-bolt"></i>
+                                </button>
+                                <button type="button" class="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors" title="Help">
+                                    <i class="fa-regular fa-question-circle"></i>
+                                </button>
+                            </div>
+            
+                            <textarea
+                                id="searchInput" 
+                                name="query" 
+                                placeholder="Ask anything or @mention a Space" 
+                                class="flex-1 bg-transparent mx-4 py-2 text-lg text-white placeholder-slate-500 focus:outline-none focus:placeholder-transparent resize-none overflow-hidden min-h-[2.75rem]"
+                                rows="1"
+                            ></textarea>
+            
+                            <div class="flex items-center space-x-1">
+                                <button type="button" class="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors" title="System Info">
+                                    <i class="fa-solid fa-microchip"></i>
+                                </button>
+                                <button type="button" class="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors" title="Web Search">
+                                    <i class="fa-solid fa-globe"></i>
+                                </button>
+                                <button type="button" class="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors" title="Attach File">
+                                    <i class="fa-solid fa-paperclip"></i>
+                                </button>
+                            </div>
+                            
+                            <button type="submit" class="ml-2 flex-shrink-0 bg-cyan-400 hover:bg-cyan-500 text-slate-900 w-12 h-12 rounded-full flex items-center justify-center transition-colors pulse-btn" title="Voice Search">
+                                <i class="fa-solid fa-microphone fa-lg"></i>
+                            </button>
+            
+                        </div>
+                    </form>
+                </div>
+    
+                <div class="flex flex-wrap justify-center gap-4 mb-12">
+                    <button class="action-btn-vibrant btn-interactive" data-action="health">
+                        <div class="action-icon bg-gradient-to-r from-red-500 to-pink-500 pulse-glow">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <span>Health</span>
+                    </button>
+                    <button class="action-btn-vibrant btn-interactive" data-action="summarize">
+                        <div class="action-icon bg-gradient-to-r from-blue-500 to-purple-500 pulse-glow">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <span>Summarize</span>
+                    </button>
+                    <button class="action-btn-vibrant btn-interactive" data-action="analyze">
+                        <div class="action-icon bg-gradient-to-r from-green-500 to-teal-500 pulse-glow">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <span>Analyze</span>
+                    </button>
+                    <button class="action-btn-vibrant btn-interactive" data-action="plan">
+                        <div class="action-icon bg-gradient-to-r from-yellow-500 to-orange-500 pulse-glow">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <span>Plan</span>
+                    </button>
+                    <button class="action-btn-vibrant btn-interactive" data-action="local">
+                        <div class="action-icon bg-gradient-to-r from-purple-500 to-indigo-500 pulse-glow">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <span>Local</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% include 'result_state.html' %}
+
+ 
+    </div>
+</div>
+
+<!-- Floating particles -->
+<div class="fixed inset-0 pointer-events-none">
+    <div class="particle w-2 h-2 bg-primary/30 rounded-full absolute top-1/4 left-1/4 animate-float"></div>
+    <div class="particle w-1 h-1 bg-secondary/30 rounded-full absolute top-3/4 left-3/4 animate-float" style="animation-delay: 2s;"></div>
+    <div class="particle w-1.5 h-1.5 bg-accent/30 rounded-full absolute top-1/2 left-1/6 animate-float" style="animation-delay: 4s;"></div>
+    <div class="particle w-1 h-1 bg-primary/30 rounded-full absolute bottom-1/4 right-1/3 animate-float" style="animation-delay: 6s;"></div>
+</div>
+
+<!-- Toast Notifications -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<script src="{{ url_for('static', filename='js/multi_agent.js') }}"></script>
+
+{% endblock %}
+
