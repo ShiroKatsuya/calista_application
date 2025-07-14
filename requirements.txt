@@ -1,4 +1,5 @@
 Flask
+python-dotenv
 Gunicorn
 langchain_core
 langchain_ollama

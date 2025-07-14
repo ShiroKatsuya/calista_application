@@ -67,8 +67,12 @@ logger = logging.getLogger(__name__)
 # )
 
 import os
+from dotenv import load_dotenv
 
-# Get API keys from environment variables (production server)
+# Load environment variables from a .env file
+load_dotenv()
+
+# Get API keys from environment variables (now loaded from .env if present)
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
 
