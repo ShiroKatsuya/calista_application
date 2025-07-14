@@ -35,47 +35,47 @@ logger = logging.getLogger(__name__)
 # --- Enhanced Models with Better Configuration ---
 
 # Model configurations with optimized parameters
-# model_config = {
-#     "temperature": 0.7,
-#     "top_p": 0.9,
-#     "max_tokens": 4000,
-#     "stream": True
-# }
+model_config = {
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "max_tokens": 4000,
+    "stream": True
+}
 
-# # Initialize models with better configurations
-# model_alice = ChatOllama(
-#     model="llama3.2:3b",
-#     temperature=0.7,
-#     top_p=0.9,
-#     streaming=True
-# )
+# Initialize models with better configurations
+model_alice = ChatOllama(
+    model="llama3.2:3b",
+    temperature=0.7,
+    top_p=0.9,
+    streaming=True
+)
 
-# model_bob = ChatOllama(
-#     model="llama3-2.3b:latest", 
-#     temperature=0.6,  # Slightly lower for technical accuracy
-#     top_p=0.9,
-#     streaming=True
-# )
-
-
-
-# model_supervisor = ChatOllama(
-#     model="llama3.2-3b-grpo:latest",
-#     temperature=0.5,  # Lower temperature for more consistent routing
-#     top_p=0.9,
-#     streaming=True
-# )
-
-import os
-from dotenv import load_dotenv
-
-# Load environment variables from a .env file
-load_dotenv()
+model_bob = ChatOllama(
+    model="llama3-2.3b:latest", 
+    temperature=0.6,  # Slightly lower for technical accuracy
+    top_p=0.9,
+    streaming=True
+)
 
 
 
+model_supervisor = ChatOllama(
+    model="llama3.2-3b-grpo:latest",
+    temperature=0.5,  # Lower temperature for more consistent routing
+    top_p=0.9,
+    streaming=True
+)
 
-# Get API keys from environment variables (now loaded from .env if present)
+# import os
+# from dotenv import load_dotenv
+
+# # Load environment variables from a .env file
+# load_dotenv()
+
+
+
+
+# # Get API keys from environment variables (now loaded from .env if present)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 
@@ -83,26 +83,26 @@ search = GoogleSerperAPIWrapper(
     serper_api_key=SERPER_API_KEY
 )
 
-model_alice = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash-preview-04-17",
-    temperature=0.7,
-    top_p=0.9,
-    google_api_key=GOOGLE_API_KEY
-)
+# model_alice = ChatGoogleGenerativeAI(
+#     model="gemini-2.5-flash-preview-04-17",
+#     temperature=0.7,
+#     top_p=0.9,
+#     google_api_key=GOOGLE_API_KEY
+# )
 
-model_bob = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash-preview-04-17", 
-    temperature=0.6, 
-    top_p=0.9,
-    google_api_key=GOOGLE_API_KEY
-)
+# model_bob = ChatGoogleGenerativeAI(
+#     model="gemini-2.5-flash-preview-04-17", 
+#     temperature=0.6, 
+#     top_p=0.9,
+#     google_api_key=GOOGLE_API_KEY
+# )
 
-model_supervisor = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash-preview-04-17",
-    temperature=0.5,  # Lower temperature for more consistent routing
-    top_p=0.9,
-    google_api_key=GOOGLE_API_KEY
-)
+# model_supervisor = ChatGoogleGenerativeAI(
+#     model="gemini-2.5-flash-preview-04-17",
+#     temperature=0.5,  # Lower temperature for more consistent routing
+#     top_p=0.9,
+#     google_api_key=GOOGLE_API_KEY
+# )
 
 
 @lru_cache(maxsize=100)
