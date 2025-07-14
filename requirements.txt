@@ -1,0 +1,9 @@
+Flask
+python-dotenv
+Gunicorn
+langchain_core
+langchain_ollama
+langgraph
+langchain_google_genai
+langchain_community
+bs4

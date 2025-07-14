@@ -1,0 +1,508 @@
+/* Modern Vibrant Calista Interface */
+
+/* Sidebar */
+.sidebar-collapsed {
+    width: 5rem; /* 80px */
+}
+
+.sidebar-expanded {
+    width: 18rem; /* 288px */
+}
+
+.sidebar-collapsed .sidebar-text,
+.sidebar-collapsed .nav-item-label {
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
+}
+
+.sidebar-expanded .sidebar-text,
+.sidebar-expanded .nav-item-label {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+.sidebar-collapsed .sidebar-toggle {
+    transform: rotate(0deg);
+}
+
+.sidebar-expanded .sidebar-toggle {
+    transform: rotate(90deg);
+}
+
+/* Icon Wrappers */
+.icon-wrapper {
+    @apply w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-white text-sm transition-all duration-300;
+}
+
+.icon-wrapper:hover {
+    @apply scale-110 shadow-lg;
+}
+
+/* Navigation Items */
+.nav-item {
+    @apply w-10 h-10 flex items-center justify-center rounded-lg cursor-pointer text-neutral/70 hover:text-white hover:bg-surface/20 transition-all duration-200 relative;
+}
+
+.nav-item.active {
+    @apply text-white bg-surface/30;
+}
+
+.nav-item:hover::after {
+    content: attr(data-tooltip);
+    @apply absolute left-12 bg-surface text-text px-2 py-1 rounded text-sm whitespace-nowrap z-10 border border-neutral/20;
+}
+
+/* Expandable Navigation Items */
+.nav-item-expandable {
+    @apply w-full rounded-xl cursor-pointer text-gray-300 hover:text-white hover:bg-gray-700/30 transition-all duration-300 relative group;
+}
+
+.nav-item-expandable.active {
+    @apply text-white bg-gray-700/50 shadow-lg;
+}
+
+.nav-item-expandable.active::before {
+    content: '';
+    @apply absolute left-0 top-2 bottom-2 w-1 bg-gradient-to-b from-primary to-secondary rounded-full;
+}
+
+.nav-item-expandable.active .icon-wrapper {
+    @apply shadow-lg;
+}
+
+/* Navigation Glow Effect */
+.nav-glow {
+    @apply absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(6, 182, 212, 0.1));
+}
+
+/* Enhanced hover states */
+.nav-item-expandable:hover .icon-wrapper {
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    @apply scale-110;
+}
+
+.nav-item-expandable:hover {
+    @apply transform translate-x-1 scale-102;
+}
+
+.nav-item-content {
+    @apply flex items-center space-x-3 px-3 py-3;
+}
+
+.nav-item-label {
+    @apply text-sm font-semibold transition-all duration-500 whitespace-nowrap;
+}
+
+/* Bounce on hover effect */
+.bounce-on-hover:hover {
+    @apply transform -translate-y-1;
+}
+
+/* Hide tooltip when sidebar is expanded */
+.sidebar-expanded .nav-item-expandable:hover::after {
+    display: none;
+}
+
+/* Show tooltip when sidebar is collapsed */
+.sidebar-collapsed .nav-item-expandable:hover::after {
+    content: attr(data-tooltip);
+    @apply absolute left-16 bg-black/80 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap z-50 border border-white/20 shadow-xl;
+    transform: translateY(-50%);
+    top: 50%;
+}
+
+/* Vibrant Action Buttons */
+.action-btn-vibrant {
+    @apply flex flex-col items-center justify-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/20 hover:border-white/40 transition-all duration-300 hover:scale-105 hover:bg-white/10 cursor-pointer group min-w-[100px];
+}
+
+.action-btn-vibrant:hover {
+    @apply shadow-2xl transform -translate-y-2;
+}
+
+.action-icon {
+    @apply w-12 h-12 rounded-xl flex items-center justify-center mb-2 text-white text-lg shadow-lg group-hover:scale-110 transition-transform duration-300;
+}
+
+.action-btn-vibrant span {
+    @apply text-sm font-semibold text-white/80 group-hover:text-white transition-colors duration-300;
+}
+
+/* Search glow effect */
+.search-glow:hover {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+}
+
+/* Gray Theme Action Buttons */
+.action-btn-gray {
+    @apply flex items-center px-4 py-2 bg-gray-600/50 hover:bg-gray-600/70 text-gray-200 hover:text-white rounded-lg text-sm font-medium transition-all duration-200 border border-gray-500/30 hover:border-gray-400/50 cursor-pointer;
+}
+
+.action-btn-gray:hover {
+    @apply transform -translate-y-0.5 shadow-lg;
+}
+
+/* Tab Navigation */
+.tab-btn {
+    @apply flex items-center px-4 py-3 text-gray-400 hover:text-white transition-colors duration-200 border-b-2 border-transparent hover:border-gray-400 font-medium cursor-pointer;
+}
+
+.tab-btn.active {
+    @apply text-white border-primary;
+}
+
+/* Related Questions */
+.related-question {
+    @apply flex items-center justify-between p-4 bg-gray-600/20 hover:bg-gray-600/40 rounded-lg text-gray-200 hover:text-white transition-all duration-200 cursor-pointer group border border-gray-600/30 hover:border-gray-500/50;
+}
+
+.related-question:hover {
+    @apply transform -translate-y-0.5;
+}
+
+.related-question .expand-icon {
+    @apply text-gray-400 group-hover:text-secondary transition-colors duration-200;
+}
+
+/* Layout State Transitions */
+#initialState {
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+#resultsState {
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.state-hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+}
+
+.state-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Chat Content Animations */
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Typing Animation */
+.typing-animation::after {
+    content: '|';
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
+}
+
+/* Enhanced Visual Effects */
+.floating-elements {
+    @apply absolute inset-0 pointer-events-none overflow-hidden;
+}
+
+.floating-particle {
+    @apply absolute w-2 h-2 rounded-full opacity-20;
+    background: linear-gradient(45deg, #8B5CF6, #06B6D4);
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+    }
+}
+
+/* Pulse effect for live elements */
+.pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+    from {
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    }
+    to {
+        box-shadow: 0 0 30px rgba(139, 92, 246, 0.6), 0 0 40px rgba(6, 182, 212, 0.3);
+    }
+}
+
+/* Improved button states */
+.btn-interactive {
+    @apply transition-all duration-300 transform-gpu;
+}
+
+.btn-interactive:hover {
+    @apply -translate-y-1 shadow-xl;
+}
+
+.btn-interactive:active {
+    @apply scale-95 translate-y-0;
+}
+
+/* Scale utilities */
+.scale-102 {
+    transform: scale(1.02);
+}
+
+/* Enhanced main content styling */
+.main-content-enhanced {
+    background-color: #111928;
+    position: relative;
+}
+
+.main-content-enhanced::before {
+    content: '';
+    @apply absolute inset-0 opacity-30;
+    background: radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(245, 158, 11, 0.1) 0%, transparent 50%);
+}
+
+/* Legacy Action Buttons */
+.action-btn-new {
+    @apply bg-surface/30 hover:bg-surface/50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border border-neutral/20 hover:border-neutral/40;
+}
+
+.action-btn-new:hover {
+    @apply transform -translate-y-0.5;
+}
+
+.action-btn {
+    @apply bg-surface hover:bg-neutral/10 text-text px-6 py-3 rounded-lg font-medium transition-all duration-200 border border-neutral/20 hover:border-primary/50;
+}
+
+.action-btn:hover {
+    @apply transform -translate-y-0.5 shadow-lg;
+}
+
+/* Search Input Focus Animation */
+#searchInput:focus {
+    @apply shadow-lg shadow-primary/20;
+}
+
+/* Toast Notifications */
+.toast {
+    @apply bg-black/80 backdrop-blur-sm border border-white/20 text-white px-6 py-4 rounded-xl shadow-2xl transform transition-all duration-300;
+}
+
+.toast.success {
+    @apply border-green-500/50 bg-green-500/10;
+}
+
+.toast.error {
+    @apply border-red-500/50 bg-red-500/10;
+}
+
+.toast.show {
+    @apply translate-x-0 opacity-100;
+}
+
+.toast.hide {
+    @apply translate-x-full opacity-0;
+}
+
+/* Results Area Animation */
+#resultsArea {
+    @apply transition-all duration-500 ease-in-out;
+}
+
+#resultsArea.show {
+    @apply block animate-fade-in;
+}
+
+/* Custom Animations */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+}
+
+/* Glow animation for logo */
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 30px rgba(139, 92, 246, 0.8), 0 0 40px rgba(6, 182, 212, 0.3);
+    }
+}
+
+.animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* Floating particles */
+.particle {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    33% {
+        transform: translateY(-20px) rotate(120deg);
+    }
+    66% {
+        transform: translateY(10px) rotate(240deg);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nav-item:hover::after,
+    .nav-item-expandable:hover::after {
+        display: none;
+    }
+    
+    .action-btn-vibrant {
+        @apply min-w-[80px] p-3;
+    }
+    
+    .action-icon {
+        @apply w-10 h-10 text-base;
+    }
+    
+    .action-btn-vibrant span {
+        @apply text-xs;
+    }
+    
+    .sidebar-expanded {
+        width: 16rem; /* Smaller on mobile */
+    }
+    
+    .sidebar-collapsed {
+        width: 4rem; /* Slightly smaller on mobile */
+    }
+    
+    h1 {
+        @apply text-4xl;
+    }
+}
+
+@media (max-width: 640px) {
+    .action-btn-vibrant {
+        @apply min-w-[70px] p-2;
+    }
+    
+    .action-icon {
+        @apply w-8 h-8 text-sm mb-1;
+    }
+    
+    .action-btn-vibrant span {
+        @apply text-xs;
+    }
+    
+    h1 {
+        @apply text-3xl;
+    }
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.sidebar-collapsed .sidebar-toggle {
+    opacity: 0.8;
+}
+
+.sidebar-expanded .sidebar-toggle {
+    opacity: 1;
+}
+
+/* Smooth transitions for all sidebar elements */
+.sidebar-text,
+.nav-item-label {
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* Modern Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1c1c1e; /* Dark background */
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4a4a4e; /* Darker grey thumb */
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #6a6a6e; /* Lighter on hover */
+}
+
+/* Glassmorphism Effect */
+.glass {
+    background: rgba(255, 255, 255, 0.05); /* Slightly visible white with transparency */
+    backdrop-filter: blur(10px); /* Blur effect */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Light border */
+    border-radius: 15px; /* Rounded corners */
+}
+
+/* Gradient Text Effect */
+.gradient-text {
+    background: linear-gradient(45deg, #8B5CF6, #06B6D4); /* Purple to Cyan */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Focus Ring for Inputs */
+input:focus,
+textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5); /* Purple ring */
+}
+
+/* Loading Pulse Animation */
+.loading-pulse {
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
