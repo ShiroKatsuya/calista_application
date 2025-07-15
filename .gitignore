@@ -7,3 +7,4 @@ uv.lock
 replit.md
 .vercel
 .env*.local
+ollama_test.py

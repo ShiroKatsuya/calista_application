@@ -1,0 +1,23 @@
+[
+    {
+        "type": "chat",
+        "sender": "user",
+        "content": "WTF BOB"
+    },
+    {
+        "type": "system",
+        "content": "--- Supervisor routing to: BOB - Direct, non-technical question, potential misdirection ---"
+    },
+    {
+        "type": "system",
+        "content": "--- Supervisor routing to: Alice - The message appears to be a non-technical question, which is more suitable for ALICE's expertise in general knowledge and academic topics. Additionally, I'd like to address the potential frustration or confusion behind the message, rather than just providing a technical solution. ---"
+    },
+    {
+        "type": "system",
+        "content": "--- Supervisor routing to: Alice - The conversation has taken a turn towards exploring the underlying causes of Bob's frustration, which is more suitable for ALICE's expertise in general knowledge and academic topics, as well as her ability to provide comprehensive explanations and guidance on complex issues. ---"
+    },
+    {
+        "type": "system",
+        "content": "--- Conversation Complete ---"
+    }
+]

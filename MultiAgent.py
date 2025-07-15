@@ -17,7 +17,7 @@ from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_core.tools import Tool
 from langchain_ollama import ChatOllama
 from langgraph.graph import END, StateGraph
-from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.utilities import GoogleSerperAPIWrapper
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.prompts import MessagesPlaceholder
@@ -47,14 +47,16 @@ model_alice = ChatOllama(
     model="llama3.2:3b",
     temperature=0.7,
     top_p=0.9,
-    streaming=True
+    streaming=True,
+    base_url="https://abroad-mug-rankings-rocket.trycloudflare.com/"
 )
 
 model_bob = ChatOllama(
     model="llama3-2.3b:latest", 
     temperature=0.6,  # Slightly lower for technical accuracy
     top_p=0.9,
-    streaming=True
+    streaming=True,
+    base_url="https://abroad-mug-rankings-rocket.trycloudflare.com/"
 )
 
 
@@ -63,7 +65,8 @@ model_supervisor = ChatOllama(
     model="llama3.2-3b-grpo:latest",
     temperature=0.5,  # Lower temperature for more consistent routing
     top_p=0.9,
-    streaming=True
+    streaming=True,
+    base_url="https://abroad-mug-rankings-rocket.trycloudflare.com/"
 )
 
 # import os
@@ -76,7 +79,7 @@ model_supervisor = ChatOllama(
 
 
 # # Get API keys from environment variables (now loaded from .env if present)
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+# GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 
 search = GoogleSerperAPIWrapper(
