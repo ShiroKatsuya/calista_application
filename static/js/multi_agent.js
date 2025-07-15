@@ -160,6 +160,7 @@ $(document).ready(function() {
 
         console.log("Message Div InnerHTML after buttons:", $messageDiv.html());
         conversationMessages.push({ type: 'chat', sender: sender, content: text }); // Store chat message
+        saveConversationToLocalStorage();
     }
 
     // Function to add a system message (like routing or start/end signals)
@@ -172,6 +173,7 @@ $(document).ready(function() {
         $responseContainer.append($systemMessageDiv);
         $responseContainer.scrollTop($responseContainer[0].scrollHeight);
         conversationMessages.push({ type: 'system', content: text }); // Store system message
+        saveConversationToLocalStorage();
     }
 
     // Clear input button logic
@@ -183,7 +185,37 @@ $(document).ready(function() {
         }
     }
 
-    // // Function to save conversation to JSON
+    // Function to save conversation to localStorage
+    function saveConversationToLocalStorage() {
+        try {
+            localStorage.setItem('conversationMessages', JSON.stringify(conversationMessages));
+        } catch (e) {
+            console.error('Error saving conversation to localStorage:', e);
+        }
+    }
+
+    // Function to load conversation from localStorage
+    function loadConversationFromLocalStorage() {
+        try {
+            const stored = localStorage.getItem('conversationMessages');
+            if (stored) {
+                const messages = JSON.parse(stored);
+                if (Array.isArray(messages)) {
+                    messages.forEach(msg => {
+                        if (msg.type === 'chat') {
+                            addMessage(msg.content, msg.sender);
+                        } else if (msg.type === 'system') {
+                            addSystemMessage(msg.content);
+                        }
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Error loading conversation from localStorage:', e);
+        }
+    }
+
+    // Function to save conversation to JSON
     // function saveConversationToJson() {
     //     fetch('/save_conversation', {
     //         method: 'POST',
@@ -208,39 +240,42 @@ $(document).ready(function() {
     //     });
     // }
 
-    // // Function to load existing conversation history
-    // function loadConversationHistory() {
-    //     fetch('/get_conversation_history')
-    //     .then(response => response.json())
-    //     .then(data => {
-    //         if (data.conversation_messages && data.conversation_messages.length > 0) {
-    //             // Show results state
-    //             $initialState.addClass('hidden');
-    //             $resultsState.removeClass('hidden');
+    // Function to load existing conversation history
+    function loadConversationHistory() {
+        fetch('/get_conversation_history')
+        .then(response => response.json())
+        .then(data => {
+            if (data.conversation_messages && data.conversation_messages.length > 0) {
+                // Show results state
+                $initialState.addClass('hidden');
+                $resultsState.removeClass('hidden');
                 
-    //             // Set conversation title
-    //             const $conversationTitle = $('#conversationTitle');
-    //             if ($conversationTitle.length && data.conversation_title) {
-    //                 $conversationTitle.text(data.conversation_title);
-    //             }
+                // Set conversation title
+                const $conversationTitle = $('#conversationTitle');
+                if ($conversationTitle.length && data.conversation_title) {
+                    $conversationTitle.text(data.conversation_title);
+                }
                 
-    //             // Display existing messages
-    //             data.conversation_messages.forEach(msg => {
-    //                 if (msg.type === 'HumanMessage') {
-    //                     addMessage(msg.content, 'user');
-    //                 } else if (msg.type === 'AIMessage') {
-    //                     addMessage(msg.content, msg.name || 'ai');
-    //                 }
-    //             });
-    //         }
-    //     })
-    //     .catch(error => {
-    //         console.error('Error loading conversation history:', error);
-    //     });
-    // }
+                // Display existing messages
+                data.conversation_messages.forEach(msg => {
+                    if (msg.type === 'HumanMessage') {
+                        addMessage(msg.content, 'user');
+                    } else if (msg.type === 'AIMessage') {
+                        addMessage(msg.content, msg.name || 'ai');
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading conversation history:', error);
+        });
+    }
 
+    // On page load, load from localStorage first
     if ($searchForm.length && $searchInput.length && $initialState.length && $resultsState.length && $responseContainer.length && $followUpForm.length && $followUpInput.length) {
-        // Load existing conversation history on page load
+        // Load conversation from localStorage first
+        loadConversationFromLocalStorage();
+        // Then load from backend if available (may overwrite local)
         loadConversationHistory();
         
         // Event listener for sending the main query
@@ -312,7 +347,7 @@ $(document).ready(function() {
                             }
                             addSystemMessage('--- Conversation Complete ---');
                             isChatStreamActive = false; // Reset flag on stream completion
-                            // saveConversationToJson(); // Save conversation
+                            saveConversationToLocalStorage(); // Save conversation
                             return;
                         }
 
@@ -439,7 +474,7 @@ $(document).ready(function() {
                             }
                             addSystemMessage('--- Follow-up Conversation Complete ---');
                             isChatStreamActive = false; // Reset flag on stream completion
-                            // saveConversationToJson(); // Save conversation after follow-up
+                            saveConversationToLocalStorage(); // Save conversation after follow-up
                             return;
                         }
                         buffer += decoder.decode(value, { stream: true });
