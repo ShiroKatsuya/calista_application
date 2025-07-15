@@ -183,61 +183,61 @@ $(document).ready(function() {
         }
     }
 
-    // Function to save conversation to JSON
-    function saveConversationToJson() {
-        fetch('/save_conversation', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ conversation: conversationMessages })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                console.log('Conversation saved successfully:', data.file_path);
-                // Optionally, inform the user or provide a download link
-            } else {
-                console.error('Error saving conversation:', data.message);
-                addSystemMessage('Error saving conversation: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Fetch error when saving conversation:', error);
-            addSystemMessage('Network error when trying to save conversation.');
-        });
-    }
+    // // Function to save conversation to JSON
+    // function saveConversationToJson() {
+    //     fetch('/save_conversation', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //         },
+    //         body: JSON.stringify({ conversation: conversationMessages })
+    //     })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         if (data.status === 'success') {
+    //             console.log('Conversation saved successfully:', data.file_path);
+    //             // Optionally, inform the user or provide a download link
+    //         } else {
+    //             console.error('Error saving conversation:', data.message);
+    //             addSystemMessage('Error saving conversation: ' + data.message);
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error('Fetch error when saving conversation:', error);
+    //         addSystemMessage('Network error when trying to save conversation.');
+    //     });
+    // }
 
-    // Function to load existing conversation history
-    function loadConversationHistory() {
-        fetch('/get_conversation_history')
-        .then(response => response.json())
-        .then(data => {
-            if (data.conversation_messages && data.conversation_messages.length > 0) {
-                // Show results state
-                $initialState.addClass('hidden');
-                $resultsState.removeClass('hidden');
+    // // Function to load existing conversation history
+    // function loadConversationHistory() {
+    //     fetch('/get_conversation_history')
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         if (data.conversation_messages && data.conversation_messages.length > 0) {
+    //             // Show results state
+    //             $initialState.addClass('hidden');
+    //             $resultsState.removeClass('hidden');
                 
-                // Set conversation title
-                const $conversationTitle = $('#conversationTitle');
-                if ($conversationTitle.length && data.conversation_title) {
-                    $conversationTitle.text(data.conversation_title);
-                }
+    //             // Set conversation title
+    //             const $conversationTitle = $('#conversationTitle');
+    //             if ($conversationTitle.length && data.conversation_title) {
+    //                 $conversationTitle.text(data.conversation_title);
+    //             }
                 
-                // Display existing messages
-                data.conversation_messages.forEach(msg => {
-                    if (msg.type === 'HumanMessage') {
-                        addMessage(msg.content, 'user');
-                    } else if (msg.type === 'AIMessage') {
-                        addMessage(msg.content, msg.name || 'ai');
-                    }
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error loading conversation history:', error);
-        });
-    }
+    //             // Display existing messages
+    //             data.conversation_messages.forEach(msg => {
+    //                 if (msg.type === 'HumanMessage') {
+    //                     addMessage(msg.content, 'user');
+    //                 } else if (msg.type === 'AIMessage') {
+    //                     addMessage(msg.content, msg.name || 'ai');
+    //                 }
+    //             });
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error('Error loading conversation history:', error);
+    //     });
+    // }
 
     if ($searchForm.length && $searchInput.length && $initialState.length && $resultsState.length && $responseContainer.length && $followUpForm.length && $followUpInput.length) {
         // Load existing conversation history on page load
@@ -312,7 +312,7 @@ $(document).ready(function() {
                             }
                             addSystemMessage('--- Conversation Complete ---');
                             isChatStreamActive = false; // Reset flag on stream completion
-                            saveConversationToJson(); // Save conversation
+                            // saveConversationToJson(); // Save conversation
                             return;
                         }
 
@@ -439,7 +439,7 @@ $(document).ready(function() {
                             }
                             addSystemMessage('--- Follow-up Conversation Complete ---');
                             isChatStreamActive = false; // Reset flag on stream completion
-                            saveConversationToJson(); // Save conversation after follow-up
+                            // saveConversationToJson(); // Save conversation after follow-up
                             return;
                         }
                         buffer += decoder.decode(value, { stream: true });

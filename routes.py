@@ -291,29 +291,29 @@ def chat_stream():
 
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
-@app.route('/save_conversation', methods=['POST'])
-def save_conversation():
-    data = request.get_json()
-    conversation = data.get('conversation', [])
+# @app.route('/save_conversation', methods=['POST'])
+# def save_conversation():
+#     data = request.get_json()
+#     conversation = data.get('conversation', [])
 
-    if not conversation:
-        return jsonify({'status': 'error', 'message': 'No conversation data provided.'}), 400
+#     if not conversation:
+#         return jsonify({'status': 'error', 'message': 'No conversation data provided.'}), 400
 
-    # Create a directory to save conversations if it doesn't exist
-    save_dir = 'conversations'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+#     # Create a directory to save conversations if it doesn't exist
+#     save_dir = 'conversations'
+#     if not os.path.exists(save_dir):
+#         os.makedirs(save_dir)
 
-    # Generate a unique filename using a timestamp
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_path = os.path.join(save_dir, f'conversation_{timestamp}.json')
+#     # Generate a unique filename using a timestamp
+#     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+#     file_path = os.path.join(save_dir, f'conversation_{timestamp}.json')
 
-    try:
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(conversation, f, indent=4)
-        return jsonify({'status': 'success', 'message': 'Conversation saved.', 'file_path': file_path}), 200
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+#     try:
+#         with open(file_path, 'w', encoding='utf-8') as f:
+#             json.dump(conversation, f, indent=4)
+#         return jsonify({'status': 'success', 'message': 'Conversation saved.', 'file_path': file_path}), 200
+#     except Exception as e:
+#         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 @app.route('/list_conversations')
