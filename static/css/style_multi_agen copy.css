@@ -1,0 +1,70 @@
+    /* Custom styles to more closely match the design */
+    :root {
+        --custom-orange: #f06a29;
+        --custom-orange-light: #f58954;
+        --custom-orange-glow: 0 0 6px 1px #f06a2980;
+        --dark-bg: #0d0d0d;
+        --card-bg: #1a1a1a;
+        --border-color: #2c2c2c;
+        --line-color: #383838;
+        --text-primary: #e0e0e0;
+        --text-secondary: #8a8a8a;
+        --dot-inactive: #3a3a3a;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--dark-bg);
+        color: var(--text-primary);
+    }
+
+    .font-mono {
+        font-family: 'Roboto Mono', monospace;
+    }
+
+    .card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+    }
+
+    .line {
+        background-color: var(--line-color);
+    }
+
+    .status-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background-color: var(--custom-orange);
+        box-shadow: var(--custom-orange-glow);
+    }
+    
+    /* Custom grid definition for progress bar */
+    .progress-grid {
+        display: grid;
+        grid-template-columns: repeat(24, minmax(0, 1fr));
+        gap: 4px;
+    }
+
+    .progress-dot {
+        height: 6px;
+        border-radius: 2px; /* Changed from rounded-full to match the squarish dots */
+    }
+    
+    .dot-active {
+        background-color: var(--custom-orange);
+        opacity: 0.9;
+    }
+
+    .dot-inactive {
+        background-color: var(--dot-inactive);
+    }
+
+    #agent-connectors {
+      height: 48px; /* Adjust as needed for spacing */
+      position: relative;
+
+    }
+    .bg-gray-700 {
+      background-color: #333; /* Or use your --border-color variable */
+    }

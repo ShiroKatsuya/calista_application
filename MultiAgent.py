@@ -48,7 +48,7 @@ model_alice = ChatOllama(
     temperature=0.7,
     top_p=0.9,
     streaming=True,
-    base_url="https://abroad-mug-rankings-rocket.trycloudflare.com/"
+    base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
 model_bob = ChatOllama(
@@ -56,7 +56,7 @@ model_bob = ChatOllama(
     temperature=0.6,  # Slightly lower for technical accuracy
     top_p=0.9,
     streaming=True,
-    base_url="https://abroad-mug-rankings-rocket.trycloudflare.com/"
+    base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
 
@@ -66,7 +66,7 @@ model_supervisor = ChatOllama(
     temperature=0.5,  # Lower temperature for more consistent routing
     top_p=0.9,
     streaming=True,
-    base_url="https://abroad-mug-rankings-rocket.trycloudflare.com/"
+    base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
 # import os
@@ -330,7 +330,7 @@ supervisor_routing_prompt = ChatPromptTemplate.from_messages([
     ("system",
      """You are an intelligent supervisor managing a team of two specialized agents:
 
-ALICE: General Knowledge Agent with PhD-level expertise across multiple disciplines
+Alice: General Knowledge Agent with PhD-level expertise across multiple disciplines
 - Handles: Academic questions, research topics, conceptual explanations, interdisciplinary topics
 - Strengths: Deep knowledge, analytical thinking, comprehensive explanations
 
@@ -339,7 +339,7 @@ BOB: Technical Implementation Agent specializing in software and technical solut
 - Strengths: Practical solutions, technical accuracy, implementation guidance
 
 ROUTING GUIDELINES:
-- Route to ALICE for: General knowledge, academic topics, research questions, conceptual explanations
+- Route to Alice for: General knowledge, academic topics, research questions, conceptual explanations
 - Route to BOB for: Technical implementation, programming, system design, code-related questions
 - If both agents are suitable, prefer the agent with the lower workload (fewer tasks handled in this session)
 - Alternate agents for ambiguous or general questions to ensure fair distribution

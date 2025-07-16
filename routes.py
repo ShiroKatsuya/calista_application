@@ -53,6 +53,11 @@ def install():
     """Route for the Install page"""
     return render_template('install.html')
 
+@app.route('/multi-agent')
+def multi_agent():
+    """Route for the Multi-Agent page"""
+    return render_template('multi-agent.html')
+
 
 @app.route('/action/<action_type>', methods=['POST'])
 def handle_action(action_type):
@@ -78,6 +83,30 @@ def handle_action(action_type):
         'query': query,
         'message': f'{actions[action_type]} would be performed for: "{query}"'
     })
+
+@app.route('/multi-agent-stream', methods=['POST'])
+def multi_agent_stream():
+    """
+    Handle multi-agent chat requests and stream responses using the backend logic from MultiAgent_Working_Together.py.
+    Now streams agent status and final result as JSON lines for real-time frontend updates.
+    """
+    from flask import stream_with_context, Response
+    import MultiAgent_Working_Together as multi_agent_backend
+
+    data = request.get_json()
+    query = data.get('query', '').strip()
+
+    if not query:
+        return jsonify({'error': 'Please enter a query'}), 400
+
+    def generate():
+        for update in multi_agent_backend.run_enhanced_agent_system_stream(query):
+            yield update
+
+    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+    
+    
+    
 
 @app.route('/chat_stream', methods=['POST'])
 def chat_stream():
@@ -291,29 +320,29 @@ def chat_stream():
 
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
-# @app.route('/save_conversation', methods=['POST'])
-# def save_conversation():
-#     data = request.get_json()
-#     conversation = data.get('conversation', [])
+@app.route('/save_conversation', methods=['POST'])
+def save_conversation():
+    data = request.get_json()
+    conversation = data.get('conversation', [])
 
-#     if not conversation:
-#         return jsonify({'status': 'error', 'message': 'No conversation data provided.'}), 400
+    if not conversation:
+        return jsonify({'status': 'error', 'message': 'No conversation data provided.'}), 400
 
-#     # Create a directory to save conversations if it doesn't exist
-#     save_dir = 'conversations'
-#     if not os.path.exists(save_dir):
-#         os.makedirs(save_dir)
+    # Create a directory to save conversations if it doesn't exist
+    save_dir = 'conversations'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
-#     # Generate a unique filename using a timestamp
-#     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-#     file_path = os.path.join(save_dir, f'conversation_{timestamp}.json')
+    # Generate a unique filename using a timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_path = os.path.join(save_dir, f'conversation_{timestamp}.json')
 
-#     try:
-#         with open(file_path, 'w', encoding='utf-8') as f:
-#             json.dump(conversation, f, indent=4)
-#         return jsonify({'status': 'success', 'message': 'Conversation saved.', 'file_path': file_path}), 200
-#     except Exception as e:
-#         return jsonify({'status': 'error', 'message': str(e)}), 500
+    try:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(conversation, f, indent=4)
+        return jsonify({'status': 'success', 'message': 'Conversation saved.', 'file_path': file_path}), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 @app.route('/list_conversations')

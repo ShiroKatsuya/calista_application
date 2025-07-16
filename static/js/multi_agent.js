@@ -160,11 +160,10 @@ $(document).ready(function() {
 
         console.log("Message Div InnerHTML after buttons:", $messageDiv.html());
         conversationMessages.push({ type: 'chat', sender: sender, content: text }); // Store chat message
-        saveConversationToLocalStorage();
     }
 
     // Function to add a system message (like routing or start/end signals)
-    function addSystemMessage(text) {
+    function addSystemMessage(text, sender = 'system') {
         // Remove any existing system-message divs to ensure only one is shown
         $responseContainer.find('.system-message').remove();
 
@@ -172,8 +171,8 @@ $(document).ready(function() {
         $systemMessageDiv.text(text);
         $responseContainer.append($systemMessageDiv);
         $responseContainer.scrollTop($responseContainer[0].scrollHeight);
-        conversationMessages.push({ type: 'system', content: text }); // Store system message
-        saveConversationToLocalStorage();
+        // Save as a chat message with sender, not just as type system
+        conversationMessages.push({ type: 'chat', sender: sender, content: text });
     }
 
     // Clear input button logic
@@ -185,60 +184,30 @@ $(document).ready(function() {
         }
     }
 
-    // Function to save conversation to localStorage
-    function saveConversationToLocalStorage() {
-        try {
-            localStorage.setItem('conversationMessages', JSON.stringify(conversationMessages));
-        } catch (e) {
-            console.error('Error saving conversation to localStorage:', e);
-        }
-    }
-
-    // Function to load conversation from localStorage
-    function loadConversationFromLocalStorage() {
-        try {
-            const stored = localStorage.getItem('conversationMessages');
-            if (stored) {
-                const messages = JSON.parse(stored);
-                if (Array.isArray(messages)) {
-                    messages.forEach(msg => {
-                        if (msg.type === 'chat') {
-                            addMessage(msg.content, msg.sender);
-                        } else if (msg.type === 'system') {
-                            addSystemMessage(msg.content);
-                        }
-                    });
-                }
-            }
-        } catch (e) {
-            console.error('Error loading conversation from localStorage:', e);
-        }
-    }
-
     // Function to save conversation to JSON
-    // function saveConversationToJson() {
-    //     fetch('/save_conversation', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json'
-    //         },
-    //         body: JSON.stringify({ conversation: conversationMessages })
-    //     })
-    //     .then(response => response.json())
-    //     .then(data => {
-    //         if (data.status === 'success') {
-    //             console.log('Conversation saved successfully:', data.file_path);
-    //             // Optionally, inform the user or provide a download link
-    //         } else {
-    //             console.error('Error saving conversation:', data.message);
-    //             addSystemMessage('Error saving conversation: ' + data.message);
-    //         }
-    //     })
-    //     .catch(error => {
-    //         console.error('Fetch error when saving conversation:', error);
-    //         addSystemMessage('Network error when trying to save conversation.');
-    //     });
-    // }
+    function saveConversationToJson() {
+        fetch('/save_conversation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ conversation: conversationMessages })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                console.log('Conversation saved successfully:', data.file_path);
+                // Optionally, inform the user or provide a download link
+            } else {
+                console.error('Error saving conversation:', data.message);
+                addSystemMessage('Error saving conversation: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error when saving conversation:', error);
+            addSystemMessage('Network error when trying to save conversation.');
+        });
+    }
 
     // Function to load existing conversation history
     function loadConversationHistory() {
@@ -271,11 +240,8 @@ $(document).ready(function() {
         });
     }
 
-    // On page load, load from localStorage first
     if ($searchForm.length && $searchInput.length && $initialState.length && $resultsState.length && $responseContainer.length && $followUpForm.length && $followUpInput.length) {
-        // Load conversation from localStorage first
-        loadConversationFromLocalStorage();
-        // Then load from backend if available (may overwrite local)
+        // Load existing conversation history on page load
         loadConversationHistory();
         
         // Event listener for sending the main query
@@ -347,7 +313,7 @@ $(document).ready(function() {
                             }
                             addSystemMessage('--- Conversation Complete ---');
                             isChatStreamActive = false; // Reset flag on stream completion
-                            saveConversationToLocalStorage(); // Save conversation
+                            saveConversationToJson(); // Save conversation
                             return;
                         }
 
@@ -385,9 +351,10 @@ $(document).ready(function() {
                                         const routeMatch = jsonData.content.match(/ROUTE_TO: (\w+) - (.*)/);
                                         if (routeMatch && routeMatch[1] && routeMatch[2]) {
                                             if (routeMatch[1] === "FINISH") {
-                                                addSystemMessage(`--- Supervisor: ${routeMatch[2]} ---`);
+                                                addSystemMessage(`--- Supervisor: ${routeMatch[2]} ---`, 'supervisor');
                                             } else {
-                                                addSystemMessage(`--- Supervisor routing to: ${routeMatch[1]} - ${routeMatch[2]} ---`);
+                                                // Use the routeMatch[1] as sender (e.g., Alice, BOB, etc.)
+                                                addSystemMessage(`--- Supervisor routing to: ${routeMatch[1]} - ${routeMatch[2]} ---`, routeMatch[1].toLowerCase());
                                             }
                                         }
                                     }
@@ -474,7 +441,7 @@ $(document).ready(function() {
                             }
                             addSystemMessage('--- Follow-up Conversation Complete ---');
                             isChatStreamActive = false; // Reset flag on stream completion
-                            saveConversationToLocalStorage(); // Save conversation after follow-up
+                            saveConversationToJson(); // Save conversation after follow-up
                             return;
                         }
                         buffer += decoder.decode(value, { stream: true });
@@ -510,9 +477,9 @@ $(document).ready(function() {
                                         const routeMatch = jsonData.content.match(/ROUTE_TO: (\w+) - (.*)/);
                                         if (routeMatch && routeMatch[1] && routeMatch[2]) {
                                             if (routeMatch[1] === "FINISH") {
-                                                addSystemMessage(`--- Supervisor: ${routeMatch[2]} ---`);
+                                                addSystemMessage(`--- Supervisor: ${routeMatch[2]} ---`, 'supervisor');
                                             } else {
-                                                addSystemMessage(`--- Supervisor routing to: ${routeMatch[1]} - ${routeMatch[2]} ---`);
+                                                addSystemMessage(`--- Supervisor routing to: ${routeMatch[1]} - ${routeMatch[2]} ---`, routeMatch[1].toLowerCase());
                                             }
                                         }
                                     }
