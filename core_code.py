@@ -16,7 +16,7 @@ class AgentTask:
     created_at: float = field(default_factory=time.time)
     completed_at: Optional[float] = None
     collaboration_partners: List[str] = field(default_factory=list)
-    priority: int = 1
+    priority: int = 1   
     complexity_score: float = 0.0
 
 class ThreadSafeState:
@@ -132,7 +132,7 @@ model_rina = ChatOllama(model="llama3-2.3b:latest")
 model_emilia = ChatOllama(model="llama3.2:3b")
 model_shirokatsuya = ChatOllama(model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M")
 # model_coordinator = ChatOllama(model="llama3.2:3b", temperature=0.5)
-model_synthesizer = ChatOllama(model="hf.co/unsloth/Phi-4-mini-reasoning-GGUF:Q4_K_M")  # New synthesis model
+model_synthesizer = ChatOllama(model="hf.co/unsloth/gemma-3n-E2B-it-GGUF:Q4_K_M")  # New synthesis model
 
 class Agent:
     def __init__(self, name: str, model, description: str, expertise: List[str], tools=None):

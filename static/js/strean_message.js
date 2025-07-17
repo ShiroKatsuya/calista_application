@@ -15,10 +15,94 @@ function renderFinalResultBubble(result) {
     `;
 }
 
+// New helper function to render markdown *inside* the <think> blocks
+// This function will *not* look for <think> tags itself, and will assume its input is already raw text that needs escaping and markdown processing.
+function _renderThinkContentMarkdown(rawText) {
+    let html = escapeHtml(rawText); // Escape the raw text first
+
+    // Store code blocks and replace with placeholders
+    const codeBlocks = [];
+    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+        const placeholder = `CODE_BLOCK_PLACEHOLDER_${codeBlocks.length}__`;
+        codeBlocks.push({ lang: lang, code: code });
+        return placeholder;
+    });
+
+    // Horizontal Rule
+    html = html.replace(/^[\s\*\-_]{3,}\s*$/gm, '<hr class="my-2 border-t-1 border-gray-500">');
+
+    // Headers (H1-H6) - use smaller sizes for nested content
+    html = html.replace(/^###### (.*)$/gm, '<h6 class="text-xs font-semibold mt-2 mb-1 text-gray-300">$1</h6>');
+    html = html.replace(/^##### (.*)$/gm, '<h5 class="text-sm font-semibold mt-2 mb-1 text-gray-300">$1</h5>');
+    html = html.replace(/^#### (.*)$/gm, '<h4 class="text-base font-semibold mt-2 mb-1 text-gray-300">$1</h4>');
+    html = html.replace(/^### (.*)$/gm, '<h3 class="text-lg font-semibold mt-2 mb-2 text-gray-200">$1</h3>');
+    html = html.replace(/^## (.*)$/gm, '<h2 class="text-xl font-bold mt-3 mb-2 text-gray-100">$1</h2>');
+    html = html.replace(/^# (.*)$/gm, '<h1 class="text-2xl font-bold mt-4 mb-3 text-white">$1</h1>');
+
+    // Blockquotes
+    html = html.replace(/^> (.*)$/gm, '<blockquote class="border-l-3 border-blue-400 pl-3 py-0.5 italic text-gray-300 my-2">$1</blockquote>');
+
+    // Lists (unordered and ordered)
+    html = html.replace(/\n(?= *- |^\d+\. )/g, '@@NEWLINE_HOLDER_INNER@@');
+    // Unordered lists
+    html = html.replace(/^- (.*)$/gm, '<li class="mb-0.5">$1</li>');
+    // Ordered lists
+    html = html.replace(/^(\d+)\. (.*)$/gm, '<li class="mb-0.5">$1. $2</li>');
+    // Wrap consecutive <li> elements into a single <ul> with list-style: none
+    html = html.replace(/((?:<li class="mb-0.5">.*?<\/li>\n?)+)/g, (match, listItems) => {
+        listItems = listItems.trim();
+        return `<ul class="list-none pl-4 mb-1 text-gray-200">${listItems}</ul>`;
+    });
+    html = html.replace(/@@NEWLINE_HOLDER_INNER@@/g, '<br>');
+
+    // Links
+    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-300 hover:underline">$1</a>');
+
+    // Images (less likely in thought blocks, but good to support)
+    html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="max-w-full h-auto rounded my-2 shadow">');
+
+    // Math Notation (basic: inline $...$ and block $$...$$)
+    html = html.replace(/\$\$(.*?)\$\$/gs, '<div class="math-block text-center my-2 p-2 bg-gray-700 rounded-md overflow-x-auto text-yellow-300 text-xs">$1</div>');
+    html = html.replace(/\$(.*?)\$/g, '<span class="math-inline bg-gray-700 text-yellow-300 px-0.5 py-0 rounded-sm text-xs">$1</span>');
+
+    // Inline code
+    html = html.replace(/`(.*?)`/g, '<code class="bg-gray-600 text-gray-100 px-0.5 py-0 rounded-sm text-xs font-mono">$1</code>');
+
+    // Newlines to <br>
+    html = html.replace(/\n/g, '<br>');
+
+    // Basic bold
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Basic italics
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // Restore code blocks (for thought content)
+    for (let i = 0; i < codeBlocks.length; i++) {
+        const placeholder = `CODE_BLOCK_PLACEHOLDER_${i}__`;
+        const block = codeBlocks[i];
+        const languageClass = block.lang ? `language-${block.lang}` : 'language-markup';
+        const escapedCode = escapeHtml(block.code); // Ensure code content is escaped
+        const codeHtml = `<pre class="line-numbers text-xs p-3 overflow-x-auto"><code class="${languageClass}">${escapedCode}</code></pre>`;
+        html = html.replace(placeholder, codeHtml);
+    }
+    return html;
+}
+
 // Advanced Markdown to HTML converter with Tailwind classes
 function renderMarkdown(markdownText) {
-    // Escape HTML entities first to prevent unwanted HTML rendering
-    let html = escapeHtml(markdownText);
+    // 1. First, handle <think> blocks.
+    // We'll replace them with placeholders, and for their content,
+    // we'll use the _renderThinkContentMarkdown helper.
+    const thinkBlockData = [];
+    const tempHtml = markdownText.replace(/<think>([\s\S]*?)<\/think>/g, (match, content) => {
+        const placeholder = `__THINK_BLOCK_${thinkBlockData.length}__`;
+        thinkBlockData.push(content);
+        return placeholder;
+    });
+
+    // 2. Now, escape HTML for the rest of the text that's not part of <think>
+    let html = escapeHtml(tempHtml);
 
     // Store code blocks and replace with placeholders
     const codeBlocks = [];
@@ -105,8 +189,18 @@ function renderMarkdown(markdownText) {
         const placeholder = `CODE_BLOCK_PLACEHOLDER_${i}__`;
         const block = codeBlocks[i];
         const languageClass = block.lang ? `language-${block.lang}` : 'language-markup';
-        const codeHtml = `<pre id="code-block-wrapper" class="line-numbers text-sm p-5 overflow-x-auto"><code id="code-content" class="${languageClass}">${block.code}</code></pre>`;
+        const escapedCode = escapeHtml(block.code); // Make sure code content is escaped
+        const codeHtml = `<pre id="code-block-wrapper" class="line-numbers text-sm p-5 overflow-x-auto"><code id="code-content" class="${languageClass}">${escapedCode}</code></pre>`;
         html = html.replace(placeholder, codeHtml);
+    }
+
+    // 4. Finally, restore the <think> blocks and recursively render their content
+    for (let i = 0; i < thinkBlockData.length; i++) {
+        const placeholder = `__THINK_BLOCK_${i}__`;
+        // Recursively render markdown for the content inside <think>
+        const renderedThinkContent = _renderThinkContentMarkdown(thinkBlockData[i]);
+        const thinkHtml = `<details class="thought-process"><summary class="thought-process-summary text-gray-400 hover:text-blue-400 cursor-pointer font-semibold mb-2">Thought Process</summary><div class="thought-process-content p-3 bg-gray-700 rounded-md mt-2">${renderedThinkContent}</div></details>`;
+        html = html.replace(placeholder, thinkHtml);
     }
 
     return html;
