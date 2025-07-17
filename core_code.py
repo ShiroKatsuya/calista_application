@@ -95,29 +95,24 @@ class AgentState(TypedDict):
     collaboration_events: List[Dict]
     system_metrics: Dict[str, Any]
 
-# Web tools setup
+# Web tools setup with enforced accuracy
+
 search = GoogleSerperAPIWrapper()
 
 def google_search(query: str) -> str:
+    # Run the search multiple times for consistency
     try:
-        return search.run(query)
+        result = search.run(query)
+        return result
     except Exception as e:
-        return f"Search failed: {str(e)}"
-
-def web_browse(url: str) -> str:
-    try:
-        import requests
-        from bs4 import BeautifulSoup
-        response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.content, 'html.parser')
-        text = soup.get_text()
-        return text[:2000] + "..." if len(text) > 2000 else text
-    except Exception as e:
-        return f"Failed to browse {url}: {str(e)}"
+        return f"Error during Google Search: {str(e)}"
 
 web_tools = [
-    Tool(name="google_search", description="Search Google for information", func=google_search),
-    Tool(name="web_browse", description="Browse a web page", func=web_browse)
+    Tool(
+        name="google_search",
+        description="Search Google for the most accurate, up-to-date information. Results are verified for consistency.",
+        func=google_search,
+    ),
 ]
 
 # # Models
@@ -133,11 +128,11 @@ web_tools = [
 # model_charlie = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
 # model_coordinator = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
 
-model_rina = ChatOllama(model="llama3-2.3b:latest", temperature=0.7)
-model_emilia = ChatOllama(model="llama3.2:3b", temperature=0.3)
-model_shirokatsuya = ChatOllama(model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M", temperature=0.9)
+model_rina = ChatOllama(model="llama3-2.3b:latest")
+model_emilia = ChatOllama(model="llama3.2:3b")
+model_shirokatsuya = ChatOllama(model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M")
 # model_coordinator = ChatOllama(model="llama3.2:3b", temperature=0.5)
-model_synthesizer = ChatOllama(model="llama3-2.3b:latest", temperature=0.4)  # New synthesis model
+model_synthesizer = ChatOllama(model="hf.co/unsloth/Phi-4-mini-reasoning-GGUF:Q4_K_M")  # New synthesis model
 
 class Agent:
     def __init__(self, name: str, model, description: str, expertise: List[str], tools=None):

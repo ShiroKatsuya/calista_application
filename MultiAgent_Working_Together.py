@@ -250,7 +250,6 @@ Permintaan Pengguna: {user_input}
 
 Instruksi:
 - Analisis, bandingkan, dan integrasikan semua kontribusi agen secara cermat.
-- Selesaikan kontradiksi, lengkapi detail yang kurang, dan pastikan jawaban lengkap serta akurat.
 - JANGAN sebut atau identifikasi nama/role agen manapun.
 - JANGAN membuat daftar kontribusi.
 - Tulis satu jawaban terpadu, terstruktur baik, jelas, mendalam, dan bernilai bagi pengguna.
@@ -415,7 +414,24 @@ def run_enhanced_agent_system_stream(user_input: str, use_all_agents: bool = Tru
     import re
     # --- Streaming output Synthesizer (Bahasa Indonesia) ---
     synthesis_prompt = PromptTemplate.from_template(
-        """Anda adalah SYNTHESIZER, seorang ahli dalam membuat satu jawaban terpadu, berkualitas tinggi dari berbagai kontribusi agen.\n\nKontribusi Agen (mentah, jangan sebut nama agen):\n{agent_outputs}\n\nPermintaan Pengguna: {user_input}\n\nInstruksi:\n- Analisis, bandingkan, dan integrasikan semua kontribusi agen secara cermat.\n- Selesaikan kontradiksi, lengkapi detail yang kurang, dan pastikan jawaban lengkap serta akurat.\n- JANGAN sebut atau identifikasi nama/role agen manapun.\n- JANGAN membuat daftar kontribusi.\n- Tulis satu jawaban terpadu, terstruktur baik, jelas, mendalam, dan bernilai bagi pengguna.\n- Hasil akhir harus terasa seperti ditulis satu pakar terbaik, bukan tim.\n- Selalu berikan jawaban terbaik, maksimalkan wawasan dan manfaat.\n\nJawaban Sintesis Terpadu:"""
+       
+        """Anda adalah SYNTHESIZER, seorang ahli dalam membuat satu jawaban terpadu, berkualitas tinggi dari berbagai kontribusi agen.
+
+            Kontribusi Agen (mentah, jangan sebut nama agen):
+            {agent_outputs}
+
+            Permintaan Pengguna: {user_input}
+
+            Instruksi:
+            - Analisis, bandingkan, dan integrasikan semua kontribusi agen secara cermat.
+            - JANGAN sebut atau identifikasi nama/role agen manapun.
+            - JANGAN membuat daftar kontribusi.
+            - Tulis satu jawaban terpadu, terstruktur baik, jelas, mendalam, dan bernilai bagi pengguna.
+            - Hasil akhir harus terasa seperti ditulis satu pakar terbaik, bukan tim.
+            - Selalu berikan jawaban terbaik, maksimalkan wawasan dan manfaat.
+
+            Jawaban Sintesis Terpadu:"""
+
     )
     agent_outputs_text = "\n".join([
         output for name, output in state["agent_outputs"].items() if name != "Synthesizer"

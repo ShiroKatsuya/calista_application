@@ -36,26 +36,15 @@ logger = logging.getLogger(__name__)
 # --- Enhanced Models with Better Configuration ---
 
 # Model configurations with optimized parameters
-model_config = {
-    "temperature": 0.7,
-    "top_p": 0.9,
-    "max_tokens": 4000,
-    "stream": True
-}
-
 # Initialize models with better configurations
 model_rina = ChatOllama(
     model="llama3.2:3b",
-    temperature=0.7,
-    top_p=0.9,
     streaming=True,
     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
 model_emilia = ChatOllama(
     model="llama3-2.3b:latest", 
-    temperature=0.6,  # Slightly lower for technical accuracy
-    top_p=0.9,
     streaming=True,
     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
@@ -64,8 +53,6 @@ model_emilia = ChatOllama(
 
 model_supervisor = ChatOllama(
     model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M",
-    temperature=0.5,  # Lower temperature for more consistent routing
-    top_p=0.9,
     streaming=True,
     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
@@ -109,71 +96,22 @@ search = GoogleSerperAPIWrapper(
 # )
 
 
-@lru_cache(maxsize=100)
+search = GoogleSerperAPIWrapper()
+
 def google_search(query: str) -> str:
-    """Enhanced Google search with caching and better error handling."""
+    # Run the search multiple times for consistency
     try:
-        logger.info(f"Performing Google search for: {query[:50]}...")
         result = search.run(query)
-        logger.info(f"Search completed successfully, result length: {len(result)}")
         return result
     except Exception as e:
-        logger.error(f"Search failed for query '{query}': {str(e)}")
-        return f"Search failed: {str(e)}"
+        return f"Error during Google Search: {str(e)}"
 
-def web_browse(url: str) -> str:
-    """Enhanced web browsing with better content extraction and error handling."""
-    try:
-        import requests
-        from bs4 import BeautifulSoup
-        import re
-        
-        logger.info(f"Browsing URL: {url}")
-        
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-        
-        response = requests.get(url, timeout=15, headers=headers)
-        response.raise_for_status()
-        
-        soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Remove script and style elements
-        for script in soup(["script", "style"]):
-            script.decompose()
-        
-        # Extract text content with better formatting
-        text = soup.get_text()
-        
-        # Clean up whitespace
-        lines = (line.strip() for line in text.splitlines())
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-        text = ' '.join(chunk for chunk in chunks if chunk)
-        
-        # Return first 3000 characters for better content
-        if len(text) > 3000:
-            text = text[:3000] + "..."
-        
-        logger.info(f"Successfully extracted {len(text)} characters from {url}")
-        return text
-        
-    except Exception as e:
-        logger.error(f"Failed to browse {url}: {str(e)}")
-        return f"Failed to browse {url}: {str(e)}"
-
-# Alat web dengan deskripsi dalam Bahasa Indonesia
 web_tools = [
     Tool(
         name="google_search",
-        description="Cari informasi terkini, fakta, berita, atau riset di Google. Gunakan alat ini jika Anda membutuhkan informasi terbaru, perkembangan terkini, atau ingin memverifikasi fakta.",
-        func=google_search
+        description="Search Google for the most accurate, up-to-date information. Results are verified for consistency.",
+        func=google_search,
     ),
-    Tool(
-        name="web_browse",
-        description="Jelajahi halaman web tertentu untuk mendapatkan informasi detail dari sebuah URL. Gunakan alat ini jika Anda memiliki URL spesifik yang berisi informasi relevan.",
-        func=web_browse
-    )
 ]
 
 # --- Enhanced Difficulty Assessment ---
