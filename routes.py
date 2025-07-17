@@ -1,12 +1,13 @@
 from flask import render_template, request, jsonify, Response, stream_with_context, session, redirect, url_for
 from app import app
 from MultiAgent import app as multi_agent_app  # Import the Langchain graph app
-from MultiAgent import model_alice, model_bob, model_supervisor, alice_simple_prompt, bob_simple_prompt, supervisor_routing_prompt, is_difficult_question, web_tools, alice_tool_executor, bob_tool_executor
+from MultiAgent import model_rina, model_emilia, model_supervisor, rina_simple_prompt, emilia_simple_prompt, supervisor_routing_prompt, is_difficult_question, web_tools, rina_tool_executor, emilia_tool_executor
 from langchain.schema import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 import json
 import os
 from datetime import datetime
+import re
 
 
 
@@ -142,14 +143,14 @@ def chat_stream():
             
             if current_agent == "Supervisor":
                 # Supervisor makes decision
-                alice_workload = session.get('alice_workload', 0)
-                bob_workload = session.get('bob_workload', 0)
+                rina_workload = session.get('rina_workload', 0)
+                emilia_workload = session.get('emilia_workload', 0)
                 supervisor_input = {
                     "messages": conversation_messages,
                     "input": conversation_messages[-1].content,
-                    "members": "Alice, Bob",
-                    "alice_workload": alice_workload,
-                    "bob_workload": bob_workload,
+                    "members": "Rina, Emilia",
+                    "rina_workload": rina_workload,
+                    "emilia_workload": emilia_workload,
                 }
                 
                 # Stream supervisor's decision
@@ -157,161 +158,94 @@ def chat_stream():
                 for chunk in model_supervisor.stream(supervisor_routing_prompt.format_messages(**supervisor_input)):
                     if hasattr(chunk, 'content') and chunk.content:
                         full_decision += chunk.content
-                        yield f"data: {json.dumps({'sender': 'Supervisor', 'content': chunk.content, 'type': 'chunk'})}\n\n"
+                        # Do not yield chunk directly, as it might contain <think> tags
+                        # yield f"data: {json.dumps({'sender': 'Supervisor', 'content': chunk.content, 'type': 'chunk'})}\n\n"
                 
-                # Send complete message for supervisor
-                yield f"data: {json.dumps({'sender': 'Supervisor', 'content': full_decision, 'type': 'complete'})}\n\n"
+                # Clean the full_decision to remove <think>...</think> tags
+                cleaned_content = re.sub(r"<think>.*?</think>\n?", "", full_decision, flags=re.DOTALL).strip()
                 
-                # Add supervisor message to conversation
-                supervisor_message = AIMessage(content=full_decision, name="Supervisor")
+                # Send complete message for supervisor with cleaned content
+                yield f"data: {json.dumps({'sender': 'Supervisor', 'content': cleaned_content, 'type': 'complete'})}\n\n"
+                
+                # Add supervisor message to conversation (using cleaned content)
+                supervisor_message = AIMessage(content=cleaned_content, name="Supervisor")
                 conversation_messages.append(supervisor_message)
                 # Update session with conversation history
                 session['conversation_messages'] = conversation_messages
                 
                 # Parse supervisor's decision
                 def parse_supervisor_decision(decision):
-                    decision_lower = decision.lower()
-                    if "route_to:" in decision_lower:
-                        for member in ["Alice", "Bob"]:
-                            if member.lower() in decision_lower:
-                                return member
-                    if "finish" in decision_lower:
+                    match = re.search(r"route_to:\s*(rina|emilia)", decision, re.IGNORECASE)
+                    if match:
+                        return match.group(1).capitalize()
+                    if "finish" in decision.lower():
                         return "FINISH"
-                    for member in ["Alice", "Bob"]:
-                        if member.lower() in decision_lower:
-                            return member
-                    return "Alice"  # Default fallback
+                    return "Rina"  # Default fallback
 
                 next_agent_name = parse_supervisor_decision(full_decision)
-                if next_agent_name in ["Alice", "Bob"]:
+                if next_agent_name in ["Rina", "Emilia"]:
                     current_agent = next_agent_name
                     # Update workload in session
-                    if current_agent == "Alice":
-                        session['alice_workload'] = alice_workload + 1
-                    elif current_agent == "Bob":
-                        session['bob_workload'] = bob_workload + 1
+                    if current_agent == "Rina":
+                        session['rina_workload'] = rina_workload + 1
+                    elif current_agent == "Emilia":
+                        session['emilia_workload'] = emilia_workload + 1
                     # Send routing message
-                    yield f"data: {{'sender': 'Supervisor', 'content': 'ROUTE_TO: {next_agent_name} - Routing to {next_agent_name}', 'type': 'complete'}}\n\n"
+                    yield f"data: {json.dumps({'sender': 'Supervisor', 'content': f'ROUTE_TO: {next_agent_name} - Routing to {next_agent_name}', 'type': 'complete'})}\n\n"
                     continue
                 elif next_agent_name == "FINISH":
-                    yield f"data: {{'sender': 'Supervisor', 'content': 'ROUTE_TO: FINISH - Conversation complete', 'type': 'complete'}}\n\n"
+                    yield f"data: {json.dumps({'sender': 'Supervisor', 'content': 'ROUTE_TO: FINISH - Conversation complete', 'type': 'complete'})}\n\n"
                     break
                 else:
                     # Default to finish if no clear decision
-                    yield f"data: {{'sender': 'Supervisor', 'content': 'ROUTE_TO: FINISH - Default finish', 'type': 'complete'}}\n\n"
+                    yield f"data: {json.dumps({'sender': 'Supervisor', 'content': 'ROUTE_TO: FINISH - Default finish', 'type': 'complete'})}\n\n"
                     break
             
-            elif current_agent in ["Alice", "Bob"]:
+            elif current_agent in ["Rina", "Emilia"]:
                 # Agent responds to the current question
                 current_question = conversation_messages[-1].content
                 chat_history = conversation_messages[:-1]
-                
-                # Determine if this is a difficult question
-                use_tools = is_difficult_question(current_question)
-                
-                if current_agent == "Alice":
-                    print(f"[DEBUG] Alice starting response for question: {current_question[:50]}...")
-                    print(f"[DEBUG] Alice model: {model_alice}")
-                    full_content = ""  # Initialize full_content for Alice
-                    if use_tools:
-                        print("[DEBUG] Alice using tools")
-                        # Use tool-enabled agent
-                        try:
-                            alice_tool_runnable = alice_tool_executor | StrOutputParser() # Assuming alice_tool_executor can be chained with StrOutputParser for streaming
-                            for chunk in alice_tool_runnable.stream({
-                                "input": current_question,
-                                "chat_history": chat_history
-                            }):
-                                if chunk:
-                                    full_content += chunk
-                                    yield f"data: {json.dumps({'sender': 'Alice', 'content': chunk, 'type': 'chunk'})}\n\n"
-                            # After streaming all chunks, send a complete message (optional, but good for clarity)
-                            # yield f"data: {json.dumps({'sender': 'Alice', 'content': full_content, 'type': 'complete'})}\n\n"
-                        except Exception as e:
-                            print(f"[DEBUG] Alice tool execution failed: {str(e)}")
-                            # Fallback to simple agent with streaming
-                            alice_simple_runnable = alice_simple_prompt | model_alice | StrOutputParser()
-                            for chunk in alice_simple_runnable.stream({
-                                "input": current_question,
-                                "chat_history": conversation_messages,
-                            }):
-                                if chunk:
-                                    full_content += chunk
-                                    yield f"data: {json.dumps({'sender': 'Alice', 'content': chunk, 'type': 'chunk'})}\n\n"
-                            # Send complete message
-                            # yield f"data: {json.dumps({'sender': 'Alice', 'content': full_content, 'type': 'complete'})}\n\n"
-                    else:
-                        print("[DEBUG] Alice using simple streaming")
-                        # Use simple agent with streaming
-                        alice_simple_runnable = alice_simple_prompt | model_alice | StrOutputParser()
-                        chunk_count = 0
-                        for chunk in alice_simple_runnable.stream({
-                            "input": current_question,
-                            "chat_history": conversation_messages,
-                        }):
-                            if chunk:
-                                chunk_count += 1
-                                full_content += chunk
-                                yield f"data: {json.dumps({'sender': 'Alice', 'content': chunk, 'type': 'chunk'})}\n\n"
-                        print(f"[DEBUG] Alice streamed {chunk_count} chunks, total length: {len(full_content)}")
-                        # Send complete message
-                        # yield f"data: {json.dumps({'sender': 'Alice', 'content': full_content, 'type': 'complete'})}\n\n"
-                
-                elif current_agent == "Bob":
-                    print(f"[DEBUG] Bob starting response for question: {current_question[:50]}...")
-                    print(f"[DEBUG] Bob model: {model_bob}")
-                    full_content = ""  # Initialize full_content for Bob
-                    if use_tools:
-                        print("[DEBUG] Bob using tools")
-                        # Use tool-enabled agent with streaming
-                        try:
-                            bob_tool_runnable = bob_tool_executor | StrOutputParser() # Assuming bob_tool_executor can be chained with StrOutputParser for streaming
-                            for chunk in bob_tool_runnable.stream({
-                                "input": current_question,
-                                "chat_history": chat_history
-                            }):
-                                if chunk:
-                                    full_content += chunk
-                                    yield f"data: {json.dumps({'sender': 'Bob', 'content': chunk, 'type': 'chunk'})}\n\n"
-                            # After streaming all chunks, send a complete message (optional, but good for clarity)
-                            # yield f"data: {json.dumps({'sender': 'Bob', 'content': full_content, 'type': 'complete'})}\n\n"
-                        except Exception as e:
-                            print(f"[DEBUG] Bob tool execution failed: {str(e)}")
-                            # Fallback to simple agent with streaming
-                            bob_simple_runnable = bob_simple_prompt | model_bob | StrOutputParser()
-                            for chunk in bob_simple_runnable.stream({
-                                "input": current_question,
-                                "chat_history": conversation_messages,
-                            }):
-                                if chunk:
-                                    full_content += chunk
-                                    yield f"data: {json.dumps({'sender': 'Bob', 'content': chunk, 'type': 'chunk'})}\n\n"
-                            # Send complete message
-                            # yield f"data: {json.dumps({'sender': 'Bob', 'content': full_content, 'type': 'complete'})}\n\n"
-                    else:
-                        print("[DEBUG] Bob using simple streaming")
-                        # Use simple agent with streaming
-                        bob_simple_runnable = bob_simple_prompt | model_bob | StrOutputParser()
-                        chunk_count = 0
-                        for chunk in bob_simple_runnable.stream({
-                            "input": current_question,
-                            "chat_history": conversation_messages,
-                        }):
-                            if chunk:
-                                chunk_count += 1
-                                full_content += chunk
-                                yield f"data: {json.dumps({'sender': 'Bob', 'content': chunk, 'type': 'chunk'})}\n\n"
-                        print(f"[DEBUG] Bob streamed {chunk_count} chunks, total length: {len(full_content)}")
-                        # Send complete message
-                        # yield f"data: {json.dumps({'sender': 'Bob', 'content': full_content, 'type': 'complete'})}\n\n"
-                
-                # Add agent response to conversation
-                agent_message = AIMessage(content=full_content, name=current_agent)
-                conversation_messages.append(agent_message)
-                # Update session with conversation history
-                session['conversation_messages'] = conversation_messages
-                
-                # Route back to supervisor for next decision
+                difficulty_analysis = is_difficult_question(current_question)
+                use_tools = difficulty_analysis["use_tools"]
+                if current_agent in ["Rina", "Emilia"]:
+                    use_tools = True
+                full_content = ""
+                try:
+                    executor_to_use = rina_tool_executor if current_agent == "Rina" else emilia_tool_executor
+                    simple_runnable_to_use = rina_simple_prompt | model_rina | StrOutputParser() if current_agent == "Rina" else emilia_simple_prompt | model_emilia | StrOutputParser()
+                    # Use new agent_node streaming logic
+                    from MultiAgent import agent_node
+                    agent_stream = agent_node(
+                        {"messages": conversation_messages, "metadata": {}},
+                        simple_runnable_to_use,
+                        executor_to_use,
+                        current_agent
+                    )
+                    for item in agent_stream:
+                        if item["type"] == "chunk":
+                            full_content += item["content"]
+                            yield f"data: {json.dumps({'sender': current_agent, 'content': item['content'], 'type': 'chunk'})}\n\n"
+                        elif item["type"] == "system":
+                            yield f"data: {json.dumps({'sender': item['sender'], 'content': item['content'], 'type': 'system'})}\n\n"
+                        elif item["type"] == "complete":
+                            yield f"data: {json.dumps({'sender': current_agent, 'content': full_content, 'type': 'complete'})}\n\n"
+                    # Add agent response to conversation
+                    agent_message = AIMessage(content=full_content, name=current_agent)
+                    conversation_messages.append(agent_message)
+                    session['conversation_messages'] = conversation_messages
+                except Exception as e:
+                    print(f"[DEBUG] {current_agent} tool execution failed: {str(e)}. Falling back to simple response.")
+                    for chunk in simple_runnable_to_use.stream({
+                        "input": current_question,
+                        "chat_history": conversation_messages,
+                    }):
+                        if chunk:
+                            full_content += chunk
+                            yield f"data: {json.dumps({'sender': current_agent, 'content': chunk, 'type': 'chunk'})}\n\n"
+                    yield f"data: {json.dumps({'sender': current_agent, 'content': full_content, 'type': 'complete'})}\n\n"
+                    agent_message = AIMessage(content=full_content, name=current_agent)
+                    conversation_messages.append(agent_message)
+                    session['conversation_messages'] = conversation_messages
                 current_agent = "Supervisor"
         
         # Send end stream signal

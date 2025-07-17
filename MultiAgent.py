@@ -9,6 +9,7 @@ import logging
 from typing import Annotated, TypedDict, Union, List, Dict, Optional, Any
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
+import re # Added this import
 
 from langchain_core.agents import AgentFinish
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -43,30 +44,30 @@ model_config = {
 }
 
 # Initialize models with better configurations
-model_alice = ChatOllama(
+model_rina = ChatOllama(
     model="llama3.2:3b",
     temperature=0.7,
     top_p=0.9,
     streaming=True,
-    base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
+    # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
-model_bob = ChatOllama(
+model_emilia = ChatOllama(
     model="llama3-2.3b:latest", 
     temperature=0.6,  # Slightly lower for technical accuracy
     top_p=0.9,
     streaming=True,
-    base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
+    # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
 
 
 model_supervisor = ChatOllama(
-    model="llama3.2-3b-grpo:latest",
+    model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M",
     temperature=0.5,  # Lower temperature for more consistent routing
     top_p=0.9,
     streaming=True,
-    base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
+    # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
 # import os
@@ -86,14 +87,14 @@ search = GoogleSerperAPIWrapper(
     serper_api_key=SERPER_API_KEY
 )
 
-# model_alice = ChatGoogleGenerativeAI(
+# model_rina = ChatGoogleGenerativeAI(
 #     model="gemini-2.5-flash-preview-04-17",
 #     temperature=0.7,
 #     top_p=0.9,
 #     google_api_key=GOOGLE_API_KEY
 # )
 
-# model_bob = ChatGoogleGenerativeAI(
+# model_emilia = ChatGoogleGenerativeAI(
 #     model="gemini-2.5-flash-preview-04-17", 
 #     temperature=0.6, 
 #     top_p=0.9,
@@ -161,16 +162,16 @@ def web_browse(url: str) -> str:
         logger.error(f"Failed to browse {url}: {str(e)}")
         return f"Failed to browse {url}: {str(e)}"
 
-# Enhanced web tools with better descriptions
+# Alat web dengan deskripsi dalam Bahasa Indonesia
 web_tools = [
     Tool(
         name="google_search",
-        description="Search Google for current information, facts, news, or research. Use when you need up-to-date information, recent developments, or to verify facts.",
+        description="Cari informasi terkini, fakta, berita, atau riset di Google. Gunakan alat ini jika Anda membutuhkan informasi terbaru, perkembangan terkini, atau ingin memverifikasi fakta.",
         func=google_search
     ),
     Tool(
         name="web_browse",
-        description="Browse a specific web page to get detailed information from a URL. Use when you have a specific URL that contains relevant information.",
+        description="Jelajahi halaman web tertentu untuk mendapatkan informasi detail dari sebuah URL. Gunakan alat ini jika Anda memiliki URL spesifik yang berisi informasi relevan.",
         func=web_browse
     )
 ]
@@ -231,150 +232,102 @@ def is_difficult_question(question: str) -> Dict[str, Union[bool, str, List[str]
 
 # --- Enhanced Agent Prompts ---
 
-# Alice: Enhanced General Knowledge Agent
-alice_simple_prompt = PromptTemplate.from_template(
-    """You are Alice, a General Knowledge Agent with PhD-level expertise across multiple disciplines. Your knowledge spans science, technology, humanities, arts, business, and more. You excel at providing comprehensive, well-reasoned responses that draw from diverse fields of knowledge.
-
-IMPORTANT GUIDELINES:
-- Provide accurate, well-structured responses
-- Use clear, engaging language
-- Include relevant examples and analogies
-- Connect concepts across disciplines when relevant
-- Acknowledge limitations when appropriate
-- Focus on depth, accuracy, and interdisciplinary connections
-
-Conversation History:
+# Rina: Enhanced General Knowledge Agent
+rina_simple_prompt = PromptTemplate.from_template(
+    """
+Riwayat Percakapan:
 {chat_history}
 
-User Request:
+Permintaan Pengguna:
 {input}
 
-Your response:"""
+Tanggapan Anda (jawab dalam Bahasa Indonesia):"""
 )
 
-alice_tool_prompt = ChatPromptTemplate.from_messages([
+rina_tool_prompt = ChatPromptTemplate.from_messages([
     ("system", 
-     """You are Alice, a General Knowledge Agent with PhD-level expertise across multiple disciplines. 
-You have comprehensive knowledge spanning science, technology, humanities, arts, business, and more.
+     """
+Saat menggunakan alat:
+- Cari informasi yang paling relevan dan terbaru
+- Verifikasi fakta dari beberapa sumber jika memungkinkan
+- Sintesis informasi dari berbagai sumber
+- Berikan konteks dan jelaskan signifikansi temuan
 
-RESPONSIBILITIES:
-- Use web search tools to research current information and verify facts
-- Provide thorough, well-reasoned responses with proper citations
-- Demonstrate deep understanding and interdisciplinary thinking
-- Ensure accuracy by cross-referencing information when possible
-- Present information in a clear, engaging manner
-
-When using tools:
-- Search for the most relevant and current information
-- Verify facts from multiple sources when possible
-- Synthesize information from different sources
-- Provide context and explain the significance of findings"""),
+Selalu balas dalam Bahasa Indonesia."""),
     MessagesPlaceholder(variable_name="chat_history"),
     ("user", "{input}"),
     MessagesPlaceholder(variable_name="agent_scratchpad")
 ])
 
-# Bob: Enhanced Technical Implementation Agent
-bob_simple_prompt = PromptTemplate.from_template(
-    """You are Bob, a Technical Implementation Agent with deep expertise in software development, system architecture, and technical problem-solving.
+# Emilia: Enhanced Technical Implementation Agent
+emilia_simple_prompt = PromptTemplate.from_template(
+    """
 
-EXPERTISE AREAS:
-- Programming languages and frameworks
-- System design and architecture
-- Database design and optimization
-- API development and integration
-- DevOps and deployment
-- Performance optimization
-- Security best practices
-
-RESPONSE GUIDELINES:
-- Provide practical, implementable solutions
-- Include code examples when relevant
-- Explain technical concepts clearly
-- Consider scalability and maintainability
-- Address potential issues and edge cases
-- Suggest best practices and alternatives
-
-Conversation History:
+Riwayat Percakapan:
 {chat_history}
 
-User Request:
+Permintaan Pengguna:
 {input}
 
-Your response:"""
+Tanggapan Anda (jawab dalam Bahasa Indonesia):"""
 )
 
-bob_tool_prompt = ChatPromptTemplate.from_messages([
+emilia_tool_prompt = ChatPromptTemplate.from_messages([
     ("system", 
-     """You are Bob, a Technical Implementation Agent with access to web search tools.
+     """
+Saat menggunakan alat:
+- Cari dokumentasi resmi dan spesifikasi terkait
+- Cari praktik terbaik dan rekomendasi dari komunitas
+- Verifikasi kompatibilitas versi dan persyaratan
+- Temukan contoh kerja dan tutorial
 
-RESPONSIBILITIES:
-- Research technical specifications and best practices
-- Troubleshoot implementation challenges
-- Provide accurate, efficient, and well-structured technical solutions
-- Stay current with latest technologies and frameworks
-- Verify technical information from authoritative sources
-
-When using tools:
-- Search for official documentation and specifications
-- Look for best practices and community recommendations
-- Verify version compatibility and requirements
-- Find working examples and tutorials"""),
+Selalu balas dalam Bahasa Indonesia."""),
     MessagesPlaceholder(variable_name="chat_history"),
     ("user", "{input}"),
     MessagesPlaceholder(variable_name="agent_scratchpad")
 ])
 
-# Enhanced Supervisor Prompt
+# Enhanced Supervisor Prompt (Bahasa Indonesia)
 supervisor_routing_prompt = ChatPromptTemplate.from_messages([
     ("system",
-     """You are an intelligent supervisor managing a team of two specialized agents:
+     """Anda adalah supervisor cerdas yang mengelola tim berisi dua agen spesialis:
 
-Alice: General Knowledge Agent with PhD-level expertise across multiple disciplines
-- Handles: Academic questions, research topics, conceptual explanations, interdisciplinary topics
-- Strengths: Deep knowledge, analytical thinking, comprehensive explanations
+PANDUAN ROUTING:
+- Rute ke Rina untuk: ["sains", "teknologi", "humaniora", "seni", "bisnis", "riset", "analisis"]
+- Rute ke Emilia untuk: ["pemrograman", "implementasi", "teknis", "arsitektur", "pengembangan"]
 
-BOB: Technical Implementation Agent specializing in software and technical solutions
-- Handles: Programming, system design, technical implementation, code-related questions
-- Strengths: Practical solutions, technical accuracy, implementation guidance
+FORMAT KEPUTUSAN:
+- Untuk merutekan: "ROUTE_TO: [NamaAgen] - [Alasan singkat dan langsung untuk routing]"
+- Untuk menyelesaikan: "FINISH - [Kesimpulan komprehensif yang merangkum poin-poin utama]"
 
-ROUTING GUIDELINES:
-- Route to Alice for: General knowledge, academic topics, research questions, conceptual explanations
-- Route to BOB for: Technical implementation, programming, system design, code-related questions
-- If both agents are suitable, prefer the agent with the lower workload (fewer tasks handled in this session)
-- Alternate agents for ambiguous or general questions to ensure fair distribution
-- Use FINISH when: All aspects of the user's question have been comprehensively addressed
+PENTING: Selalu rute ke anggota tim jika tugas memerlukan pekerjaan lanjutan. Hanya gunakan FINISH jika semua aspek sudah sepenuhnya dijawab. Pertimbangkan keahlian dan beban kerja/keseimbangan dalam keputusan Anda.
 
-DECISION FORMAT:
-- To route: "ROUTE_TO: [AgentName] - [Brief, direct reason for routing]"
-- To finish: "FINISH - [Comprehensive conclusion summarizing key points]"
+Beban Kerja Saat Ini:
+Rina: {rina_workload} tugas
+Emilia: {emilia_workload} tugas
 
-IMPORTANT: Always route to a team member if the task requires further work. Only use FINISH when all aspects are fully addressed. Consider both expertise and workload/fairness in your decision.
+Riwayat Percakapan:
+{messages}
 
-Current Workload:
-Alice: {alice_workload} tasks
-Bob: {bob_workload} tasks
-
-Conversation History:
-{messages}"""),
+Selalu balas dalam Bahasa Indonesia."""),
     ("user", "{input}"),
 ])
 
 # --- Enhanced Agent Creation ---
 
 # Create tool-calling agents with better error handling
-alice_tool_agent = create_tool_calling_agent(model_alice, web_tools, alice_tool_prompt)
-alice_tool_executor = AgentExecutor(
-    agent=alice_tool_agent, 
+rina_tool_agent = create_tool_calling_agent(model_rina, web_tools, rina_tool_prompt)
+rina_tool_executor = AgentExecutor(
+    agent=rina_tool_agent, 
     tools=web_tools, 
     verbose=False,
     max_iterations=3,
     early_stopping_method="generate"
 )
 
-bob_tool_agent = create_tool_calling_agent(model_bob, web_tools, bob_tool_prompt)
-bob_tool_executor = AgentExecutor(
-    agent=bob_tool_agent, 
+emilia_tool_agent = create_tool_calling_agent(model_emilia, web_tools, emilia_tool_prompt)
+emilia_tool_executor = AgentExecutor(
+    agent=emilia_tool_agent, 
     tools=web_tools, 
     verbose=False,
     max_iterations=3,
@@ -382,8 +335,8 @@ bob_tool_executor = AgentExecutor(
 )
 
 # Enhanced simple runnables with better streaming
-alice_simple_runnable = alice_simple_prompt | model_alice | StrOutputParser()
-bob_simple_runnable = bob_simple_prompt | model_bob | StrOutputParser()
+rina_simple_runnable = rina_simple_prompt | model_rina | StrOutputParser()
+emilia_simple_runnable = emilia_simple_prompt | model_emilia | StrOutputParser()
 
 # --- Enhanced Graph State ---
 
@@ -395,74 +348,98 @@ class AgentState(TypedDict):
 # --- Enhanced Agent Nodes ---
 
 def agent_node(state: AgentState, agent_simple, agent_tools, name: str):
-    """Enhanced agent node with better error handling and performance optimization."""
+    """Enhanced agent node with better error handling, performance optimization, and true streaming."""
+    import threading
+    import queue
     current_question = state["messages"][-1].content
-    
-    # Enhanced difficulty assessment
     difficulty_analysis = is_difficult_question(current_question)
     use_tools = difficulty_analysis["use_tools"]
-    
+    if name in ["Rina", "Emilia"]:
+        use_tools = True
     logger.info(f"[{name}] Processing question: {current_question[:50]}...")
     logger.info(f"[{name}] Difficulty analysis: {difficulty_analysis}")
-    
-    full_content = ""
     start_time = time.time()
-    
+    metadata = state.get("metadata", {})
+    # Streaming logic
+    def stream_tool_agent():
+        full_content = ""
+        tool_started = False
+        tool_finished = False
+        tool_queue = queue.Queue()
+        def tool_worker():
+            try:
+                for chunk in agent_tools.stream({
+                    "input": current_question,
+                    "chat_history": [msg for msg in state["messages"][:-1]]
+                }):
+                    if chunk and isinstance(chunk, dict) and "output" in chunk:
+                        tool_queue.put(chunk["output"])
+                tool_queue.put(None)  # Signal end
+            except Exception as e:
+                tool_queue.put(e)
+        t = threading.Thread(target=tool_worker)
+        t.start()
+        # Wait for first output or timeout
+        try:
+            first = tool_queue.get(timeout=2)
+            if first is None:
+                tool_finished = True
+            elif isinstance(first, Exception):
+                raise first
+            else:
+                # Yield system message: tool started
+                yield {"type": "system", "content": f"{name} is searching for information...", "sender": "system"}
+                tool_started = True
+                full_content += first
+                yield {"type": "chunk", "content": first, "sender": name}
+        except queue.Empty:
+            # Tool is slow, yield system message
+            yield {"type": "system", "content": f"{name} is still searching, please wait...", "sender": "system"}
+        # Continue streaming rest
+        while not tool_finished:
+            next_item = tool_queue.get()
+            if next_item is None:
+                tool_finished = True
+                break
+            elif isinstance(next_item, Exception):
+                raise next_item
+            else:
+                full_content += next_item
+                yield {"type": "chunk", "content": next_item, "sender": name}
+        # Yield system message: tool finished
+        yield {"type": "system", "content": f"{name} has finished searching.", "sender": "system"}
+        yield {"type": "complete", "content": full_content, "sender": name}
+    def stream_simple_agent():
+        full_content = ""
+        for chunk in agent_simple.stream({
+            "input": current_question,
+            "chat_history": state["messages"],
+        }):
+            if chunk:
+                full_content += chunk
+                yield {"type": "chunk", "content": chunk, "sender": name}
+        yield {"type": "complete", "content": full_content, "sender": name}
     try:
         if use_tools:
-            logger.info(f"[{name}] Using tools for difficult question")
-            
-            # Use tool-enabled agent with better error handling
-            chat_history = [msg for msg in state["messages"][:-1]]
-            
-            try:
-                result = agent_tools.invoke({
-                    "input": current_question,
-                    "chat_history": chat_history
-                })
-                
-                full_content = result["output"]
-                logger.info(f"[{name}] Tool execution successful, response length: {len(full_content)}")
-                
-            except Exception as e:
-                logger.error(f"[{name}] Tool execution failed: {str(e)}")
-                # Enhanced fallback to simple agent
-                logger.info(f"[{name}] Falling back to simple response")
-                
-                for chunk in agent_simple.stream({
-                    "input": current_question,
-                    "chat_history": state["messages"],
-                }):
-                    if chunk:
-                        full_content += chunk
+            logger.info(f"[{name}] Using tools for difficult question (streaming)")
+            for item in stream_tool_agent():
+                yield item
         else:
-            logger.info(f"[{name}] Using simple mode")
-            
-            # Use simple agent with streaming
-            for chunk in agent_simple.stream({
-                "input": current_question,
-                "chat_history": state["messages"],
-            }):
-                if chunk:
-                    full_content += chunk
-        
+            logger.info(f"[{name}] Using simple mode (streaming)")
+            for item in stream_simple_agent():
+                yield item
         processing_time = time.time() - start_time
-        logger.info(f"[{name}] Response completed in {processing_time:.2f}s, length: {len(full_content)}")
-        
-        # Add metadata to state
-        metadata = state.get("metadata", {})
         metadata[f"{name.lower()}_processing_time"] = processing_time
         metadata[f"{name.lower()}_used_tools"] = use_tools
         metadata[f"{name.lower()}_difficulty_score"] = difficulty_analysis["complexity_score"]
-        
         return {
-            "messages": [AIMessage(content=full_content, name=name)],
+            "messages": [AIMessage(content="", name=name)],  # Content is streamed, so leave blank
             "metadata": metadata
         }
-        
     except Exception as e:
         logger.error(f"[{name}] Critical error: {str(e)}")
         error_message = f"I apologize, but I encountered an error while processing your request. Please try rephrasing your question or ask for a different approach."
+        yield {"type": "system", "content": error_message, "sender": "system-error"}
         return {
             "messages": [AIMessage(content=error_message, name=name)],
             "metadata": {"error": str(e)}
@@ -470,15 +447,15 @@ def agent_node(state: AgentState, agent_simple, agent_tools, name: str):
 
 # --- Enhanced Supervisor Node ---
 
-members = ["Alice", "Bob"]
+members = ["Rina", "Emilia"]
 
 def supervisor_node(state: AgentState):
     """Enhanced supervisor node with dynamic, fair task distribution."""
     last_message = state["messages"][-1].content
     metadata = state.get("metadata", {})
     # Defensive: always provide integer values for workloads
-    alice_workload = int(metadata.get("alice_workload", 0) or 0)
-    bob_workload = int(metadata.get("bob_workload", 0) or 0)
+    rina_workload = int(metadata.get("rina_workload", 0) or 0)
+    emilia_workload = int(metadata.get("emilia_workload", 0) or 0)
     last_agent = metadata.get("last_agent", None)
 
     logger.info("[Supervisor] Making routing decision")
@@ -489,39 +466,42 @@ def supervisor_node(state: AgentState):
             "messages": state["messages"],
             "input": last_message,
             "members": ", ".join(members),
-            "alice_workload": alice_workload,
-            "bob_workload": bob_workload,
+            "rina_workload": rina_workload,
+            "emilia_workload": emilia_workload,
         }
         full_decision = ""
         for chunk in model_supervisor.stream(supervisor_routing_prompt.format_messages(**supervisor_input)):
             if hasattr(chunk, 'content') and chunk.content:
                 full_decision += chunk.content
 
-        supervisor_message = AIMessage(content=full_decision, name="Supervisor")
-        next_agent = _parse_supervisor_decision(full_decision)
+        # Remove <think>...</think> tags
+        cleaned_content = re.sub(r"<think>.*?</think>\n?", "", full_decision, flags=re.DOTALL).strip()
+
+        supervisor_message = AIMessage(content=cleaned_content, name="Supervisor")
+        next_agent = _parse_supervisor_decision(cleaned_content)
 
         # Workload balancing: if ambiguous, alternate or pick less-busy agent
         if next_agent not in members and next_agent != "FINISH":
             # Alternate if last_agent exists, else pick less-busy
-            if last_agent == "Alice":
-                next_agent = "Bob"
-            elif last_agent == "Bob":
-                next_agent = "Alice"
+            if last_agent == "Rina":
+                next_agent = "Emilia"
+            elif last_agent == "Emilia":
+                next_agent = "Rina"
             else:
-                next_agent = "Alice" if alice_workload <= bob_workload else "Bob"
+                next_agent = "Rina" if rina_workload <= emilia_workload else "Emilia"
 
         processing_time = time.time() - start_time
         logger.info(f"[Supervisor] Decision made in {processing_time:.2f}s: {next_agent}")
 
         # Update workload
-        if next_agent == "Alice":
-            alice_workload += 1
-        elif next_agent == "Bob":
-            bob_workload += 1
+        if next_agent == "Rina":
+            rina_workload += 1
+        elif next_agent == "Emilia":
+            emilia_workload += 1
         if next_agent in members:
             metadata["last_agent"] = next_agent
-        metadata["alice_workload"] = alice_workload
-        metadata["bob_workload"] = bob_workload
+        metadata["rina_workload"] = rina_workload
+        metadata["emilia_workload"] = emilia_workload
         metadata["supervisor_processing_time"] = processing_time
         metadata["supervisor_decision"] = next_agent
 
@@ -534,12 +514,12 @@ def supervisor_node(state: AgentState):
     except Exception as e:
         logger.error(f"[Supervisor] Error in decision making: {str(e)}")
         # Default to alternate or less-busy agent
-        if last_agent == "Alice":
-            fallback_agent = "Bob"
-        elif last_agent == "Bob":
-            fallback_agent = "Alice"
+        if last_agent == "Rina":
+            fallback_agent = "Emilia"
+        elif last_agent == "Emilia":
+            fallback_agent = "Rina"
         else:
-            fallback_agent = "Alice" if alice_workload <= bob_workload else "Bob"
+            fallback_agent = "Rina" if rina_workload <= emilia_workload else "Emilia"
         return {
             "messages": [AIMessage(content=f"ROUTE_TO: {fallback_agent} - Default routing due to decision error", name="Supervisor")],
             "next_agent": fallback_agent,
@@ -580,16 +560,16 @@ def _parse_supervisor_decision(decision: str) -> str:
         if member.lower() in decision_lower:
             return member
     
-    # Default to Alice for general questions
-    return "Alice"
+    # Default to Rina for general questions
+    return "Rina"
 
 # --- Enhanced Graph Construction ---
 
 builder = StateGraph(AgentState)
 
 # Add nodes with enhanced error handling
-builder.add_node("Alice", lambda state: agent_node(state, alice_simple_runnable, alice_tool_executor, "Alice"))
-builder.add_node("Bob", lambda state: agent_node(state, bob_simple_runnable, bob_tool_executor, "Bob"))
+builder.add_node("Rina", lambda state: agent_node(state, rina_simple_runnable, rina_tool_executor, "Rina"))
+builder.add_node("Emilia", lambda state: agent_node(state, emilia_simple_runnable, emilia_tool_executor, "Emilia"))
 builder.add_node("Supervisor", supervisor_node)
 
 # Add edges
@@ -599,7 +579,7 @@ for member in members:
 builder.add_conditional_edges(
     "Supervisor",
     lambda state: state.get("next_agent"),
-    {"Alice": "Alice", "Bob": "Bob", "FINISH": END},
+    {"Rina": "Rina", "Emilia": "Emilia", "FINISH": END},
 )
 
 builder.set_entry_point("Supervisor")
@@ -627,7 +607,7 @@ performance_monitor = PerformanceMonitor()
 # --- Enhanced Execution ---
 
 if __name__ == "__main__":
-    question = "Can you explain quantum computing in detail and provide a simple implementation example?"
+    question = "jadwal rilis iron heart"
     initial_input = HumanMessage(content=question)
     inputs = {"messages": [initial_input], "metadata": {}}
     

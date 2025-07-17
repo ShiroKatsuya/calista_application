@@ -121,22 +121,22 @@ web_tools = [
 ]
 
 # # Models
-# model_alice = ChatOllama(model="llama3.2:3b")
-# model_bob = ChatOllama(model="llama3-2.3b:latest")
+# model_rina = ChatOllama(model="llama3.2:3b")
+# model_emilia = ChatOllama(model="llama3-2.3b:latest")
 # model_charlie = ChatOllama(model="llama3.2:3b")
 # model_coordinator = ChatOllama(model="llama3.2:3b")
 
 
 
-# model_alice = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
-# model_bob = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
+# model_rina = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
+# model_emilia = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
 # model_charlie = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
 # model_coordinator = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
 
-model_alice = ChatOllama(model="llama3-2.3b:latest", temperature=0.7)
-model_bob = ChatOllama(model="llama3-2.3b:latest", temperature=0.3)
-model_charlie = ChatOllama(model="llama3.2:3b", temperature=0.9)
-model_coordinator = ChatOllama(model="llama3.2:3b", temperature=0.5)
+model_rina = ChatOllama(model="llama3-2.3b:latest", temperature=0.7)
+model_emilia = ChatOllama(model="llama3.2:3b", temperature=0.3)
+model_shirokatsuya = ChatOllama(model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M", temperature=0.9)
+# model_coordinator = ChatOllama(model="llama3.2:3b", temperature=0.5)
 model_synthesizer = ChatOllama(model="llama3-2.3b:latest", temperature=0.4)  # New synthesis model
 
 class Agent:
@@ -165,4 +165,3 @@ class Agent:
         self.performance_metrics["tasks_completed"] += 1
         current_avg = self.performance_metrics["avg_response_time"]
         self.performance_metrics["avg_response_time"] = (current_avg + response_time) / 2
-

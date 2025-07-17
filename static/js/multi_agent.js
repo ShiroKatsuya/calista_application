@@ -49,9 +49,9 @@ $(document).ready(function() {
                 $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
             } else if (sender === 'system-error') {
                 $messageDiv.addClass('bg-red-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
-            } else if (sender === 'Alice') {
-                $messageDiv.addClass('text-white mr-auto rounded-bl-none').css('max-width', '80%');
-            } else if (sender === 'Bob') {
+            } else if (sender === 'Rina') {
+                $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
+            } else if (sender === 'Emilia') {
                 $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
             }
 
@@ -121,9 +121,9 @@ $(document).ready(function() {
             $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
         } else if (sender === 'system-error') {
             $messageDiv.addClass('bg-red-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
-        } else if (sender === 'Alice') {
+        } else if (sender === 'Rina') {
             $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
-        } else if (sender === 'Bob') {
+        } else if (sender === 'Emilia') {
             $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
         }
 
@@ -353,7 +353,7 @@ $(document).ready(function() {
                                             if (routeMatch[1] === "FINISH") {
                                                 addSystemMessage(`--- Supervisor: ${routeMatch[2]} ---`, 'supervisor');
                                             } else {
-                                                // Use the routeMatch[1] as sender (e.g., Alice, BOB, etc.)
+                                                // Use the routeMatch[1] as sender (e.e.g., Rina, Emilia, etc.)
                                                 addSystemMessage(`--- Supervisor routing to: ${routeMatch[1]} - ${routeMatch[2]} ---`, routeMatch[1].toLowerCase());
                                             }
                                         }

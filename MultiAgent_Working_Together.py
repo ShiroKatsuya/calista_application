@@ -4,13 +4,14 @@ import json
 
 
 agents = {
-    "Alice": Agent("Alice", model_alice, "General Knowledge Agent", 
-                   ["science", "technology", "humanities", "arts", "business", "research", "analysis"], web_tools),
-    "Bob": Agent("Bob", model_bob, "Technical Implementation Agent", 
-                 ["coding", "programming", "implementation", "technical", "architecture", "development"], web_tools),
-    "Charlie": Agent("Charlie", model_charlie, "Creative Problem Solver", 
-                     ["creativity", "innovation", "problem-solving", "design", "strategy", "brainstorming"], web_tools),
-    "Synthesizer": Agent("Synthesizer", model_synthesizer, "Enhanced Response Synthesis Specialist", ["synthesis", "integration", "summary", "clarity", "coherence", "optimization"], []),
+    "Rina": Agent("Rina", model_rina, "General Knowledge Agent (Bahasa Indonesia)", 
+                   ["ilmu pengetahuan", "teknologi", "humaniora", "seni", "bisnis", "riset", "analisis"], web_tools),
+    "Emilia": Agent("Emilia", model_emilia, "Technical Implementation Agent (Bahasa Indonesia)", 
+                 ["pengkodean", "pemrograman", "implementasi", "teknis", "arsitektur", "pengembangan"], web_tools),
+    "Shirokatsuya": Agent("Shirokatsuya", model_shirokatsuya, "Creative Problem Solver (Bahasa Indonesia)", 
+                     ["kreativitas", "inovasi", "pemecahan masalah", "desain", "strategi", "brainstorming"], web_tools),
+    "Synthesizer": Agent("Synthesizer", model_synthesizer, "Enhanced Response Synthesis Specialist (Bahasa Indonesia)", 
+                        ["sintesis", "integrasi", "ringkasan", "kejelasan", "koherensi", "optimasi"], []),
 }
 
 def create_enhanced_collaborative_prompt(agent: Agent, thread_safe_state: ThreadSafeState, task_description: str):
@@ -18,35 +19,35 @@ def create_enhanced_collaborative_prompt(agent: Agent, thread_safe_state: Thread
     collaboration_context = ""
     
     if other_outputs:
-        collaboration_context = "\n\n🔗 REAL-TIME COLLABORATION CONTEXT:\n"
+        collaboration_context = "\n\n🔗 KONTEKS KOLABORASI REAL-TIME:\n"
         for agent_name, output in other_outputs.items():
-            collaboration_context += f"\n📝 {agent_name}'s contribution:\n{output[:500]}...\n"
-        collaboration_context += "\n💡 Build upon these insights and provide complementary perspectives.\n"
+            collaboration_context += f"\n📝 Kontribusi {agent_name}:\n{output[:500]}...\n"
+        collaboration_context += "\n💡 Kembangkan wawasan ini dan berikan perspektif yang saling melengkapi.\n"
     
-    # Add task-specific collaboration instructions
+    # Tambahkan instruksi kolaborasi khusus tugas
     task_lower = task_description.lower()
-    if any(word in task_lower for word in ["complex", "difficult", "challenging"]):
-        collaboration_context += "\n⚠️  This is a complex task. Collaborate intensively with other agents.\n"
+    if any(word in task_lower for word in ["kompleks", "sulit", "menantang", "complex", "difficult", "challenging"]):
+        collaboration_context += "\n⚠️  Ini adalah tugas yang kompleks. Kolaborasikan secara intensif dengan agen lain.\n"
     
     return PromptTemplate.from_template(
-        f"""You are {agent.name}, {agent.description}. Expertise: {', '.join(agent.expertise)}.
+        f"""Anda adalah {agent.name}, {agent.description}. Keahlian: {', '.join(agent.expertise)}.
 
 {collaboration_context}
 
-You are working in a TRUE PARALLEL collaborative environment. Other agents are working simultaneously.
-Consider their contributions in real-time and provide complementary insights.
+Anda bekerja dalam lingkungan kolaboratif PARALEL SEBENARNYA. Agen lain bekerja secara bersamaan.
+Pertimbangkan kontribusi mereka secara real-time dan berikan wawasan yang saling melengkapi.
 
-IMPORTANT COLLABORATION RULES:
-1. Build upon other agents' insights
-2. Fill gaps they haven't addressed
-3. Provide unique perspectives from your expertise
-4. Avoid duplicating work already done
-5. Enhance the overall solution quality
+ATURAN KOLABORASI PENTING:
+1. Kembangkan wawasan dari agen lain
+2. Isi kekosongan yang belum dibahas
+3. Berikan perspektif unik sesuai keahlian Anda
+4. Hindari duplikasi pekerjaan yang sudah dilakukan
+5. Tingkatkan kualitas solusi secara keseluruhan
 
-Conversation History: {{chat_history}}
-User Request: {{input}}
+Riwayat Percakapan: {{chat_history}}
+Permintaan Pengguna: {{input}}
 
-Your response (focus on collaboration and your unique expertise):"""
+Tanggapan Anda (fokus pada kolaborasi dan keahlian unik Anda, gunakan Bahasa Indonesia):"""
     )
 
 class EnhancedParallelTaskExecutor:
@@ -65,12 +66,13 @@ class EnhancedParallelTaskExecutor:
         try:
             self.thread_safe_state.update_task(task.id, status=TaskStatus.IN_PROGRESS)
             
-            # Create enhanced collaborative prompt
+            # Create enhanced collaborative prompt (already in Indonesian)
             collaborative_prompt = create_enhanced_collaborative_prompt(agent, self.thread_safe_state, task.task_description)
             
             # Use tool-enabled agent with enhanced collaboration
+            # SYSTEM PROMPT: Bahasa Indonesia
             tool_prompt = ChatPromptTemplate.from_messages([
-                ("system", f"You are {agent.name}, {agent.description}. Use tools for comprehensive responses and collaborate with other agents in real-time."),
+                ("system", f"Anda adalah {agent.name}, {agent.description}. Gunakan alat (tools) untuk memberikan jawaban yang komprehensif dan kolaborasi dengan agen lain secara real-time. Selalu gunakan Bahasa Indonesia dalam seluruh respons Anda."),
                 MessagesPlaceholder(variable_name="chat_history"),
                 ("user", "{input}"),
                 MessagesPlaceholder(variable_name="agent_scratchpad")
@@ -86,6 +88,12 @@ class EnhancedParallelTaskExecutor:
             })
             
             task.result = result["output"]
+            
+            # Hidden <think> tags from supervisor respond for Shirokatsuya
+            if agent.name == "Shirokatsuya":
+                import re
+                task.result = re.sub(r"<think>.*?</think>\n?", "", task.result, flags=re.DOTALL).strip()
+                
             self.thread_safe_state.update_agent_output(agent.name, task.result)
             task.status = TaskStatus.COMPLETED
             task.completed_at = time.time()
@@ -97,7 +105,7 @@ class EnhancedParallelTaskExecutor:
             
         except Exception as e:
             task.status = TaskStatus.FAILED
-            task.result = f"Task failed: {str(e)}"
+            task.result = f"Tugas gagal: {str(e)}"
             
         finally:
             agent.is_busy = False
@@ -113,15 +121,18 @@ class IntelligentTaskDistributor:
         self.task_executor = EnhancedParallelTaskExecutor()
         
     def analyze_task_complexity(self, user_input: str) -> float:
-        """Analyze task complexity for optimal distribution."""
+        """Analisis kompleksitas tugas untuk distribusi optimal."""
         complexity_score = 0.0
         input_lower = user_input.lower()
         
-        # Complexity indicators
-        complexity_keywords = ["complex", "difficult", "challenging", "comprehensive", "detailed", "analysis"]
+        # Indikator kompleksitas (Bahasa Indonesia dan Inggris)
+        complexity_keywords = [
+            "kompleks", "sulit", "menantang", "komprehensif", "terperinci", "analisis",
+            "complex", "difficult", "challenging", "comprehensive", "detailed", "analysis"
+        ]
         complexity_score += sum(0.2 for keyword in complexity_keywords if keyword in input_lower)
         
-        # Length and structure indicators
+        # Indikator panjang dan struktur
         if len(user_input.split()) > 20:
             complexity_score += 0.3
         if user_input.count('?') > 1:
@@ -129,18 +140,17 @@ class IntelligentTaskDistributor:
             
         return min(complexity_score, 1.0)
     
-    def select_optimal_agents(self, user_input: str, complexity_score: float) -> List[str]:
-        """Select optimal agents based on task requirements and agent capabilities."""
+    def select_optimal_agents(self, user_input: str, complexity_score: float) -> list:
+        """Pilih agen optimal berdasarkan kebutuhan tugas dan kapabilitas agen."""
         available_agents = list(agents.keys())
         
-        # For demonstration and testing, always use all agents to show parallel execution
-        # In production, you would use the complexity-based logic below
-        print(f"🔍 Task complexity score: {complexity_score:.2f}")
-        print(f"🎯 Using all agents for maximum parallel execution")
+        # Untuk demonstrasi, gunakan semua agen agar eksekusi paralel terlihat
+        print(f"🔍 Skor kompleksitas tugas: {complexity_score:.2f}")
+        print(f"🎯 Menggunakan semua agen untuk eksekusi paralel maksimal")
         return available_agents
   
     
-    def distribute_tasks_parallel(self, state: AgentState, user_input: str) -> List[AgentTask]:
+    def distribute_tasks_parallel(self, state: AgentState, user_input: str) -> list:
         complexity_score = self.analyze_task_complexity(user_input)
         optimal_agents = self.select_optimal_agents(user_input, complexity_score)
         
@@ -169,12 +179,12 @@ class EnhancedCoordinator:
         state["thread_safe_state"] = self.thread_safe_state
         tasks = self.task_distributor.distribute_tasks_parallel(state, user_input)
         
-        print(f"\n🚀 PARALLEL EXECUTION STARTING")
-        print(f"📋 Tasks to execute: {len(tasks)}")
+        print(f"\n🚀 EKSEKUSI PARALEL DIMULAI")
+        print(f"📋 Tugas yang akan dieksekusi: {len(tasks)}")
         for task in tasks:
             print(f"   - {task.agent_name}: {task.task_description[:50]}...")
         
-        # Add collaboration events tracking
+        # Tambahkan pelacakan event kolaborasi
         state["collaboration_events"] = []
         state["system_metrics"] = {"start_time": time.time()}
         
@@ -182,7 +192,7 @@ class EnhancedCoordinator:
             state["tasks"][task.id] = task
             self.thread_safe_state.add_task(task)
         
-        # Execute tasks with enhanced parallel processing (excluding Synthesizer)
+        # Eksekusi paralel (kecuali Synthesizer)
         parallel_agents = [name for name in agents.keys() if name != "Synthesizer"]
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(parallel_agents)) as executor:
             future_to_task = {
@@ -190,9 +200,9 @@ class EnhancedCoordinator:
                 for task in tasks if task.agent_name != "Synthesizer"
             }
             
-            print(f"⚡ Executing {len(future_to_task)} tasks in parallel...")
+            print(f"⚡ Mengeksekusi {len(future_to_task)} tugas secara paralel...")
             
-            # Monitor execution with real-time collaboration
+            # Monitoring eksekusi dengan kolaborasi real-time
             completed_tasks = []
             for future in concurrent.futures.as_completed(future_to_task):
                 task = future_to_task[future]
@@ -202,19 +212,19 @@ class EnhancedCoordinator:
                     
                     if completed_task.status == TaskStatus.COMPLETED:
                         state["agent_outputs"][completed_task.agent_name] = completed_task.result
-                        print(f"✅ {completed_task.agent_name} completed task: {completed_task.result}")
-                        # Track collaboration events
+                        print(f"✅ {completed_task.agent_name} selesai: {completed_task.result}")
+                        # Catat event kolaborasi
                         state["collaboration_events"].append({
                             "agent": completed_task.agent_name,
                             "timestamp": time.time(),
                             "status": "completed"
                         })
                 except Exception as e:
-                    print(f"❌ Task {task.id} failed: {str(e)}")
+                    print(f"❌ Tugas {task.id} gagal: {str(e)}")
         
-        print(f"🎉 Parallel execution completed. {len(completed_tasks)} tasks finished.")
+        print(f"🎉 Eksekusi paralel selesai. {len(completed_tasks)} tugas selesai.")
         
-        # Update final state
+        # Update state akhir
         state["agent_outputs"].update(self.thread_safe_state.get_agent_outputs())
         state["system_metrics"]["end_time"] = time.time()
         state["system_metrics"]["execution_time"] = state["system_metrics"]["end_time"] - state["system_metrics"]["start_time"]
@@ -223,15 +233,31 @@ class EnhancedCoordinator:
 
     def synthesize_results_enhanced(self, state: AgentState) -> str:
         if not state["agent_outputs"]:
-            return "No agent outputs to synthesize."
+            return "Tidak ada output agen untuk disintesis."
 
         synthesis_start = time.time()
-        # Prepare a single, unified synthesis prompt for the Synthesizer agent
+        # Satu prompt sintesis terpadu untuk agen Synthesizer (Bahasa Indonesia)
         agent_outputs_text = "\n".join([
             output for name, output in state["agent_outputs"].items() if name != "Synthesizer"
         ])
         synthesis_prompt = PromptTemplate.from_template(
-            """You are the SYNTHESIZER, an expert at creating a single, unified, high-quality answer from multiple agent contributions.\n\nAgent Contributions (raw, do not mention agent names):\n{agent_outputs}\n\nUser's Request: {user_input}\n\nInstructions:\n- Carefully analyze, compare, and integrate all agent contributions.\n- Resolve any contradictions, fill in missing details, and ensure the answer is complete and accurate.\n- Do NOT mention or identify any agent names or roles.\n- Do NOT list or enumerate the contributions.\n- Write a single, seamless, well-structured answer that is clear, deep, and valuable for the user.\n- The result should read as if written by one top expert, not a group.\n- Always provide the best possible answer, maximizing insight and usefulness.\n\nUnified Synthesized Response:"""
+            """Anda adalah SYNTHESIZER, seorang ahli dalam membuat satu jawaban terpadu, berkualitas tinggi dari berbagai kontribusi agen.
+
+Kontribusi Agen (mentah, jangan sebut nama agen):
+{agent_outputs}
+
+Permintaan Pengguna: {user_input}
+
+Instruksi:
+- Analisis, bandingkan, dan integrasikan semua kontribusi agen secara cermat.
+- Selesaikan kontradiksi, lengkapi detail yang kurang, dan pastikan jawaban lengkap serta akurat.
+- JANGAN sebut atau identifikasi nama/role agen manapun.
+- JANGAN membuat daftar kontribusi.
+- Tulis satu jawaban terpadu, terstruktur baik, jelas, mendalam, dan bernilai bagi pengguna.
+- Hasil akhir harus terasa seperti ditulis satu pakar terbaik, bukan tim.
+- Selalu berikan jawaban terbaik, maksimalkan wawasan dan manfaat.
+
+Jawaban Sintesis Terpadu:"""
         )
         synthesizer = agents["Synthesizer"]
         synthesis_runnable = synthesis_prompt | synthesizer.model | StrOutputParser()
@@ -291,38 +317,28 @@ def run_enhanced_agent_system(user_input: str, use_all_agents: bool = True, sing
             final_message = state["messages"][-1]
             if isinstance(final_message, AIMessage):
                 synthesized_response = final_message.content
-                print(f"\n🎯 ENHANCED SYNTHESIZED RESPONSE")
+                print(f"\n🎯 JAWABAN SINTESIS TERPADU")
                 print(f"{'='*80}")
                 print(f"{synthesized_response}")
                 print(f"{'='*80}")
 
-    # # Enhanced fallback with system metrics
-    # if final_state and "agent_outputs" in final_state and final_state["agent_outputs"]:
-    #     print(f"\n🎯 ENHANCED SYNTHESIZED RESPONSE")
-    #     print(f"{'='*80}")
-    #     if "messages" in final_state and len(final_state["messages"]) > 1:
-    #         final_message = final_state["messages"][-1]
-    #         if isinstance(final_message, AIMessage):
-    #             print(f"{final_message.content}")
-    #     print(f"{'='*80}")
-        
-    # Enhanced execution summary with system metrics
+    # Ringkasan eksekusi dengan metrik sistem
     end_time = time.time()
     execution_time = end_time - start_time
-    print(f"\n📈 ENHANCED EXECUTION SUMMARY")
+    print(f"\n📈 RINGKASAN EKSEKUSI TERENHANCE")
     print(f"{'='*80}")
-    print(f"⏱️  Total execution time: {execution_time:.2f} seconds")
-    print(f"📊 Tasks processed: {len(final_state.get('tasks', {})) if final_state else 0}")
-    print(f"👥 Agents involved: {len(final_state.get('agent_outputs', {})) if final_state else 0}")
+    print(f"⏱️  Total waktu eksekusi: {execution_time:.2f} detik")
+    print(f"📊 Tugas yang diproses: {len(final_state.get('tasks', {})) if final_state else 0}")
+    print(f"👥 Agen yang terlibat: {len(final_state.get('agent_outputs', {})) if final_state else 0}")
     
     if final_state and "system_metrics" in final_state:
         metrics = final_state["system_metrics"]
         if "execution_time" in metrics:
-            print(f"🚀 Parallel execution time: {metrics['execution_time']:.2f} seconds")
+            print(f"🚀 Waktu eksekusi paralel: {metrics['execution_time']:.2f} detik")
         if "collaboration_events" in final_state:
-            print(f"🤝 Collaboration events: {len(final_state['collaboration_events'])}")
+            print(f"🤝 Event kolaborasi: {len(final_state['collaboration_events'])}")
     
-    print(f"✅ TRUE PARALLEL MULTI-AGENT SYSTEM COMPLETE")
+    print(f"✅ SISTEM MULTI-AGENT PARALEL SEBENARNYA SELESAI")
     print(f"{'='*80}")
 
     return synthesized_response
@@ -340,9 +356,9 @@ def run_enhanced_agent_system_stream(user_input: str, use_all_agents: bool = Tru
     }
     coordinator = EnhancedCoordinator()
     state = initial_state
-    # Distribute tasks
+    # Distribusi tugas
     tasks = coordinator.task_distributor.distribute_tasks_parallel(state, user_input)
-    # Mark all agents as pending initially
+    # Tandai semua agen sebagai pending di awal
     agent_progress = {name: {"status": "PENDING", "progress": 0.0} for name in agents.keys()}
     for agent_name in agent_progress:
         yield json.dumps({
@@ -351,14 +367,14 @@ def run_enhanced_agent_system_stream(user_input: str, use_all_agents: bool = Tru
             "status": "PENDING",
             "progress": 0.0
         }) + "\n"
-    # Start parallel execution (excluding Synthesizer)
+    # Eksekusi paralel (kecuali Synthesizer)
     parallel_agents = [name for name in agents.keys() if name != "Synthesizer"]
     import concurrent.futures
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(parallel_agents)) as executor:
         future_to_task = {}
         for task in tasks:
             if task.agent_name != "Synthesizer":
-                # Yield PROCESSING status as soon as agent starts
+                # Status PROCESSING saat agen mulai
                 yield json.dumps({
                     "type": "status",
                     "agent": task.agent_name,
@@ -367,19 +383,19 @@ def run_enhanced_agent_system_stream(user_input: str, use_all_agents: bool = Tru
                 }) + "\n"
                 future = executor.submit(coordinator.task_distributor.task_executor.execute_task_parallel, state, task)
                 future_to_task[future] = task
-        # Monitor execution
+        # Monitoring eksekusi
         for future in concurrent.futures.as_completed(future_to_task):
             task = future_to_task[future]
             try:
                 completed_task = future.result()
-                # Yield COMPLETED status
+                # Status COMPLETED
                 yield json.dumps({
                     "type": "status",
                     "agent": completed_task.agent_name,
                     "status": "COMPLETED",
                     "progress": 1.0
                 }) + "\n"
-                # Update state for synthesis
+                # Update state untuk sintesis
                 state["agent_outputs"][completed_task.agent_name] = completed_task.result
             except Exception as e:
                 yield json.dumps({
@@ -389,7 +405,7 @@ def run_enhanced_agent_system_stream(user_input: str, use_all_agents: bool = Tru
                     "progress": 1.0,
                     "error": str(e)
                 }) + "\n"
-    # Synthesize results
+    # Sintesis hasil
     yield json.dumps({
         "type": "status",
         "agent": "Synthesizer",
@@ -397,9 +413,9 @@ def run_enhanced_agent_system_stream(user_input: str, use_all_agents: bool = Tru
         "progress": 0.01
     }) + "\n"
     import re
-    # --- Begin streaming Synthesizer output ---
+    # --- Streaming output Synthesizer (Bahasa Indonesia) ---
     synthesis_prompt = PromptTemplate.from_template(
-        """You are the SYNTHESIZER, an expert at creating a single, unified, high-quality answer from multiple agent contributions.\n\nAgent Contributions (raw, do not mention agent names):\n{agent_outputs}\n\nUser's Request: {user_input}\n\nInstructions:\n- Carefully analyze, compare, and integrate all agent contributions.\n- Resolve any contradictions, fill in missing details, and ensure the answer is complete and accurate.\n- Do NOT mention or identify any agent names or roles.\n- Do NOT list or enumerate the contributions.\n- Write a single, seamless, well-structured answer that is clear, deep, and valuable for the user.\n- The result should read as if written by one top expert, not a group.\n- Always provide the best possible answer, maximizing insight and usefulness.\n\nUnified Synthesized Response:"""
+        """Anda adalah SYNTHESIZER, seorang ahli dalam membuat satu jawaban terpadu, berkualitas tinggi dari berbagai kontribusi agen.\n\nKontribusi Agen (mentah, jangan sebut nama agen):\n{agent_outputs}\n\nPermintaan Pengguna: {user_input}\n\nInstruksi:\n- Analisis, bandingkan, dan integrasikan semua kontribusi agen secara cermat.\n- Selesaikan kontradiksi, lengkapi detail yang kurang, dan pastikan jawaban lengkap serta akurat.\n- JANGAN sebut atau identifikasi nama/role agen manapun.\n- JANGAN membuat daftar kontribusi.\n- Tulis satu jawaban terpadu, terstruktur baik, jelas, mendalam, dan bernilai bagi pengguna.\n- Hasil akhir harus terasa seperti ditulis satu pakar terbaik, bukan tim.\n- Selalu berikan jawaban terbaik, maksimalkan wawasan dan manfaat.\n\nJawaban Sintesis Terpadu:"""
     )
     agent_outputs_text = "\n".join([
         output for name, output in state["agent_outputs"].items() if name != "Synthesizer"
@@ -407,7 +423,7 @@ def run_enhanced_agent_system_stream(user_input: str, use_all_agents: bool = Tru
     user_input_val = state["messages"][-1].content
     synthesizer = agents["Synthesizer"]
     synthesis_runnable = synthesis_prompt | synthesizer.model | StrOutputParser()
-    # Use streaming if available
+    # Streaming jika tersedia
     try:
         for chunk in synthesis_runnable.stream({
             "agent_outputs": agent_outputs_text,
@@ -419,7 +435,7 @@ def run_enhanced_agent_system_stream(user_input: str, use_all_agents: bool = Tru
                     "chunk": chunk
                 }) + "\n"
     except Exception as e:
-        # Fallback: yield error as a chunk
+        # Fallback: error sebagai chunk
         yield json.dumps({
             "type": "final_chunk",
             "chunk": f"[SYNTHESIZER ERROR: {str(e)}]"
@@ -436,23 +452,23 @@ def run_enhanced_agent_system_stream(user_input: str, use_all_agents: bool = Tru
 
 def run_single_agent_system(user_input: str, agent_name: str):
     if agent_name not in agents:
-        print(f"❌ Error: Agent '{agent_name}' not found. Available agents: {', '.join(agents.keys())}")
+        print(f"❌ Error: Agen '{agent_name}' tidak ditemukan. Agen yang tersedia: {', '.join(agents.keys())}")
         return
     run_enhanced_agent_system(user_input, use_all_agents=False, single_agent=agent_name)
 
 def run_all_agents_system(user_input: str):
     run_enhanced_agent_system(user_input, use_all_agents=True)
 
-# if __name__ == "__main__":
-#     question = "Ironheart kapan rilis"
-#     print("🚀 ENHANCED PARALLEL MULTI-AGENT SYSTEM")
-#     print("=" * 80)
-#     print("Features:")
-#     print("✅ True parallel execution")
-#     print("✅ Real-time collaboration")
-#     print("✅ Intelligent task distribution")
-#     print("✅ Load balancing")
-#     print("✅ Performance optimization")
-#     print("✅ Enhanced synthesis")
-#     print("=" * 80)
-#     run_all_agents_system(question)
+if __name__ == "__main__":
+    question = "Ironheart kapan rilis"
+    print("🚀 SISTEM MULTI-AGENT PARALEL TERENHANCE")
+    print("=" * 80)
+    print("Fitur:")
+    print("✅ Eksekusi paralel sesungguhnya")
+    print("✅ Kolaborasi real-time")
+    print("✅ Distribusi tugas cerdas")
+    print("✅ Load balancing")
+    print("✅ Optimasi performa")
+    print("✅ Sintesis jawaban terpadu")
+    print("=" * 80)
+    run_all_agents_system(question)
