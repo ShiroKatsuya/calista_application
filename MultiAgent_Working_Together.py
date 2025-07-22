@@ -14,7 +14,7 @@ agents = {
                         ["sintesis", "integrasi", "ringkasan", "kejelasan", "koherensi", "optimasi"], []),
 }
 
-def create_enhanced_collaborative_prompt(agent: Agent, thread_safe_state: ThreadSafeState, task_description: str):
+def create_enhanced_collaborative_prompt(agent: Agent, thread_safe_state: ThreadSafeState, task_description: str, agent_role: str = None):
     other_outputs = thread_safe_state.get_other_agent_outputs(agent.name)
     collaboration_context = ""
     
@@ -29,8 +29,11 @@ def create_enhanced_collaborative_prompt(agent: Agent, thread_safe_state: Thread
     if any(word in task_lower for word in ["kompleks", "sulit", "menantang", "complex", "difficult", "challenging"]):
         collaboration_context += "\n⚠️  Ini adalah tugas yang kompleks. Kolaborasikan secara intensif dengan agen lain.\n"
     
+    # Tambahkan instruksi peran khusus jika ada
+    role_instruction = f"\n\nFokus utama Anda: {agent_role}." if agent_role else ""
+    
     return PromptTemplate.from_template(
-        f"""Anda adalah {agent.name}, {agent.description}. Keahlian: {', '.join(agent.expertise)}.
+        f"""Anda adalah {agent.name}, {agent.description}. Keahlian: {', '.join(agent.expertise)}.{role_instruction}
 
 {collaboration_context}
 
@@ -54,7 +57,14 @@ class EnhancedParallelTaskExecutor:
     def __init__(self):
         self.thread_safe_state = ThreadSafeState()
         self.execution_metrics = {"total_tasks": 0, "successful_tasks": 0, "avg_execution_time": 0.0}
-        
+        # Define agent roles for parallel execution
+        self.agent_roles = {
+            "Rina": "Menganalisis Penyebab (Analyzing Causes)",
+            "Emilia": "Menganalisis Dampak (Analyzing Impacts)",
+            "Shirokatsuya": "Mengusulkan Solusi (Proposing Solutions)",
+            "Synthesizer": "Menyintesis Laporan Komprehensif (Synthesizing Comprehensive Report)"
+        }
+    
     def execute_task_parallel(self, state: AgentState, task: AgentTask) -> AgentTask:
         agent = agents[task.agent_name]
         agent.is_busy = True
@@ -66,13 +76,15 @@ class EnhancedParallelTaskExecutor:
         try:
             self.thread_safe_state.update_task(task.id, status=TaskStatus.IN_PROGRESS)
             
-            # Create enhanced collaborative prompt (already in Indonesian)
-            collaborative_prompt = create_enhanced_collaborative_prompt(agent, self.thread_safe_state, task.task_description)
+            # Get agent role for this execution
+            agent_role = self.agent_roles.get(agent.name, None)
+            # Create enhanced collaborative prompt with role
+            collaborative_prompt = create_enhanced_collaborative_prompt(agent, self.thread_safe_state, task.task_description, agent_role)
             
             # Use tool-enabled agent with enhanced collaboration
             # SYSTEM PROMPT: Bahasa Indonesia
             tool_prompt = ChatPromptTemplate.from_messages([
-                ("system", f"Anda adalah {agent.name}, {agent.description}. Gunakan alat (tools) untuk memberikan jawaban yang komprehensif dan kolaborasi dengan agen lain secara real-time. Selalu gunakan Bahasa Indonesia dalam seluruh respons Anda."),
+                ("system", f"Anda adalah {agent.name}, {agent.description}. Gunakan alat (tools) untuk memberikan jawaban yang komprehensif dan kolaborasi dengan agen lain secara real-time. Selalu gunakan Bahasa Indonesia dalam seluruh respons Anda. Fokus utama Anda: {agent_role if agent_role else ''}"),
                 MessagesPlaceholder(variable_name="chat_history"),
                 ("user", "{input}"),
                 MessagesPlaceholder(variable_name="agent_scratchpad")
@@ -119,7 +131,14 @@ class EnhancedParallelTaskExecutor:
 class IntelligentTaskDistributor:
     def __init__(self):
         self.task_executor = EnhancedParallelTaskExecutor()
-        
+        # Define agent roles for parallel execution
+        self.agent_roles = {
+            "Rina": "Menganalisis Penyebab (Analyzing Causes)",
+            "Emilia": "Menganalisis Dampak (Analyzing Impacts)",
+            "Shirokatsuya": "Mengusulkan Solusi (Proposing Solutions)",
+            "Synthesizer": "Menyintesis Laporan Komprehensif (Synthesizing Comprehensive Report)"
+        }
+    
     def analyze_task_complexity(self, user_input: str) -> float:
         """Analisis kompleksitas tugas untuk distribusi optimal."""
         complexity_score = 0.0
@@ -158,10 +177,12 @@ class IntelligentTaskDistributor:
         timestamp = int(time.time())
         
         for agent_name in optimal_agents:
+            # Assign specific role to each agent
+            agent_role = self.agent_roles.get(agent_name, None)
             task = AgentTask(
                 id=f"task_{len(state['tasks'])}_{agent_name}_{timestamp}",
                 agent_name=agent_name,
-                task_description=user_input,
+                task_description=f"{user_input}\n\nFokus utama Anda: {agent_role}.",
                 complexity_score=complexity_score,
                 priority=1 if complexity_score > 0.5 else 2
             )
@@ -342,10 +363,30 @@ def run_enhanced_agent_system(user_input: str, use_all_agents: bool = True, sing
 
     return synthesized_response
 
-def run_enhanced_agent_system_stream(user_input: str, use_all_agents: bool = True, single_agent: str = None):
-    initial_message = HumanMessage(content=user_input)
+def run_enhanced_agent_system_stream(user_input: str, messages=None, use_all_agents: bool = True, single_agent: str = None):
+    # If messages are provided, use them; otherwise, start with the new message
+    if messages is not None and len(messages) > 0:
+        initial_messages = []
+        for msg in messages:
+            if isinstance(msg, dict):
+                # Try to reconstruct HumanMessage or AIMessage
+                if msg.get('type') == 'HumanMessage' or msg.get('sender') == 'user':
+                    initial_messages.append(HumanMessage(content=msg['content']))
+                elif msg.get('type') == 'AIMessage' or msg.get('sender') == 'ai' or msg.get('type') == 'final_result':
+                    initial_messages.append(AIMessage(content=msg['content'], name=msg.get('sender', 'ai')))
+                else:
+                    # Fallback to HumanMessage
+                    initial_messages.append(HumanMessage(content=msg['content']))
+            else:
+                initial_messages.append(msg)
+        # Ensure the last message is the new user input
+        if initial_messages[-1].content != user_input:
+            initial_messages.append(HumanMessage(content=user_input))
+    else:
+        initial_messages = [HumanMessage(content=user_input)]
+
     initial_state = {
-        "messages": [initial_message],
+        "messages": initial_messages,
         "tasks": {},
         "agent_outputs": {},
         "active_agents": list(agents.keys()) if use_all_agents else [single_agent],

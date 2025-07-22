@@ -1,0 +1,378 @@
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .agent {
+            transition: all 0.5s ease-in-out;
+        }
+        .task {
+            transition: all 0.5s ease-in-out;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .thinking-dots span {
+            animation: blink 1.4s infinite both;
+        }
+        .thinking-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .thinking-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+        /* Responsive tweaks for mobile */
+        @media (max-width: 640px) {
+            .min-h-\[60px\], .min-h-\[50px\] {
+                min-height: 32px !important;
+            }
+            .w-72 {
+                width: 90vw !important;
+                max-width: 100% !important;
+            }
+            .max-w-4xl, .max-w-5xl {
+                max-width: 98vw !important;
+            }
+            .p-6 {
+                padding: 1rem !important;
+            }
+            #multi-agent-section .agent {
+                width: 64px !important;
+                height: 64px !important;
+            }
+            #multi-agent-section .task {
+                font-size: 1rem !important;
+                padding: 0.5rem !important;
+            }
+            #multi-agent-section h3 {
+                font-size: 1.1rem !important;
+            }
+        }
+    </style>
+
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-12">
+            <!--
+            <h1 class="text-4xl sm:text-5xl font-bold mb-2">Multi-Agent System Collaboration</h1>
+            <p class="text-lg text-gray-400 max-w-3xl mx-auto">Visualizing how multiple agents collaborate to complete tasks more effectively than a single agent.</p>
+            -->
+            </header>
+
+        <div class="text-center mb-8">
+
+        </div>
+
+        <div id="simulation-container" class="space-y-16">
+            <!-- Single Agent Workflow -->
+            <section id="single-agent-section" class="opacity-0 transition-opacity duration-1000">
+                <h2 class="text-3xl font-bold text-center mb-8">1. Single Agent (Basic Result)</h2>
+                <div class="flex flex-col items-center">
+                    <div class="w-full max-w-4xl p-6 bg-gray-800 rounded-xl shadow-lg">
+                        <div class="flex flex-col items-center">
+                            <!-- Task -->
+                             <div class="mb-8 text-center">
+                                <h3 class="text-xl font-semibold mb-4">User Request</h3>
+                                <div id="single-agent-task-request" class="task bg-rose-500 w-72 p-3 rounded-lg shadow text-center font-medium"></div>
+                            </div>
+                            
+                            <!-- Agent & Result -->
+                            <div class="w-full flex flex-col md:flex-row items-center justify-center">
+                                <div class="flex flex-col items-center mx-8">
+                                    <div id="single-agent" class="agent w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center border-4 border-gray-600">
+                                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                    <p class="mt-2 font-semibold">Agent 1</p>
+                                </div>
+                                <div class="w-full md:w-auto mt-8 md:mt-0 md:ml-16 text-center">
+                                    <h3 class="text-xl font-semibold mb-4">Result</h3>
+                                    <div id="single-agent-completed" class="min-h-[60px] flex items-center justify-center"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Multi-Agent Collaborative Refinement -->
+            <section id="multi-agent-section" class="opacity-0 transition-opacity duration-1000">
+                <h2 class="text-3xl font-bold text-center mb-8">2. Multi-Agent (Comprehensive Result)</h2>
+                <div class="flex flex-col items-center">
+                    <div class="w-full max-w-5xl p-6 bg-gray-800 rounded-xl shadow-lg">
+                        <div class="flex flex-col items-center">
+                             <!-- User Request -->
+                            <div class="mb-8 text-center">
+                                <h3 class="text-xl font-semibold mb-4">User Request</h3>
+                                <div id="multi-agent-request" class="task bg-rose-500 w-72 p-3 rounded-lg shadow text-center font-medium"></div>
+                            </div>
+
+                            <!-- Agents & Result -->
+                            <div class="w-full flex flex-col sm:flex-row sm:justify-around items-center gap-4">
+                                <!-- Agent Group -->
+                                <div class="w-full flex flex-col sm:flex-row justify-around items-center gap-4">
+                                    <div class="flex flex-col items-center my-2 sm:mx-4 w-full sm:w-auto">
+                                        <div id="multi-agent-1" class="agent w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center border-4 border-gray-600">
+                                            <img src="/static/analisis.png" alt="Agent 1" class="w-12 h-12">
+                                        </div>
+                                        <p class="mt-2 font-semibold">Agent 1</p>
+                                        <div id="multi-agent-1-subtask" class="mt-2 text-center text-sm text-gray-400 min-h-[40px]"></div>
+                                    </div>
+                                    <div class="flex flex-col items-center my-2 sm:mx-4 w-full sm:w-auto">
+                                        <div id="multi-agent-2" class="agent w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center border-4 border-gray-600">
+                                            <img src="/static/impact.png" alt="Agent 2" class="w-12 h-12">
+                                        </div>
+                                        <p class="mt-2 font-semibold">Agent 2</p>
+                                        <div id="multi-agent-2-subtask" class="mt-2 text-center text-sm text-gray-400 min-h-[40px]"></div>
+                                    </div>
+                                    <div class="flex flex-col items-center my-2 sm:mx-4 w-full sm:w-auto">
+                                        <div id="multi-agent-3" class="agent w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center border-4 border-gray-600">
+                                            <img src="/static/recomendation.png" alt="Agent 3" class="w-12 h-12">
+                                        </div>
+                                        <p class="mt-2 font-semibold">Agent 3</p>
+                                        <div id="multi-agent-3-subtask" class="mt-2 text-center text-sm text-gray-400 min-h-[40px]"></div>
+                                    </div>
+                                </div>
+                                <!-- Result -->
+                                <div class="w-full mt-6 text-center">
+                                    <h3 class="text-xl font-semibold mb-4">Synthesized Result</h3>
+                                    <div id="multi-agent-completed" class="min-h-[60px] flex items-center justify-center"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Collaborative Workflow -->
+            <section id="collab-agent-section" class="opacity-0 transition-opacity duration-1000">
+                <h2 class="text-3xl font-bold text-center mb-8">3. Collaborative Workflow (Specialized Agents)</h2>
+                <div class="flex flex-col items-center">
+                    <div class="w-full max-w-5xl p-6 bg-gray-800 rounded-xl shadow-lg">
+                        <div class="flex flex-col md:flex-row items-center justify-around gap-4 overflow-x-auto">
+                            <!-- Agent 1: Data Gatherer -->
+                            <div class="flex flex-col items-center">
+                                <div id="collab-agent-1" class="agent w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center border-4 border-gray-600">
+                                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                </div>
+                                <p class="mt-2 font-semibold">Agent 1: Gatherer</p>
+                                <div id="collab-agent-1-task" class="mt-2 min-h-[60px] text-center"></div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div id="arrow-1" class="text-5xl text-indigo-400 opacity-0 mx-4 my-8 md:my-0 transform md:-rotate-0">
+                                →
+                            </div>
+
+                            <!-- Agent 2: Processor -->
+                            <div class="flex flex-col items-center">
+                                <div id="collab-agent-2" class="agent w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center border-4 border-gray-600">
+                                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M12 6V3m0 18v-3M5.636 5.636L4.222 4.222m15.556 15.556l-1.414-1.414M4.222 19.778l1.414-1.414M19.778 4.222l-1.414 1.414"></path></svg>
+                                </div>
+                                <p class="mt-2 font-semibold">Agent 2: Processor</p>
+                                <div id="collab-agent-2-task" class="mt-2 min-h-[60px] text-center"></div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div id="arrow-2" class="text-5xl text-indigo-400 opacity-0 mx-4 my-8 md:my-0 transform md:-rotate-0">
+                                →
+                            </div>
+
+                            <!-- Agent 3: Finalizer -->
+                            <div class="flex flex-col items-center">
+                                <div id="collab-agent-3" class="agent w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center border-4 border-gray-600">
+                                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <p class="mt-2 font-semibold">Agent 3: Finalizer</p>
+                                <div id="collab-agent-3-task" class="mt-2 min-h-[60px] text-center"></div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-8">
+                           <div id="collab-result" class="min-h-[50px]"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const startBtn = document.getElementById('start-btn');
+            
+            const singleAgentSection = document.getElementById('single-agent-section');
+            const singleAgentTaskRequest = document.getElementById('single-agent-task-request');
+            const singleAgent = document.getElementById('single-agent');
+            const singleAgentCompletedContainer = document.getElementById('single-agent-completed');
+
+            const multiAgentSection = document.getElementById('multi-agent-section');
+            const multiAgentRequestContainer = document.getElementById('multi-agent-request');
+            const multiAgents = [document.getElementById('multi-agent-1'), document.getElementById('multi-agent-2'), document.getElementById('multi-agent-3')];
+            const multiAgentSubtaskHolders = [document.getElementById('multi-agent-1-subtask'), document.getElementById('multi-agent-2-subtask'), document.getElementById('multi-agent-3-subtask')];
+            const multiAgentCompletedContainer = document.getElementById('multi-agent-completed');
+
+            const collabAgentSection = document.getElementById('collab-agent-section');
+            const collabAgents = [document.getElementById('collab-agent-1'), document.getElementById('collab-agent-2'), document.getElementById('collab-agent-3')];
+            const collabAgentTaskHolders = [document.getElementById('collab-agent-1-task'), document.getElementById('collab-agent-2-task'), document.getElementById('collab-agent-3-task')];
+            const arrows = [document.getElementById('arrow-1'), document.getElementById('arrow-2')];
+            const collabResult = document.getElementById('collab-result');
+
+            const TASK_PROCESSING_TIME = 2500; // ms
+
+            function resetSimulations() {
+                // Clear all containers
+                [singleAgentTaskRequest, singleAgentCompletedContainer, multiAgentRequestContainer, multiAgentCompletedContainer, collabResult, ...multiAgentSubtaskHolders, ...collabAgentTaskHolders].forEach(c => c.innerHTML = '');
+                
+                // Reset agent styles
+                [singleAgent, ...multiAgents, ...collabAgents].forEach(agent => {
+                    agent.classList.remove('border-green-500', 'border-yellow-500');
+                    agent.classList.add('border-gray-600');
+                });
+                
+                // Hide sections
+                singleAgentSection.classList.add('opacity-0');
+                multiAgentSection.classList.add('opacity-0');
+                collabAgentSection.classList.add('opacity-0');
+
+                // Hide arrows
+                arrows.forEach(a => a.classList.add('opacity-0'));
+            }
+
+            async function runSingleAgentWorkflow() {
+                singleAgentSection.classList.remove('opacity-0');
+                singleAgentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // 1. Show the user request
+                singleAgentTaskRequest.textContent = "Write a report on climate change";
+                singleAgentTaskRequest.classList.add('fade-in');
+                
+                await new Promise(res => setTimeout(res, 500));
+
+                // 2. Agent starts working
+                singleAgent.classList.remove('border-gray-600');
+                singleAgent.classList.add('border-yellow-500');
+                singleAgentCompletedContainer.innerHTML = `<div class="thinking-dots text-4xl text-gray-500"><span>.</span><span>.</span><span>.</span></div>`;
+                
+                // 3. Processing time
+                await new Promise(res => setTimeout(res, TASK_PROCESSING_TIME));
+                
+                // 4. Agent completes and shows basic result
+                singleAgent.classList.remove('border-yellow-500');
+                singleAgent.classList.add('border-green-500');
+                singleAgentCompletedContainer.innerHTML = `<div class="task bg-sky-500 w-72 p-3 rounded-lg shadow font-medium fade-in">Basic Report</div>`;
+            }
+
+            async function runMultiAgentWorkflow() {
+                multiAgentSection.classList.remove('opacity-0');
+                multiAgentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // 1. Show the user request
+                multiAgentRequestContainer.textContent = "Write a report on climate change";
+                multiAgentRequestContainer.classList.add('fade-in');
+
+                await new Promise(res => setTimeout(res, 500));
+
+                // 2. All agents start working on different aspects
+                multiAgents.forEach(agent => {
+                    agent.classList.remove('border-gray-600');
+                    agent.classList.add('border-yellow-500');
+                });
+                
+                multiAgentSubtaskHolders[0].innerHTML = `<div class="fade-in">Analyzes Causes</div>`;
+                multiAgentSubtaskHolders[1].innerHTML = `<div class="fade-in">Analyzes Impacts</div>`;
+                multiAgentSubtaskHolders[2].innerHTML = `<div class="fade-in">Proposes Solutions</div>`;
+                
+                multiAgentCompletedContainer.innerHTML = `<div class="thinking-dots text-4xl text-gray-500"><span>.</span><span>.</span><span>.</span></div>`;
+
+                // 3. Processing time
+                await new Promise(res => setTimeout(res, TASK_PROCESSING_TIME));
+
+                // 4. Agents complete and show synthesized result
+                multiAgents.forEach(agent => {
+                    agent.classList.remove('border-yellow-500');
+                    agent.classList.add('border-green-500');
+                });
+                
+                multiAgentSubtaskHolders.forEach(holder => holder.innerHTML = '');
+
+                multiAgentCompletedContainer.innerHTML = `<div class="task bg-emerald-500 w-72 p-3 rounded-lg shadow font-medium fade-in">Comprehensive Report (Synthesized from 3 Agents)</div>`;
+            }
+
+            async function runCollaborativeWorkflow() {
+                collabAgentSection.classList.remove('opacity-0');
+                collabAgentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const [gatherer, processor, finalizer] = collabAgents;
+                const [gathererHolder, processorHolder, finalizerHolder] = collabAgentTaskHolders;
+
+                // Step 1: Gatherer
+                gatherer.classList.add('border-yellow-500');
+                gathererHolder.innerHTML = `<div class="task bg-sky-500 p-2 rounded fade-in">Gathering Data...</div>`;
+                await new Promise(res => setTimeout(res, TASK_PROCESSING_TIME));
+                gatherer.classList.remove('border-yellow-500');
+                gatherer.classList.add('border-green-500');
+                gathererHolder.innerHTML = `<div class="task bg-sky-500 p-2 rounded">Raw Data</div>`;
+                
+                // Arrow 1 appears
+                arrows[0].classList.remove('opacity-0');
+                arrows[0].classList.add('fade-in');
+                await new Promise(res => setTimeout(res, 500));
+
+                // Step 2: Processor
+                processor.classList.add('border-yellow-500');
+                gathererHolder.innerHTML = '';
+                processorHolder.innerHTML = `<div class="task bg-amber-500 p-2 rounded fade-in">Processing Data...</div>`;
+                await new Promise(res => setTimeout(res, TASK_PROCESSING_TIME));
+                processor.classList.remove('border-yellow-500');
+                processor.classList.add('border-green-500');
+                processorHolder.innerHTML = `<div class="task bg-amber-500 p-2 rounded">Processed Info</div>`;
+
+                // Arrow 2 appears
+                arrows[1].classList.remove('opacity-0');
+                arrows[1].classList.add('fade-in');
+                await new Promise(res => setTimeout(res, 500));
+
+                // Step 3: Finalizer
+                finalizer.classList.add('border-yellow-500');
+                processorHolder.innerHTML = '';
+                finalizerHolder.innerHTML = `<div class="task bg-emerald-500 p-2 rounded fade-in">Generating Report...</div>`;
+                await new Promise(res => setTimeout(res, TASK_PROCESSING_TIME));
+                finalizer.classList.remove('border-yellow-500');
+                finalizer.classList.add('border-green-500');
+                finalizerHolder.innerHTML = `<div class="task bg-emerald-500 p-2 rounded">Final Report</div>`;
+                
+                await new Promise(res => setTimeout(res, 500));
+
+                // Final Result
+                finalizerHolder.innerHTML = '';
+                collabResult.innerHTML = `<div class="p-4 bg-indigo-600 rounded-lg text-xl font-bold fade-in">✅ Task Complete: Final Report Delivered!</div>`;
+            }
+
+            startBtn.addEventListener('click', async () => {
+                startBtn.disabled = true;
+                startBtn.textContent = 'Running...';
+                startBtn.classList.add('cursor-not-allowed', 'opacity-70');
+
+                resetSimulations();
+                await new Promise(res => setTimeout(res, 500));
+
+                await runSingleAgentWorkflow();
+                await new Promise(res => setTimeout(res, 1000));
+
+                await runMultiAgentWorkflow();
+                await new Promise(res => setTimeout(res, 1000));
+                
+                await runCollaborativeWorkflow();
+
+                startBtn.disabled = false;
+                startBtn.textContent = 'Restart Simulation';
+                startBtn.classList.remove('cursor-not-allowed', 'opacity-70');
+            });
+        });
+    </script>

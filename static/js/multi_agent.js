@@ -2,6 +2,28 @@ let isChatStreamActive = false;
 let conversationMessages = []; // Array to store all conversation messages
 let currentStreamingMessage = null; // Track the current streaming message
 
+// Utility function to scroll to the bottom of the response container
+function scrollToBottom() {
+    const responseContainerWrapper = document.getElementById('responseContainerWrapper');
+    if (responseContainerWrapper) {
+        responseContainerWrapper.scrollTo({
+            top: responseContainerWrapper.scrollHeight,
+            behavior: 'smooth'
+        });
+    }
+}
+
+// Utility function to scroll to a specific element
+function scrollToElement(element) {
+    if (element) {
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'end',
+            inline: 'nearest'
+        });
+    }
+}
+
 $(document).ready(function() {
     const $searchForm = $('#searchForm');
     const $searchInput = $('#searchInput'); // Renamed from $queryInput in some contexts
@@ -29,7 +51,7 @@ $(document).ready(function() {
             currentStreamingMessage.$messageContent.html(renderMarkdown(currentStreamingMessage.content));
             
             // Scroll to the bottom
-            $responseContainer.scrollTop($responseContainer[0].scrollHeight);
+            scrollToBottom();
             
             // Re-highlight code blocks
             Prism.highlightAllUnder(currentStreamingMessage.$messageDiv[0]);
@@ -71,7 +93,7 @@ $(document).ready(function() {
             $responseContainer.append($messageDiv);
 
             // Scroll to the bottom of the conversation
-            $responseContainer.scrollTop($responseContainer[0].scrollHeight);
+            scrollToBottom();
             
             // Add copy buttons to any new code blocks
             addCopyButtons($messageDiv);
@@ -146,7 +168,7 @@ $(document).ready(function() {
         $responseContainer.append($messageDiv);
 
         // Scroll to the bottom of the conversation
-        $responseContainer.scrollTop($responseContainer[0].scrollHeight);
+        scrollToBottom();
         
         // Add copy buttons to any new code blocks
         addCopyButtons($messageDiv);
@@ -170,7 +192,7 @@ $(document).ready(function() {
         const $systemMessageDiv = $('<div>').addClass('system-message text-center text-gray-400 text-sm my-3');
         $systemMessageDiv.text(text);
         $responseContainer.append($systemMessageDiv);
-        $responseContainer.scrollTop($responseContainer[0].scrollHeight);
+        scrollToBottom();
         // Save as a chat message with sender, not just as type system
         conversationMessages.push({ type: 'chat', sender: sender, content: text });
     }

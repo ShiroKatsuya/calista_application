@@ -1,5 +1,24 @@
+<style>
+    .related-question {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #2c2c2e;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid transparent;
+        color: #d1d5db; /* gray-300 */
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    .related-question:hover {
+        background-color: #374151; /* gray-700 */
+        border-color: #4b5563; /* gray-600 */
+        color: white;
+    }
+</style>
 
-<div id="resultsState" class="hidden flex-1 flex flex-col h-full bg-[#1c1c1e] text-white">
+<div id="resultsState" class="hidden fixed inset-0 flex flex-col h-full w-full bg-[#1c1c1e] text-white z-50">
     <div class="flex-shrink-0 bg-[#1c1c1e] p-6 border-b border-gray-700/60">
         <div class="max-w-3xl mx-auto">
             <div class="flex items-center justify-between mb-4">
@@ -20,8 +39,11 @@
 
     <div class="flex-1 overflow-y-auto" id="responseContainerWrapper">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Streamed conversation messages will be appended here -->
-            <div id="responseContainer" class="space-y-4"></div>
+            <!-- Dummy conversation -->
+            <div id="responseContainer" class="space-y-4">
+
+
+            </div>
             
             <!-- Thinking Indicator -->
             <div id="thinkingIndicator" class="thinking-indicator hidden">
@@ -30,33 +52,6 @@
             </div>
 
             <!-- Related Questions Section -->
-            <div class="mt-8 pt-8 border-t border-gray-700/60">
-                <h3 class="text-xl font-semibold mb-4 flex items-center">
-                    <i class="fas fa-list-ul mr-2"></i> Related
-                </h3>
-                <div id="relatedQuestionsContainer" class="space-y-3">
-                    <div class="related-question">
-                        <span>Tips for effective greeting in professional emails</span>
-                        <i class="fas fa-plus"></i>
-                    </div>
-                    <div class="related-question">
-                        <span>Common responses to casual greetings</span>
-                        <i class="fas fa-plus"></i>
-                    </div>
-                    <div class="related-question">
-                        <span>Cultural variations of saying hello</span>
-                        <i class="fas fa-plus"></i>
-                    </div>
-                    <div class="related-question">
-                        <span>How to start a conversation confidently</span>
-                        <i class="fas fa-plus"></i>
-                    </div>
-                    <div class="related-question">
-                        <span>Greeting etiquette in virtual meetings</span>
-                        <i class="fas fa-plus"></i>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
     <div id="loadingIndicator" class="text-center text-gray-500 text-sm mt-4 hidden">

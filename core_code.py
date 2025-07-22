@@ -123,16 +123,16 @@ web_tools = [
 
 
 
-# model_rina = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
-# model_emilia = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
-# model_charlie = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
-# model_coordinator = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
+model_rina = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+model_emilia = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+model_shirokatsuya = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+model_synthesizer = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
-model_rina = ChatOllama(model="llama3-2.3b:latest")
-model_emilia = ChatOllama(model="llama3.2:3b")
-model_shirokatsuya = ChatOllama(model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M")
-# model_coordinator = ChatOllama(model="llama3.2:3b", temperature=0.5)
-model_synthesizer = ChatOllama(model="hf.co/unsloth/gemma-3n-E2B-it-GGUF:Q4_K_M")  # New synthesis model
+# model_rina = ChatOllama(model="llama3-2.3b:latest")
+# model_emilia = ChatOllama(model="llama3.2:3b")
+# model_shirokatsuya = ChatOllama(model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M")
+# # model_coordinator = ChatOllama(model="llama3.2:3b", temperature=0.5)
+# model_synthesizer = ChatOllama(model="hf.co/unsloth/gemma-3n-E2B-it-GGUF:Q4_K_M")  # New synthesis model
 
 class Agent:
     def __init__(self, name: str, model, description: str, expertise: List[str], tools=None):

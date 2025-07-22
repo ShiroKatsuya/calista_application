@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Overlay Container -->
+
+  <div class="container mx-auto  px-4 py-8 md:py-16 flex-1 flex flex-col">
+    <!-- Header Section -->
+    <header class="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 mb-8 bg-gradient-to-r from-black/40 via-gray-900/60 to-black/30 rounded-2xl p-6 shadow-2xl backdrop-blur-lg border border-gray-800">
+      <div class="flex flex-col flex-grow w-full">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-900/60 text-xs font-semibold text-indigo-300 tracking-wide uppercase">Article</span>
+          <span class="text-xs text-gray-500">Preview</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white leading-tight mb-2 tracking-tight drop-shadow-lg">
+          {{ title if title else 'Article Summary' }}
+        </h1>
+        <div class="mt-2 mb-1">
+          <img id="article-image"
+               src="{% if data and data[0].imageUrl %}{{ data[0].imageUrl }}{% else %}https://images.pexels.com/photos/1369476/pexels-photo-1369476.jpeg{% endif %}"
+               alt="Article Image"
+               class="w-full max-w-xs h-36 object-cover rounded-xl border border-gray-700 shadow-md transition-transform duration-300 hover:scale-105">
+        </div>
+      </div>
+    </header>
+
+    <script>
+      // Fetch and update the article imageUrl if needed
+      document.addEventListener("DOMContentLoaded", function() {
+        const img = document.getElementById('article-image');
+        {% if data and data[0].link %}
+        const articleUrl = "{{ data[0].link }}";
+        {% else %}
+        const articleUrl = null;
+        {% endif %}
+
+        if (img && articleUrl) {
+          const cacheKey = "articleImage:" + articleUrl;
+          const cachedImageUrl = localStorage.getItem(cacheKey);
+
+          // Only update if not already set to cached value
+          if (cachedImageUrl && img.src !== cachedImageUrl) {
+            img.src = cachedImageUrl;
+          }
+
+          // Always try to fetch a fresh image in the background
+          fetch(`/fetch_image?url=${encodeURIComponent(articleUrl)}`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.imageUrl && img.src !== data.imageUrl) {
+                img.src = data.imageUrl;
+                localStorage.setItem(cacheKey, data.imageUrl);
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching article image:', error);
+              // fallback to default image if fetch fails
+              img.src = "https://images.pexels.com/photos/1369476/pexels-photo-1369476.jpeg";
+            });
+        } else if (img) {
+          // fallback if no articleUrl
+          img.src = "https://images.pexels.com/photos/1369476/pexels-photo-1369476.jpeg";
+        }
+      });
+    </script>
+
+    <!-- Main Content Card -->
+    <!--  -->
+    <main class="bg-black/60 border border-gray-800 rounded-2xl shadow-2xl p-6 md:p-10 backdrop-blur-xl">
+      <h2 class="text-xl md:text-2xl font-bold text-white mb-6 tracking-tight">Rangkum</h2>
+
+      <!-- Tabs -->
+    {% include "Main_Content_Card_Tabs.html" %} 
+
+      <!-- Content Area -->
+      <section id="content-area">
+        <!-- Answer Content -->
+        <div id="answer-content" role="tabpanel" aria-labelledby="answer-btn">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="source-cards-container">
+            <!-- Source Card Example -->
+            
+            {% if data and data[0].title %}
+            <a href="{{ data[0].link }}" target="_blank" class="block bg-gray-900/80 p-3 sm:p-4 rounded-xl shadow hover:scale-[1.03] hover:bg-indigo-900/60 transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 w-full">
+              <div class="flex flex-col sm:flex-row items-start sm:items-center mb-2 gap-2">
+                <img src="https://placehold.co/24x24/4285F4/FFFFFF?text=R" alt="Favicon" class="w-6 h-6 sm:w-4 sm:h-4 mr-0 sm:mr-2 rounded">
+                <span class="text-xs sm:text-sm text-gray-400 break-words">{{ data[0].title }}</span>
+              </div>
+            </a>
+            {% endif %}
+          </div>
+          <div class="space-y-4 text-gray-300 leading-relaxed" id="initial-content">
+            {% if data and data[0].agent_response %}
+                <div id="initial-markdown-content" style="display: none;">{{ data[0].agent_response }}</div>
+                <div id="initial-rendered-content"></div>
+            {% else %}
+                <p class="text-center text-gray-400 py-8">
+                    <svg class="mx-auto h-12 w-12 text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Click one of the buttons below to analyze this article
+                </p>
+            {% endif %}
+          </div>
+          <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div class="flex flex-col sm:flex-row gap-4 w-full">
+              <button
+                type="button"
+                class="flex items-center gap-2 px-4 py-3 sm:px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-full shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 w-full sm:w-auto justify-center"
+                id="summarizeArticleBtn"
+              >
+                <img src="{{ url_for('static', filename='img/summarize.png') }}" alt="Summarize Icon" class="w-5 h-5 text-white" />
+                <span class="truncate">Rangkum Artikel</span>
+              </button>
+              <button
+                type="button"
+                class="flex items-center gap-2 px-4 py-3 sm:px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-full shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 w-full sm:w-auto justify-center"
+                id="coreArticleBtn"
+              >
+                <img src="{{ url_for('static', filename='img/core.png') }}" alt="Core Icon" class="w-5 h-5 text-white" />
+                <span class="truncate">Inti Artikel</span>
+              </button>
+              <button
+                type="button"
+                class="flex items-center gap-2 px-4 py-3 sm:px-6 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-full shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 w-full sm:w-auto justify-center"
+                id="detailedExplanationBtn"
+              >
+                <img src="{{ url_for('static', filename='img/detail.png') }}" alt="Detail Icon" class="w-5 h-5 text-white" />
+                <span class="truncate">Penjelasan Rinci tentang Artikel</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+
+        <!-- Preview Artikel (Dummy Data) -->
+        <div id="preview-artikel-content" role="tabpanel" aria-labelledby="preview-btn">
+          <div class="space-y-4 text-gray-300 leading-relaxed" id="preview-result-content">
+            
+          </div>
+        </div>
+
+        <!-- Sources Content (Initially Hidden) -->
+        <div id="sources-content" class="hidden" role="tabpanel" aria-labelledby="sources-btn">
+          <ul class="space-y-4 mt-4" id="sources-list">
+            {% if data and data[0].title %}
+            <li class="flex items-start gap-4">
+              <span class="inline-flex items-center justify-center w-5 h-5 bg-gray-800 rounded text-xs text-gray-400 mt-1">1</span>
+              <a href="{{ data[0].link }}" target="_blank" class="group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                <p class="text-white group-hover:underline">{{ data[0].title }}</p>
+                <div class="flex items-center text-xs text-gray-400 mt-1">
+                  <img src="https://placehold.co/16x16/4285F4/FFFFFF?text=R" alt="Favicon" class="w-4 h-4 mr-2 rounded">
+                  <span>{{ data[0].link }}</span>
+                </div>
+              </a>
+            </li>
+            {% else %}
+            <li class="text-center text-gray-400 py-4">
+              <p>No sources available yet. Click a button to analyze the article first.</p>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+
+        <!-- Action Buttons -->
+        
+      </section>
+
+      <!-- Follow-up Input -->
+      <div class="mt-10">
+       <!-- <form id="followUpForm" class="relative flex items-center" autocomplete="off">
+          <input id="followUpInput" type="text" placeholder="Ask a follow-up..." class="w-full bg-[#1c1c1e] border border-gray-700 rounded-full py-3 pl-12 pr-24 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-200 shadow-lg" aria-label="Ask a follow-up">
+          <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="text-gray-400" viewBox="0 0 16 16">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+          </div>
+          <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">Send</button>
+        </form>
+        -->
+      </div>
+    </main>
+  </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{{ url_for('static', filename='js/artikel.js') }}"></script>
+
+</script>
+
+
+
+{% endblock %}
+

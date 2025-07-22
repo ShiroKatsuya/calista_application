@@ -10,6 +10,7 @@ from typing import Annotated, TypedDict, Union, List, Dict, Optional, Any
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 import re # Added this import
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from langchain_core.agents import AgentFinish
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -37,25 +38,25 @@ logger = logging.getLogger(__name__)
 
 # Model configurations with optimized parameters
 # Initialize models with better configurations
-model_rina = ChatOllama(
-    model="llama3.2:3b",
-    streaming=True,
-    # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
-)
+# model_rina = ChatOllama(
+#     model="llama3.2:3b",
+#     streaming=True,
+#     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
+# )
 
-model_emilia = ChatOllama(
-    model="llama3-2.3b:latest", 
-    streaming=True,
-    # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
-)
+# model_emilia = ChatOllama(
+#     model="llama3-2.3b:latest", 
+#     streaming=True,
+#     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
+# )
 
 
 
-model_supervisor = ChatOllama(
-    model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M",
-    streaming=True,
-    # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
-)
+# model_supervisor = ChatOllama(
+#     model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M",
+#     streaming=True,
+#     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
+# )
 
 # import os
 # from dotenv import load_dotenv
@@ -74,26 +75,19 @@ search = GoogleSerperAPIWrapper(
     serper_api_key=SERPER_API_KEY
 )
 
-# model_rina = ChatGoogleGenerativeAI(
-#     model="gemini-2.5-flash-preview-04-17",
-#     temperature=0.7,
-#     top_p=0.9,
-#     google_api_key=GOOGLE_API_KEY
-# )
+model_rina = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+)
 
-# model_emilia = ChatGoogleGenerativeAI(
-#     model="gemini-2.5-flash-preview-04-17", 
-#     temperature=0.6, 
-#     top_p=0.9,
-#     google_api_key=GOOGLE_API_KEY
-# )
+model_emilia = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash", 
 
-# model_supervisor = ChatGoogleGenerativeAI(
-#     model="gemini-2.5-flash-preview-04-17",
-#     temperature=0.5,  # Lower temperature for more consistent routing
-#     top_p=0.9,
-#     google_api_key=GOOGLE_API_KEY
-# )
+)
+
+model_supervisor = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+
+)
 
 
 search = GoogleSerperAPIWrapper()

@@ -26,7 +26,7 @@
     <header class="mb-8">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
             <div>
-                <h1 class="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Discover</h1>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Rekomendasi Berita Oleh [CALISTA]</h1>
                 <p class="text-lg text-gray-400 mt-1">Here's what's new and trending for you.</p>
             </div>
             <button class="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-full text-sm font-semibold text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-300">
@@ -36,79 +36,100 @@
         </div>
 
         <nav class="flex items-center gap-2 sm:gap-4 border-b border-gray-800 pb-3">
-            <a href="#" class="px-3 py-1.5 text-sm sm:text-base font-semibold text-white bg-gray-700/50 rounded-full">For You</a>
-            <a href="#" class="px-3 py-1.5 text-sm sm:text-base font-medium text-gray-400 hover:text-white transition-colors">Tech & Science</a>
-            <a href="#" class="px-3 py-1.5 text-sm sm:text-base font-medium text-gray-400 hover:text-white transition-colors">Finance</a>
-            <a href="#" class="px-3 py-1.5 text-sm sm:text-base font-medium text-gray-400 hover:text-white transition-colors">Arts & Culture</a>
-            <a href="#" class="hidden sm:block px-3 py-1.5 text-sm sm:text-base font-medium text-gray-400 hover:text-white transition-colors">Sports</a>
+            <a href="{{ url_for('discover', category='foryou') }}"
+               class="px-3 py-1.5 text-sm sm:text-base font-semibold {{ 'bg-gray-700/50 text-white' if active_category == 'foryou' else 'text-gray-400 hover:text-white transition-colors' }} rounded-full">
+                For You
+            </a>
+            <a href="{{ url_for('discover', category='tech') }}"
+               class="px-3 py-1.5 text-sm sm:text-base font-medium {{ 'bg-gray-700/50 text-white' if active_category == 'tech' else 'text-gray-400 hover:text-white transition-colors' }} rounded-full">
+                Tech & Science
+            </a>
+            <a href="{{ url_for('discover', category='finance') }}"
+               class="px-3 py-1.5 text-sm sm:text-base font-medium {{ 'bg-gray-700/50 text-white' if active_category == 'finance' else 'text-gray-400 hover:text-white transition-colors' }} rounded-full">
+                Finance
+            </a>
+            <a href="{{ url_for('discover', category='arts') }}"
+               class="px-3 py-1.5 text-sm sm:text-base font-medium {{ 'bg-gray-700/50 text-white' if active_category == 'arts' else 'text-gray-400 hover:text-white transition-colors' }} rounded-full">
+                Arts & Culture
+            </a>
+            <a href="{{ url_for('discover', category='sports') }}"
+               class="hidden sm:block px-3 py-1.5 text-sm sm:text-base font-medium {{ 'bg-gray-700/50 text-white' if active_category == 'sports' else 'text-gray-400 hover:text-white transition-colors' }} rounded-full">
+                Sports
+            </a>
         </nav>
     </header>
 
     <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-        <article class="group relative md:col-span-2 lg:col-span-2 lg:row-span-2 rounded-xl overflow-hidden shadow-lg hover:shadow-cyan-500/20 transition-all duration-300">
+        {% if articles %}
+        <!-- Featured Article -->
+        <article id="article-featured" data-url="{{ articles[0].link }}" class="group relative md:col-span-2 lg:col-span-2 lg:row-span-2 rounded-xl overflow-hidden shadow-lg hover:shadow-cyan-500/20 transition-all duration-300">
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-            <img src="https://images.unsplash.com/photo-1666937397816-3e95d5276f57?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" alt="Flooding in Texas">
+            <img src="https://images.pexels.com/photos/1369476/pexels-photo-1369476.jpeg" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" alt="News Image">
             <div class="absolute bottom-0 left-0 p-6 text-white">
-                <span class="text-sm font-semibold py-1 px-2.5 bg-cyan-500/30 text-cyan-300 rounded-md mb-2 inline-block">US News</span>
+                <span class="text-sm font-semibold py-1 px-2.5 bg-cyan-500/30 text-cyan-300 rounded-md mb-2 inline-block">Featured News</span>
                 <h2 class="text-2xl lg:text-3xl font-bold leading-tight clamp-3">
-                    Texas flood death toll hits 120 as alert delays spark outrage
+                    <a href="{{ url_for('article_summary', link=articles[0].link, title=articles[0].title) }}" target="_blank">{{ articles[0].title }}</a>
                 </h2>
                 <p class="mt-2 text-gray-300 clamp-2 hidden sm:block">
-                    Officials waited 90 minutes to send emergency warnings despite early requests, with some residents not alerted until six hours later.
+                    {{ articles[0].pub_date }}
                 </p>
                 <div class="flex items-center text-sm mt-4 text-gray-400 font-medium">
                     <i class="fa-solid fa-book-open-reader mr-2"></i>
-                    <span>22 sources</span>
+                    <span>Source</span>
                 </div>
             </div>
         </article>
 
-        <article class="group bg-gray-800/50 rounded-xl overflow-hidden shadow-md hover:bg-gray-800 hover:-translate-y-1 transition-all duration-300">
-            <img src="https://images.unsplash.com/photo-1611937920839-a035c9175069?q=80&w=2071&auto=format&fit=crop" class="w-full h-40 object-cover" alt="Iran Nuclear Facility">
+        {% for article in articles[1:] %}
+        <article id="article-{{ loop.index }}" data-url="{{ article.link }}" class="group bg-gray-800/50 rounded-xl overflow-hidden shadow-md hover:bg-gray-800 hover:-translate-y-1 transition-all duration-300">
+            <img src="https://images.pexels.com/photos/1369476/pexels-photo-1369476.jpeg" class="w-full h-40 object-cover" alt="News Image">
             <div class="p-4">
-                <h3 class="font-bold text-lg leading-tight text-gray-100 clamp-2">Iran's enriched uranium stockpile remains after strikes</h3>
+                <h3 class="font-bold text-lg leading-tight text-gray-100 clamp-2">
+                    <a href="{{ url_for('article_summary', link=article.link, title=article.title) }}" target="_blank">{{ article.title }}</a>
+                </h3>
                 <div class="flex items-center text-xs mt-3 text-gray-400 font-medium">
                     <i class="fa-solid fa-atom mr-2 text-blue-400"></i>
-                    <span>World News &middot; 20 sources</span>
+                    <span>{{ article.pub_date }} &middot; Source</span>
                 </div>
             </div>
         </article>
-
-        <article class="group bg-gray-800/50 rounded-xl overflow-hidden shadow-md hover:bg-gray-800 hover:-translate-y-1 transition-all duration-300">
-            <img src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=2070&auto=format&fit=crop" class="w-full h-40 object-cover" alt="Aid for Gaza">
-            <div class="p-4">
-                <h3 class="font-bold text-lg leading-tight text-gray-100 clamp-2">EU, Israel agree to expand Gaza aid amid famine warnings</h3>
-                <div class="flex items-center text-xs mt-3 text-gray-400 font-medium">
-                    <i class="fa-solid fa-hand-holding-hand mr-2 text-green-400"></i>
-                    <span>Humanitarian &middot; 21 sources</span>
-                </div>
-            </div>
-        </article>
-
-        <article class="group bg-gray-800/50 rounded-xl overflow-hidden shadow-md hover:bg-gray-800 hover:-translate-y-1 transition-all duration-300">
-            <img src="https://images.unsplash.com/photo-1590622617696-13a853587b8d?q=80&w=1974&auto=format&fit=crop" class="w-full h-40 object-cover" alt="Farmer's hand in soil">
-            <div class="p-4">
-                <h3 class="font-bold text-lg leading-tight text-gray-100 clamp-2">USDA ends race, sex preferences in farm loan decisions</h3>
-                <div class="flex items-center text-xs mt-3 text-gray-400 font-medium">
-                    <i class="fa-solid fa-landmark-dome mr-2 text-yellow-400"></i>
-                    <span>US Politics &middot; 22 sources</span>
-                </div>
-            </div>
-        </article>
-
-        <article class="group bg-gray-800/50 rounded-xl overflow-hidden shadow-md hover:bg-gray-800 hover:-translate-y-1 transition-all duration-300">
-            <img src="https://images.unsplash.com/photo-1621262422003-5168270cdc24?q=80&w=2070&auto=format&fit=crop" class="w-full h-40 object-cover" alt="Stock Market Chart">
-            <div class="p-4">
-                <h3 class="font-bold text-lg leading-tight text-gray-100 clamp-2">Market Volatility Rises as Investors Eye Inflation Data</h3>
-                <div class="flex items-center text-xs mt-3 text-gray-400 font-medium">
-                    <i class="fa-solid fa-arrow-trend-up mr-2 text-red-400"></i>
-                    <span>Finance &middot; 15 sources</span>
-                </div>
-            </div>
-        </article>
+        {% endfor %}
+        {% else %}
+        <p class="text-gray-400 col-span-full">No articles found.</p>
+        {% endif %}
 
     </main>
 
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const articles = document.querySelectorAll('article[data-url]');
+    articles.forEach(article => {
+        const url = article.dataset.url;
+        const img = article.querySelector('img');
+        const cacheKey = "articleImage:" + url;
+
+        // Try to get the cached image URL
+        const cachedImageUrl = localStorage.getItem(cacheKey);
+
+        if (cachedImageUrl) {
+            img.src = cachedImageUrl;
+        } else {
+            fetch(`/fetch_image?url=${encodeURIComponent(url)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.imageUrl) {
+                        img.src = data.imageUrl;
+                        // Cache the image URL for future use
+                        localStorage.setItem(cacheKey, data.imageUrl);
+                    }
+                })
+                .catch(error => console.error('Error fetching image:', error));
+        }
+    });
+});
+</script>
+
 {% endblock %} 

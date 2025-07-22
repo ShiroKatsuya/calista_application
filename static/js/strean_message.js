@@ -1,19 +1,51 @@
+let conversationMessages = [];
+
+let userIsScrolling = false; // Flag to track user scroll activity
+let scrollTimeout; // To store the timeout for resetting userIsScrolling
+
+const SCROLL_DEBOUNCE_TIME = 500; // Milliseconds to wait before resuming auto-scroll
+
+// Function to handle scroll events
+function handleScrollActivity() {
+    userIsScrolling = true;
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        userIsScrolling = false;
+    }, SCROLL_DEBOUNCE_TIME);
+}
+
+// Initialize scroll listeners once the DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    const responseContainerWrapper = document.getElementById('responseContainerWrapper');
+    if (responseContainerWrapper) {
+        responseContainerWrapper.addEventListener('scroll', handleScrollActivity);
+        responseContainerWrapper.addEventListener('wheel', handleScrollActivity); // Also detect wheel for better responsiveness
+    }
+});
+
 function renderFinalResultBubble(result) {
-    const container = document.getElementById('final-result-bubble');
-    container.innerHTML = `
-        <div class="message-bubble fade-in-up p-4 rounded-lg shadow-md mb-4 relative" style="max-width:80%;">
-            <div class="sender-label font-bold mb-1 text-gray-300">All Agents (Synthesized):</div>
-            <div class="final-response-content">${renderMarkdown(result)}</div>
-            <div class="action-buttons flex mt-4 space-x-3 ml-auto pr-2">
-                <button class="action-button good-response-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1"><i class="fas fa-thumbs-up"></i><span>Good Response</span></button>
-                <button class="action-button bad-response-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1"><i class="fas fa-thumbs-down"></i><span>Bad Response</span></button>
-                <button class="action-button read-aloud-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1"><i class="fas fa-volume-up"></i><span>Read Aloud</span></button>
-                <button class="action-button edit-canvas-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1"><i class="fas fa-edit"></i><span>Edit Canvas</span></button>
-                <button class="action-button share-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1"><i class="fas fa-share-alt"></i><span>Share</span></button>
-            </div>
+    const conversationHistory = document.getElementById('conversation-history');
+    const resultDiv = document.createElement('div');
+    resultDiv.className = "message-bubble fade-in-up p-4 rounded-lg shadow-md mb-4 relative";
+    resultDiv.innerHTML = `
+        <div class="sender-label font-bold mb-1 text-gray-300">All Agents (Synthesized):</div>
+        <div class="final-response-content">${renderMarkdown(result)}</div>
+        <div class="action-buttons flex mt-4 space-x-3 ml-auto pr-2">
+            <button class="action-button good-response-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1" title="Good Response"><i class="fas fa-thumbs-up"></i><span>Good Response</span></button>
+            <button class="action-button bad-response-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1" title="Bad Response"><i class="fas fa-thumbs-down"></i><span>Bad Response</span></button>
+            <button class="action-button read-aloud-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1" title="Read Aloud"><i class="fas fa-volume-up"></i><span>Read Aloud</span></button>
+            <button class="action-button edit-canvas-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1" title="Edit Canvas"><i class="fas fa-edit"></i><span>Edit Canvas</span></button>
+            <button class="action-button share-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1" title="Share"><i class="fas fa-share-alt"></i><span>Share</span></button>
         </div>
     `;
+    conversationHistory.appendChild(resultDiv);
+    addConversationMessage('all_agents', result, 'final_result');
+    scrollToBottom();
 }
+
+
+
+
 
 // New helper function to render markdown *inside* the <think> blocks
 // This function will *not* look for <think> tags itself, and will assume its input is already raw text that needs escaping and markdown processing.
@@ -82,8 +114,8 @@ function _renderThinkContentMarkdown(rawText) {
         const placeholder = `CODE_BLOCK_PLACEHOLDER_${i}__`;
         const block = codeBlocks[i];
         const languageClass = block.lang ? `language-${block.lang}` : 'language-markup';
-        const escapedCode = escapeHtml(block.code); // Ensure code content is escaped
-        const codeHtml = `<pre class="line-numbers text-xs p-3 overflow-x-auto"><code class="${languageClass}">${escapedCode}</code></pre>`;
+        // Don't escape code content - we want to display the actual characters
+        const codeHtml = `<pre class="line-numbers text-xs p-3 overflow-x-auto"><code class="${languageClass}">${block.code}</code></pre>`;
         html = html.replace(placeholder, codeHtml);
     }
     return html;
@@ -189,8 +221,8 @@ function renderMarkdown(markdownText) {
         const placeholder = `CODE_BLOCK_PLACEHOLDER_${i}__`;
         const block = codeBlocks[i];
         const languageClass = block.lang ? `language-${block.lang}` : 'language-markup';
-        const escapedCode = escapeHtml(block.code); // Make sure code content is escaped
-        const codeHtml = `<pre id="code-block-wrapper" class="line-numbers text-sm p-5 overflow-x-auto"><code id="code-content" class="${languageClass}">${escapedCode}</code></pre>`;
+        // Don't escape code content - we want to display the actual characters
+        const codeHtml = `<pre id="code-block-wrapper" class="line-numbers text-sm p-5 overflow-x-auto"><code id="code-content" class="${languageClass}">${block.code}</code></pre>`;
         html = html.replace(placeholder, codeHtml);
     }
 
@@ -216,50 +248,137 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
+// Utility function to scroll to the bottom of the response container
+function scrollToBottom() {
+    const responseContainerWrapper = document.getElementById('responseContainerWrapper');
+    if (responseContainerWrapper && !userIsScrolling) { // Only scroll if user is not actively scrolling
+        responseContainerWrapper.scrollTo({
+            top: responseContainerWrapper.scrollHeight,
+            behavior: 'smooth'
+        });
+    }
+}
+
+// Utility function to scroll to a specific element
+function scrollToElement(element) {
+    if (element) {
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'end',
+            inline: 'nearest'
+        });
+    }
+}
+
 let finalResultText = '';
 let submitButton = null;
 let bubbleCreated = false;
 function renderFinalResultBubbleStreaming(chunk, done = false) {
-    const container = document.getElementById('final-result-bubble');
-    // Only create the bubble when the first chunk arrives
+    const conversationHistory = document.getElementById('conversation-history');
     if (!bubbleCreated && chunk) {
-        container.innerHTML = `
-            <div class="message-bubble fade-in-up p-4 rounded-lg shadow-md mb-4 relative" style="max-width:80%;">
-                <div class="sender-label font-bold mb-1 text-gray-300">All Agents (Synthesized):</div>
-                <div class="final-response-content" id="final-response-content"></div>
-                <div class="action-buttons flex mt-4 space-x-3 ml-auto pr-2" id="final-action-buttons" style="display:none;">
-                    <button class="action-button good-response-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1"><i class="fas fa-thumbs-up"></i><span>Good Response</span></button>
-                    <button class="action-button bad-response-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1"><i class="fas fa-thumbs-down"></i><span>Bad Response</span></button>
-                    <button class="action-button read-aloud-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1"><i class="fas fa-volume-up"></i><span>Read Aloud</span></button>
-                    <button class="action-button edit-canvas-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1"><i class="fas fa-edit"></i><span>Edit Canvas</span></button>
-                    <button class="action-button share-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1"><i class="fas fa-share-alt"></i><span>Share</span></button>
-                </div>
+        streamingResultDiv = document.createElement('div');
+        streamingResultDiv.className = "message-bubble fade-in-up p-4 rounded-lg shadow-md mb-4 relative";
+        streamingResultDiv.innerHTML = `
+            <div class="sender-label font-bold mb-1 text-gray-300">All Agents (Synthesized):</div>
+            <div class="final-response-content" id="final-response-content"></div>
+            <div class="action-buttons flex mt-4 space-x-3 ml-auto pr-2" id="final-action-buttons" style="display:none;">
+                <button class="action-button good-response-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1" title="Good Response"><i class="fas fa-thumbs-up"></i><span>Good Response</span></button>
+                <button class="action-button bad-response-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1" title="Bad Response"><i class="fas fa-thumbs-down"></i><span>Bad Response</span></button>
+                <button class="action-button read-aloud-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1" title="Read Aloud"><i class="fas fa-volume-up"></i><span>Read Aloud</span></button>
+                <button class="action-button edit-canvas-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1" title="Edit Canvas"><i class="fas fa-edit"></i><span>Edit Canvas</span></button>
+                <button class="action-button share-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1" title="Share"><i class="fas fa-share-alt"></i><span>Share</span></button>
             </div>
         `;
+        conversationHistory.appendChild(streamingResultDiv);
         bubbleCreated = true;
+        scrollToBottom();
     }
-    if (chunk) {
+    if (chunk && streamingResultDiv) {
         finalResultText += chunk;
-        document.getElementById('final-response-content').innerHTML = renderMarkdown(finalResultText);
+        streamingResultDiv.querySelector('#final-response-content').innerHTML = renderMarkdown(finalResultText);
         if (window.Prism) Prism.highlightAll();
+        scrollToBottom();
     }
-    if (done) {
-        document.getElementById('final-action-buttons').style.display = '';
-        // Re-enable submit button and restore color
+    if (done && streamingResultDiv) {
+        streamingResultDiv.querySelector('#final-action-buttons').style.display = '';
         if (submitButton) {
             submitButton.disabled = false;
             submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
             submitButton.classList.add('hover:bg-blue-600');
         }
-        bubbleCreated = false; // Reset for next query
+        bubbleCreated = false;
+        addConversationMessage('all_agents', finalResultText, 'final_result');
+        streamingResultDiv = null;
+        finalResultText = '';
     }
 }
+
+function saveConversationToJson() {
+    if (!conversationMessages || conversationMessages.length === 0) {
+        addSystemMessage('No conversation data to save.');
+        return;
+    }
+    fetch('/save_conversation', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ conversation: conversationMessages })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            console.log('Conversation saved successfully:', data.file_path);
+            // Optionally, inform the user or provide a download link
+        } else {
+            console.error('Error saving conversation:', data.message);
+            addSystemMessage('Error saving conversation: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error when saving conversation:', error);
+        addSystemMessage('Network error when trying to save conversation.');
+    });
+}
+
+function loadConversationHistoryAllAgent() {
+    fetch('/get_all_conversation/agent')
+    .then(response => response.json())
+    .then(data => {
+        if (Array.isArray(data)) {
+            // Update the in-memory conversationMessages array
+            conversationMessages = data;
+            // Clear the UI and re-render all messages
+            const container = document.getElementById('final-result-bubble');
+            if (container) container.innerHTML = '';
+            data.forEach(msg => {
+                if (msg.type === 'HumanMessage' || msg.type === 'user') {
+                    addMessage(msg.content, 'user');
+                } else if (msg.type === 'AIMessage' || msg.type === 'ai' || msg.type === 'final_result') {
+                    addMessage(msg.content, msg.sender || 'ai');
+                }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error loading conversation history:', error);
+    });
+}
+
+
 function startMultiAgentStream(query) {
+    // Add the new user message to the conversationMessages array before sending
+    addConversationMessage('user', query, 'HumanMessage');
+
     fetch('/multi-agent-stream', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({query})
-    }).then(response => {
+        body: JSON.stringify({
+            query,
+            messages: conversationMessages // send the full history
+        })
+    })
+    .then(response => {
         const reader = response.body.getReader();
         let buffer = '';
         finalResultText = '';
@@ -295,6 +414,7 @@ function startMultiAgentStream(query) {
                         renderFinalResultBubbleStreaming(msg.chunk, false);
                     } else if (msg.type === 'final_done') {
                         renderFinalResultBubbleStreaming('', true);
+                        saveConversationToJson();
                     }
                 }
                 read();
@@ -302,4 +422,9 @@ function startMultiAgentStream(query) {
         }
         read();
     });
+}
+
+// Add a helper to add messages to the conversation history
+function addConversationMessage(sender, content, type = 'chat') {
+    conversationMessages.push({ sender, content, type, timestamp: new Date().toISOString() });
 }

@@ -4,239 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Calista - AI Search{% endblock %}</title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <!-- Prism.js CSS for code highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-
     <!-- Prism.js JS for code highlighting -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
-
     <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/conversation.css') }}">  
-
-    <style>
-        /* Custom styles for sidebar text fade and glow effect */
-        .sidebar {
-            transition: width 0.3s ease-in-out;
-        }
-        .sidebar-text {
-            transition: opacity 0.2s ease-in-out, transform 0.3s ease-in-out;
-        }
-        .sidebar.collapsed .sidebar-text {
-            opacity: 0;
-            transform: translateX(-20px);
-            pointer-events: none;
-        }
-        /* New rule to force collapsed width and adjust main content margin */
-        .sidebar.collapsed {
-            width: 80px !important; /* Corresponds to Tailwind's w-20 */
-        }
-        .sidebar.collapsed + #content { /* Adjust content when sidebar is collapsed */
-            margin-left: 80px !important; /* Corresponds to Tailwind's ml-20 */
-        }
-        .sidebar:not(.collapsed) .sidebar-text {
-            opacity: 1 !important;
-            transform: translateX(0) !important;
-        }
-        .nav-item:hover .nav-glow {
-            box-shadow: 0 0 15px 3px var(--glow-color, rgba(79, 70, 229, 0.5));
-        }
-        .nav-item.active {
-           background-color: #312e81; /* bg-indigo-900 */
-           color: #ffffff; /* text-white */
-        }
-        .nav-item.active .nav-glow {
-            box-shadow: 0 0 15px 3px var(--glow-color, rgba(79, 70, 229, 0.7));
-        }
-    </style>
-    
-    <style>
-        @keyframes slide-in {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-    
-        @keyframes bounce-subtle {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-5px);
-            }
-        }
-    
-     
-        .animate-slide-in {
-            animation: slide-in 0.7s ease-out forwards;
-        }
-    
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
-        }
-    
-        .animate-bounce-subtle {
-            animation: bounce-subtle 4s ease-in-out infinite;
-        }
-    
-        .search-glow {
-            transition: all 0.3s ease;
-        }
-    
-        .pulse-glow {
-            animation: pulse-glow 3s infinite alternate;
-        }
-    
-        .btn-interactive {
-            transition: all 0.2s ease-in-out;
-        }
-    
-        .btn-interactive:hover {
-            transform: scale(1.05);
-        }
-    
-        .action-btn-vibrant {
-            background-color: rgba(30, 30, 30, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: white;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-        }
-    
-        .action-icon {
-            width: 40px;
-            height: 40px;
-            display: grid;
-            place-items: center;
-            border-radius: 50%;
-            font-size: 18px;
-        }
-    
-        .bg-deep_gray\/50 {
-            background-color: rgba(17, 17, 17, 0.5);
-        }
-    
-        .bg-deep_gray\/70 {
-            background-color: rgba(17, 17, 17, 0.7);
-        }
-    
-        .border-deep_gray\/50 {
-            border-color: rgba(34, 34, 34, 0.5);
-        }
-    
-        .text-neutral\/80 {
-            color: rgba(163, 163, 163, 0.8);
-        }
-    
-        .text-neutral\/50 {
-            color: rgba(163, 163, 163, 0.5);
-        }
-    
-        .placeholder-text\/50::placeholder {
-            color: rgba(163, 163, 163, 0.5);
-        }
-    
-    
-    </style>
-    
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#8B5CF6',
-                        secondary: '#06B6D4',
-                        background: '#0A0F1C',
-                        surface: '#1A1F35',
-                        text: '#F8FAFC',
-                        accent: '#F59E0B',
-                        neutral: '#64748B',
-                        deep_gray: '#212f3d',
-                        main_content_bg: '#111928',
-                        gradient: {
-                            start: '#8B5CF6',
-                            middle: '#06B6D4',
-                            end: '#F59E0B'
-                        }
-                    },
-                    fontFamily: {
-                        'inter': ['Inter', 'sans-serif'],
-                    },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-slow': 'pulse 3s ease-in-out infinite',
-                        'gradient': 'gradient 15s ease infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
-                        'slide-in': 'slideIn 0.5s ease-out',
-                        'bounce-subtle': 'bounceSubtle 2s ease-in-out infinite'
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-20px)' }
-                        },
-                        gradient: {
-                            '0%, 100%': { 'background-position': '0% 50%' },
-                            '50%': { 'background-position': '100% 50%' }
-                        },
-                        glow: {
-                            '0%': { 'box-shadow': '0 0 20px rgba(139, 92, 246, 0.5)' },
-                            '100%': { 'box-shadow': '0 0 30px rgba(139, 92, 246, 0.8)' }
-                        },
-                        slideIn: {
-                            '0%': { transform: 'translateX(-100%)', opacity: '0' },
-                            '100%': { transform: 'translateX(0)', opacity: '1' }
-                        },
-                        bounceSubtle: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-5px)' }
-                        }
-                    },
-                    backgroundImage: {
-                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-                        'gradient-mesh': 'linear-gradient(45deg, var(--tw-gradient-stops))',
-                        'aurora': 'linear-gradient(45deg, #8B5CF6, #06B6D4, #F59E0B, #8B5CF6)',
-                    }
-                }
-            }
-        }
-    </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 </head>
 <body class="bg-background text-text font-inter min-h-screen overflow-x-hidden">
     <!-- Animated background -->
@@ -247,6 +34,11 @@
         <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-accent/10 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 4s;"></div>
     </div>
 
+    <!-- Sidebar Toggle Button (moved outside sidebar for mobile visibility) -->
+    <button id="sidebarToggle" class="fixed top-4 left-4 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white hover:scale-110 transition-transform z-50 lg:hidden mt-36">
+        <i id="toggleIcon" class="fa-solid fa-chevron-right text-xs transition-transform duration-300"></i>
+    </button>
+
     <div id="sidebar" class="sidebar fixed top-0 left-0 h-screen bg-black/90 backdrop-blur-lg text-gray-300 flex flex-col z-50 transition-all duration-300 w-20 lg:w-64">
         
         <div class="flex items-center justify-center h-20 border-b border-gray-800">
@@ -254,10 +46,6 @@
                 <i class="fa-solid fa-bolt"></i>
             </div>
         </div>
-
-        <button id="sidebarToggle" class="absolute -right-3 top-20 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white hover:scale-110 transition-transform">
-            <i id="toggleIcon" class="fa-solid fa-chevron-right text-xs transition-transform duration-300"></i>
-        </button>
 
         <nav class="flex-1 px-3 py-6">
             <ul class="space-y-3">
@@ -275,13 +63,6 @@
                         <div class="nav-glow absolute inset-0 rounded-lg -z-10 transition-shadow duration-300"></div>
                     </a>
                 </li>
-              <!--  <li>
-                    <a href="/" class="nav-item flex items-center p-3 rounded-lg hover:bg-indigo-800/50 transition-colors duration-200 relative" style="--glow-color: rgba(99, 102, 241, 0.6);">
-                        <i class="fa-solid fa-house w-6 text-center text-lg"></i>
-                        <span class="sidebar-text ml-4 font-medium whitespace-nowrap">Home</span>
-                        <div class="nav-glow absolute inset-0 rounded-lg -z-10 transition-shadow duration-300"></div>
-                    </a>
-                -->
                 </li>
                 <li>
                     <a href="/discover" class="nav-item flex items-center p-3 rounded-lg hover:bg-indigo-800/50 transition-colors duration-200 relative" style="--glow-color: rgba(99, 102, 241, 0.6);">
@@ -290,13 +71,14 @@
                         <div class="nav-glow absolute inset-0 rounded-lg -z-10 transition-shadow duration-300"></div>
                     </a>
                 </li>
-                 <li>
+                <!--<li>
                     <a href="/spaces" class="nav-item flex items-center p-3 rounded-lg hover:bg-indigo-800/50 transition-colors duration-200 relative" style="--glow-color: rgba(99, 102, 241, 0.6);">
                         <i class="fa-solid fa-layer-group w-6 text-center text-lg"></i>
                         <span class="sidebar-text ml-4 font-medium whitespace-nowrap">Spaces</span>
                         <div class="nav-glow absolute inset-0 rounded-lg -z-10 transition-shadow duration-300"></div>
                     </a>
                 </li>
+                --> 
 
                 <li>
                     <a href="/grpo" class="nav-item flex items-center p-3 rounded-lg hover:bg-indigo-800/50 transition-colors duration-200 relative" style="--glow-color: rgba(99, 102, 241, 0.6);">
@@ -335,9 +117,10 @@
             </ul>
         </div>
     </div>
+    
+    <!-- Optional: Backdrop overlay for mobile sidebar -->
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
 
-    
-    
     <div id="content" class="relative z-10 transition-all duration-300">
         {% block content %}{% endblock %}
     </div>
@@ -347,74 +130,93 @@
     <script src="{{ url_for('static', filename='js/multi_agent.js') }}"></script>
     <!-- Prism.js for code highlighting -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebarToggle');
             const toggleIcon = document.getElementById('toggleIcon');
-            const content = document.getElementById('content'); // Get content div
+            const content = document.getElementById('content');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 
-            // Function to set sidebar and content state
+            // Set sidebar background color
+            sidebar.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+
+            function isLargeScreen() {
+                return window.matchMedia('(min-width: 1024px)').matches;
+            }
+
             function setSidebarState() {
-                const isLargeScreen = window.matchMedia('(min-width: 1024px)').matches; // lg breakpoint
-
-                if (isLargeScreen) {
-                    sidebar.classList.remove('collapsed');
-                    // Ensure content has ml-64 on large screens when sidebar is open
-                    content.classList.remove('ml-20');
+                if (isLargeScreen()) {
+                    sidebar.classList.remove('collapsed', 'hidden-mobile', 'open');
+                    sidebar.style.display = '';
+                    content.classList.remove('ml-0', 'ml-20');
                     content.classList.add('ml-64');
                     toggleIcon.classList.remove('fa-chevron-right');
                     toggleIcon.classList.add('fa-chevron-left');
+                    sidebarBackdrop.classList.add('hidden');
                 } else {
-                    sidebar.classList.add('collapsed'); // Default to collapsed on small screens
-                    // Ensure content has ml-20 on small screens when sidebar is collapsed
-                    content.classList.remove('ml-64');
-                    content.classList.add('ml-20');
+                    sidebar.classList.add('hidden-mobile');
+                    sidebar.classList.remove('open');
+                    sidebar.style.display = 'none';
+                    content.classList.remove('ml-64', 'ml-20');
+                    content.classList.add('ml-0'); // Ensure no left margin on mobile
                     toggleIcon.classList.remove('fa-chevron-left');
                     toggleIcon.classList.add('fa-chevron-right');
+                    sidebarBackdrop.classList.add('hidden');
                 }
             }
 
-            // Set initial state
             setSidebarState();
-
-            // Handle resize events
             window.addEventListener('resize', setSidebarState);
-    
+
             sidebarToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('collapsed');
-                
-                // Adjust content margin and toggle icon based on collapsed state
-                if (sidebar.classList.contains('collapsed')) {
-                    // Sidebar is collapsed
-                    content.classList.remove('ml-64');
-                    content.classList.add('ml-20');
-                    toggleIcon.classList.remove('fa-chevron-left');
-                    toggleIcon.classList.add('fa-chevron-right');
+                if (isLargeScreen()) {
+                    sidebar.classList.toggle('collapsed');
+                    if (sidebar.classList.contains('collapsed')) {
+                        content.classList.remove('ml-64');
+                        content.classList.add('ml-20');
+                        toggleIcon.classList.remove('fa-chevron-left');
+                        toggleIcon.classList.add('fa-chevron-right');
+                    } else {
+                        content.classList.remove('ml-20');
+                        content.classList.add('ml-64');
+                        toggleIcon.classList.remove('fa-chevron-right');
+                        toggleIcon.classList.add('fa-chevron-left');
+                    }
                 } else {
-                    // Sidebar is expanded
-                    // On any screen size, when manually expanded, it should become w-64, so content needs ml-64
-                    content.classList.remove('ml-20');
-                    content.classList.add('ml-64');
-                    toggleIcon.classList.remove('fa-chevron-right');
-                    toggleIcon.classList.add('fa-chevron-left');
+                    // On mobile, toggle sidebar visibility and backdrop
+                    if (sidebar.classList.contains('open')) {
+                        sidebar.classList.remove('open');
+                        sidebar.style.display = 'none';
+                        sidebarBackdrop.classList.add('hidden');
+                    } else {
+                        sidebar.classList.add('open');
+                        sidebar.style.display = 'block';
+                        sidebarBackdrop.classList.remove('hidden');
+                    }
                 }
+            });
+
+            // Hide sidebar if backdrop is clicked (mobile only)
+            sidebarBackdrop.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebar.style.display = 'none';
+                sidebarBackdrop.classList.add('hidden');
             });
 
             // Highlight active navigation item based on URL
             const currentPath = window.location.pathname;
             const navItems = document.querySelectorAll('.nav-item');
-
             navItems.forEach(item => {
                 const link = item.getAttribute('href');
                 if (link && (link === currentPath || (link === '/' && currentPath === '/index')) ) {
                     item.classList.add('active');
                 } else {
-                    item.classList.remove('active'); // Ensure other items are not active
+                    item.classList.remove('active');
                 }
             });
         });
     </script>
+    <script src="{{ url_for('static', filename='js/tailwind.js') }}"></script>
 </body>
 </html>

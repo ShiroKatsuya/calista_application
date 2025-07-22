@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        .test-section {
+            background-color: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .button {
+            background-color: #4f46e5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background-color: #4338ca;
+        }
+        .result {
+            background-color: #374151;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .error {
+            background-color: #7f1d1d;
+            color: #fca5a5;
+        }
+        .success {
+            background-color: #14532d;
+            color: #86efac;
+        }
+    </style>
+</head>
+<body>
+    <h1>Button Functionality Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Simple Button Click</h2>
+        <button class="button" onclick="testSimpleClick()">Test Simple Click</button>
+        <div id="test1-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Test Process Endpoint</h2>
+        <button class="button" onclick="testProcessEndpoint()">Test Process Endpoint</button>
+        <div id="test2-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Article Summary Process</h2>
+        <button class="button" onclick="testArticleSummary()">Test Article Summary</button>
+        <div id="test3-result"></div>
+    </div>
+
+    <script>
+        function testSimpleClick() {
+            const resultDiv = document.getElementById('test1-result');
+            resultDiv.innerHTML = '<div class="result success">Simple button click working!</div>';
+        }
+        
+        function testProcessEndpoint() {
+            const resultDiv = document.getElementById('test2-result');
+            resultDiv.innerHTML = '<div class="result">Testing process endpoint...</div>';
+            
+            fetch('/test-process-endpoint', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    test: 'data',
+                    message: 'Hello from test'
+                })
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                resultDiv.innerHTML = `<div class="result success">Process endpoint working! Response: ${JSON.stringify(data, null, 2)}</div>`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `<div class="result error">Error: ${error.message}</div>`;
+            });
+        }
+        
+        function testArticleSummary() {
+            const resultDiv = document.getElementById('test3-result');
+            resultDiv.innerHTML = '<div class="result">Testing article summary...</div>';
+            
+            const testLink = 'https://example.com/test-article';
+            const testQuery = 'Please provide a comprehensive summary of this article.';
+            
+            fetch(`/article-summary/${encodeURIComponent(testLink)}/process`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: testQuery,
+                    title: 'Test Article'
+                })
+            })
+            .then(response => {
+                console.log('Article summary response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Article summary response data:', data);
+                if (data.error) {
+                    resultDiv.innerHTML = `<div class="result error">Error: ${data.error}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="result success">Article summary working! Response: ${JSON.stringify(data, null, 2)}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Article summary error:', error);
+                resultDiv.innerHTML = `<div class="result error">Error: ${error.message}</div>`;
+            });
+        }
+    </script>
+</body>
+</html> 

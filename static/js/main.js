@@ -375,13 +375,30 @@ function handleFollowUp(e) {
 
 }
 
+// Enhanced tab switching for article summary page
 function handleTabSwitch(e) {
-    $('.tab-btn').removeClass('active');
-    $(e.currentTarget).addClass('active');
-    
-    const tabType = $(e.currentTarget).data('tab');
-    showToast(`Switched to ${tabType} tab`, 'success');
+    // Remove active/selected styles from all tab buttons
+    $('.tab-btn').removeClass('text-indigo-400 border-b-2 border-indigo-400').addClass('text-gray-400').attr('aria-selected', 'false');
+    // Add active/selected styles to the clicked tab
+    $(e.currentTarget).addClass('text-indigo-400 border-b-2 border-indigo-400').removeClass('text-gray-400').attr('aria-selected', 'true');
+
+    // Hide all tab panels
+    $('#answer-content, #sources-content').addClass('hidden').attr('aria-hidden', 'true');
+    // Show the selected tab panel
+    const tabId = $(e.currentTarget).attr('id');
+    if (tabId === 'answer-btn') {
+        $('#answer-content').removeClass('hidden').attr('aria-hidden', 'false');
+    } else if (tabId === 'sources-btn') {
+        $('#sources-content').removeClass('hidden').attr('aria-hidden', 'false');
+    }
 }
+
+// Bind tab switching for article summary page
+$(document).ready(function() {
+    $('#answer-btn, #sources-btn').on('click', handleTabSwitch);
+    // Set initial state
+    $('#answer-btn').trigger('click');
+});
 
 // Add some extra dynamic effects
 function addDynamicEffects() {

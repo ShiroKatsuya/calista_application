@@ -1,0 +1,168 @@
+ /* Custom styles for sidebar text fade and glow effect */
+ .sidebar {
+    transition: width 0.3s ease-in-out;
+}
+.sidebar-text {
+    transition: opacity 0.2s ease-in-out, transform 0.3s ease-in-out;
+}
+.sidebar.collapsed .sidebar-text {
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
+}
+/* New rule to force collapsed width and adjust main content margin */
+.sidebar.collapsed {
+    width: 80px !important; /* Corresponds to Tailwind's w-20 */
+}
+.sidebar.collapsed + #content { /* Adjust content when sidebar is collapsed */
+    margin-left: 80px !important; /* Corresponds to Tailwind's ml-20 */
+}
+.sidebar:not(.collapsed) .sidebar-text {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+}
+.nav-item:hover .nav-glow {
+    box-shadow: 0 0 15px 3px var(--glow-color, rgba(79, 70, 229, 0.5));
+}
+.nav-item.active {
+   background-color: #312e81; /* bg-indigo-900 */
+   color: #ffffff; /* text-white */
+}
+.nav-item.active .nav-glow {
+    box-shadow: 0 0 15px 3px var(--glow-color, rgba(79, 70, 229, 0.7));
+}
+
+@keyframes slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes bounce-subtle {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+
+.animate-slide-in {
+    animation: slide-in 0.7s ease-out forwards;
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+.animate-bounce-subtle {
+    animation: bounce-subtle 4s ease-in-out infinite;
+}
+
+.search-glow {
+    transition: all 0.3s ease;
+}
+
+.pulse-glow {
+    animation: pulse-glow 3s infinite alternate;
+}
+
+.btn-interactive {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-interactive:hover {
+    transform: scale(1.05);
+}
+
+.action-btn-vibrant {
+    background-color: rgba(30, 30, 30, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+}
+
+.action-icon {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 18px;
+}
+
+.bg-deep_gray\/50 {
+    background-color: rgba(17, 17, 17, 0.5);
+}
+
+.bg-deep_gray\/70 {
+    background-color: rgba(17, 17, 17, 0.7);
+}
+
+.border-deep_gray\/50 {
+    border-color: rgba(34, 34, 34, 0.5);
+}
+
+.text-neutral\/80 {
+    color: rgba(163, 163, 163, 0.8);
+}
+
+.text-neutral\/50 {
+    color: rgba(163, 163, 163, 0.5);
+}
+
+.placeholder-text\/50::placeholder {
+    color: rgba(163, 163, 163, 0.5);
+}
+
+/* Hide sidebar on mobile by default */
+@media (max-width: 1023px) {
+  #sidebar {
+    display: none;
+    position: fixed;
+    z-index: 50;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 16rem; /* w-64 */
+    background: white;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+  }
+  #sidebar.open {
+    display: block;
+    transform: translateX(0);
+  }
+}
+
+/* Ensure sidebarToggle is always visible on mobile */
+@media (max-width: 1023px) {
+  #sidebarToggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
+  }
+}
+

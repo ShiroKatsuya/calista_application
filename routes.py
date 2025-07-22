@@ -8,7 +8,11 @@ import json
 import os
 from datetime import datetime
 import re
+from urllib.request import urlopen
+from bs4 import BeautifulSoup as soup
 
+from langchain_community.utilities import GoogleSerperAPIWrapper
+search = GoogleSerperAPIWrapper()
 
 
 @app.route('/')
@@ -19,6 +23,8 @@ def index():
 @app.route('/chat')
 def chat():
     """Route for the Chat page"""
+    session['conversation_messages'] = []
+    session['conversation_title'] = ''
     return render_template('index.html')
 
 
@@ -29,16 +35,176 @@ def clear_conversation():
     session.pop('conversation_title', None)
     return redirect(url_for('chat'))
 
+
+
 @app.route('/discover')
 def discover():
-    """Route for the Discover page"""
-    return render_template('discover.html')
+    """Route for the Discover page using GoogleSerperAPIWrapper (type='news') for news search"""
+    category = request.args.get('category', 'foryou')
 
-@app.route('/spaces')
-def spaces():
-    """Route for the Spaces page"""
-    return render_template('spaces.html')
+    # Map categories to improved, high-quality Indonesian news search queries with explicit recency keywords
+    from datetime import datetime
+    today_str = datetime.now().strftime("%d %B %Y")
+    category_queries = {
+        'foryou': f"berita terbaru {today_str} Indonesia",
+        'tech': f"berita teknologi {today_str} Indonesia",
+        'finance': f"berita keuangan {today_str} Indonesia",
+        'arts': f"berita seni {today_str} Indonesia",
+        'sports': f"berita olahraga {today_str} Indonesia",
+    }
+    query = category_queries.get(category, category_queries['foryou'])
 
+    # Use GoogleSerperAPIWrapper with type="news"
+    from langchain_community.utilities import GoogleSerperAPIWrapper
+    search = GoogleSerperAPIWrapper(type="news")
+
+    try:
+        results = search.results(query)
+        # The structure of results['news'] is a list of dicts with keys: title, link, snippet, date, source, image_url (if available)
+        news_items = results.get('news', [])
+    except Exception as e:
+        news_items = []
+
+    articles = []
+    for news in news_items:
+        articles.append({
+            "title": news.get('title', 'No Title'),
+            "link": news.get('link', '#'),
+            "pub_date": news.get('date', 'No Date'),
+        })
+
+    return render_template('discover.html', articles=articles, active_category=category)
+
+@app.route('/fetch_image')
+def fetch_image():
+    """API endpoint to fetch the core image for a given article URL."""
+    url = request.args.get('url')
+    if not url:
+        return jsonify({'error': 'URL parameter is missing'}), 400
+
+    import requests
+    from bs4 import BeautifulSoup
+
+    def find_core_image(soup):
+        # Try to find <meta property="og:image">
+        og_image = soup.find("meta", property="og:image")
+        if og_image and og_image.get("content"):
+            return og_image["content"]
+        # Try to find <meta name="twitter:image">
+        twitter_image = soup.find("meta", attrs={"name": "twitter:image"})
+        if twitter_image and twitter_image.get("content"):
+            return twitter_image["content"]
+        # Try to find the first large <img> in the article
+        article = soup.find("article")
+        if article:
+            imgs = article.find_all("img")
+            if imgs:
+                for img in imgs:
+                    if img.get("src"):
+                        return img["src"]
+        # Fallback: first <img> in the page
+        img = soup.find("img")
+        if img and img.get("src"):
+            return img["src"]
+        return None
+
+    try:
+        response = requests.get(url, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        img_url = find_core_image(soup)
+
+        if img_url:
+            # Handle relative URLs
+            if not img_url.startswith(('http://', 'https://')):
+                from urllib.parse import urljoin
+                img_url = urljoin(url, img_url)
+            return jsonify({'imageUrl': img_url})
+        else:
+            return jsonify({'imageUrl': "https://images.pexels.com/photos/1369476/pexels-photo-1369476.jpeg"})
+    except Exception as e:
+        return jsonify({'imageUrl': "https://images.pexels.com/photos/1369476/pexels-photo-1369476.jpeg"})
+
+
+@app.route('/article-summary/<path:link>')
+def article_summary(link):
+    """
+    Route for the Article Summary page.
+    Synchronizes with backend scraping_website.py fallback logic:
+    - If scraping fails or is minimal, fallback to agent-based related article search using keywords from the URL.
+    """
+    from scraping_website import process_article_with_fallback
+
+    user_query = request.args.get('query', '')
+    title = request.args.get('title', '')
+
+    data = []
+
+    # Only proceed if user_query is present (not empty)
+    if not user_query.strip():
+        data.append({
+            "title": title,
+            "link": link,
+            "result": {},
+            "agent_response": "Please enter a query to get a summary."
+        })
+        print(f"Article Summary for {link} with title: {title} - No query provided")
+        return render_template(
+            'article_summary.html',
+            data=data,
+            link=link,
+            title=title
+        )
+
+    # If the preview button is pressed, just return the fallback result directly
+    if user_query.strip() == 'proses':
+        # Import scrape_website only when needed to avoid NameError
+        from scraping_website import scrape_website
+        result = scrape_website(link)
+        print(f"[PREVIEW] scrape_website result: {result}")
+        # Use the main content or summary as agent_response for preview
+        return jsonify({
+            "result": result
+        })
+
+    # Use the backend's fallback system for robust summary
+    result = process_article_with_fallback(link)
+    print(f"process_article_with_fallback result: {result}")
+
+    # Compose the user question for the agent if scraping succeeded and content is sufficient
+    article_text = ""
+    agent_response = ""
+    urls = result.get('urls', [])  # Get URLs from result
+
+    if result.get('status') == 'success' and result.get('method_used') == 'original_scraping_with_agent':
+        article_text = result.get('scraped_data', {}).get('full_text', '')
+        user_question = f"{user_query}\n{article_text}\n"
+        # Use the no-tools agent for successful scraping to avoid google_search
+        from scraping_website import emilia_no_tools_agent
+        agent_result = emilia_no_tools_agent.invoke({"input": user_question, "chat_history": []})
+        agent_response = agent_result.content if hasattr(agent_result, 'content') else str(agent_result)
+        # URLs are only available when fallback search is used (handled in backend)
+        # No additional URL search needed here
+    else:
+        # If fallback_search was used, the content is already in result['content']
+        agent_response = result.get('content', 'Tidak dapat menemukan ringkasan atau artikel terkait.')
+
+    print(f"Article Summary for {link} with title: {title}")
+    print(f"URLs found: {len(urls)}")
+
+    return jsonify({
+        "title": title,
+        "link": link,
+        "result": result,
+        "agent_response": agent_response,
+        "urls": urls
+    })
+
+
+# @app.route('/spaces')
+# def spaces():
+#     """Route for the Spaces page"""
+#     return render_template('spaces.html')
+    
 @app.route('/account')
 def account():
     """Route for the Account page"""
@@ -57,6 +223,8 @@ def install():
 @app.route('/multi-agent')
 def multi_agent():
     """Route for the Multi-Agent page"""
+    session['conversation_messages'] = []
+    session['conversation_title'] = ''
     return render_template('multi-agent.html')
 
 
@@ -85,6 +253,16 @@ def handle_action(action_type):
         'message': f'{actions[action_type]} would be performed for: "{query}"'
     })
 
+@app.route('/refresh_web_page', methods=['POST', 'GET'])
+def refresh_web_page():
+    """
+    Route to clear the query and messages from the session.
+    Call this when the web page is refreshed and you want to clear conversation state.
+    """
+    session['conversation_messages'] = []
+    session['conversation_title'] = ''
+    return jsonify({'status': 'cleared'})
+
 @app.route('/multi-agent-stream', methods=['POST'])
 def multi_agent_stream():
     """
@@ -96,16 +274,20 @@ def multi_agent_stream():
 
     data = request.get_json()
     query = data.get('query', '').strip()
+    messages = data.get('messages', [])  # <-- get full history
 
     if not query:
         return jsonify({'error': 'Please enter a query'}), 400
 
+    # Save the conversation history in the session
+    session['conversation_messages'] = messages
+
     def generate():
-        for update in multi_agent_backend.run_enhanced_agent_system_stream(query):
+        # Pass the full conversation history to the agent system
+        for update in multi_agent_backend.run_enhanced_agent_system_stream(query, messages=messages):
             yield update
 
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
-    
     
     
 
@@ -322,6 +504,34 @@ def view_conversation(filename):
     }
 
     return render_template('conversations.html', conversation=conversation)
+
+
+@app.route ('/get_all_conversation/agent')
+def get_all_conversation_agent():
+    """Get all conversation from agent, return as list of dicts like conversation_*.json"""
+    conversation_messages = session.get('conversation_messages', [])
+    # Ensure the output is a list of dicts with keys: sender, content, type, timestamp
+    formatted_messages = []
+    for msg in conversation_messages:
+        # If already a dict with the right keys, just use it
+        if isinstance(msg, dict) and all(k in msg for k in ['sender', 'content', 'type', 'timestamp']):
+            formatted_messages.append(msg)
+        else:
+            # Try to extract fields from possible LangChain or other message objects
+            sender = getattr(msg, 'sender', None) or getattr(msg, 'role', None) or getattr(msg, 'name', None) or 'unknown'
+            content = getattr(msg, 'content', None) or msg.get('content', '') if isinstance(msg, dict) else ''
+            msg_type = getattr(msg, 'type', None) or getattr(msg, '__class__', type('X', (), {})).__name__ or msg.get('type', 'chat') if isinstance(msg, dict) else 'chat'
+            timestamp = getattr(msg, 'timestamp', None) or msg.get('timestamp', None) if isinstance(msg, dict) else None
+            if not timestamp:
+                from datetime import datetime
+                timestamp = datetime.utcnow().isoformat() + "Z"
+            formatted_messages.append({
+                "sender": sender,
+                "content": content,
+                "type": msg_type,
+                "timestamp": timestamp
+            })
+    return jsonify(formatted_messages)
 
 
 @app.route('/get_conversation_history')

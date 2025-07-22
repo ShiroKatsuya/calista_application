@@ -2,76 +2,6 @@
 
 {% block content %}
 
-<style>
-    .action-btn-gray {
-        display: flex;
-        align-items: center;
-        padding: 6px 12px;
-        background-color: transparent;
-        color: #a0aec0; /* gray-400 */
-        border-radius: 8px;
-        transition: all 0.2s ease-in-out;
-    }
-    .action-btn-gray:hover {
-        background-color: #4a5568; /* gray-600 */
-        color: #ffffff;
-    }
-    .icon-btn-gray {
-        padding: 8px;
-        border-radius: 8px;
-        color: #a0aec0; /* gray-400 */
-        transition: all 0.2s ease-in-out;
-    }
-    .icon-btn-gray:hover {
-       background-color: #4a5568; /* gray-600 */
-       color: #ffffff;
-    }
-    .related-question {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: #2c2c2e;
-        padding: 1rem;
-        border-radius: 0.75rem;
-        border: 1px solid transparent;
-        color: #d1d5db; /* gray-300 */
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-    }
-    .related-question:hover {
-        background-color: #374151; /* gray-700 */
-        border-color: #4b5563; /* gray-600 */
-        color: white;
-    }
-</style>
-
-
-<style>
-    /* A dark background for demonstration */
-
-
-    /* Custom styles for the focus glow effect */
-    .search-container:focus-within {
-        box-shadow: 0 0 0 2px #22d3ee; /* cyan-400 */
-    }
-    
-    /* Custom styles for the prominent button pulse */
-    .pulse-btn {
-        animation: pulse-animation 2s infinite;
-    }
-
-    @keyframes pulse-animation {
-        0% {
-            box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7);
-        }
-        70% {
-            box-shadow: 0 0 0 10px rgba(34, 211, 238, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(34, 211, 238, 0);
-        }
-    }
-</style>
 
 
 
@@ -79,7 +9,7 @@
     <div class="flex-shrink-0 bg-[#1c1c1e] p-6 border-b border-gray-700/60">
         <div class="max-w-3xl mx-auto">
             <div class="flex items-center justify-between mb-4">
-                <h1 id="conversationTitle" class="text-3xl font-bold">Multi-Agent Demo</h1>
+                <h1 id="conversationTitle" class="text-3xl font-bold">Multi Agen Working Together</h1>
                 <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center space-x-2 transition-colors">
                     <i class="fas fa-share-alt"></i>
                     <span>Share</span>
@@ -89,60 +19,64 @@
                 <div class="pb-3 border-b-2 border-blue-500 text-blue-400 font-semibold flex items-center space-x-2">
                     <i class="fas fa-magic"></i>
                     <span>Answer</span>
+                    <button id="start-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition-transform transform hover:scale-105">
+                        Start Simulation
+                    </button>
                 </div>
             </div>
+  
         </div>
     </div>
 
+
+
     <div class="flex-1 overflow-y-auto" id="responseContainerWrapper">
+        {% include "Multi-Agent-System-Animation.html" %}
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+       
             <!-- Dummy conversation -->
             <div id="responseContainer" class="space-y-4">
+                <!-- Multi-Agent Status Visualization always on top -->
+                <div id="multi-agent-visualization-container" style="display:none;">
+                    <div class="w-full max-w-3xl flex flex-col items-center">
+                        <!-- Top Icon -->
+                        <div class="p-2 rounded-full border" style="border-color: var(--border-color); background-color: #222;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </div>
+                        <!-- Connector Line -->
+                        <div class="w-px h-8 line"></div>
+                        <!-- Main Process Card -->
+                        <div class="card rounded-lg p-5 w-full">
+                            <h1 class="text-lg font-semibold" style="color: var(--text-primary);">Calista Supervisor</h1>
+                            <div class="flex justify-between items-center mt-3">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="status-dot"></div>
+                                    <span class="text-sm font-medium tracking-wider" style="color: var(--custom-orange-light);">PROCESSING</span>
+                                </div>
+                                <span class="text-sm font-mono" style="color: var(--text-secondary);">~ 03 MIN LEFT</span>
+                            </div>
+                        </div>
+                        <!-- Connectors to Agents -->
+                        <div class="relative w-full h-16 flex items-end justify-between" id="agent-connectors">
+                          <div class="absolute left-0 right-0 top-1/2 h-0.5 bg-gray-700" style="z-index:1;"></div>
+                          <div class="absolute left-[16.66%] top-0 h-1/2 w-0.5 bg-gray-700" style="z-index:2;"></div>
+                          <div class="absolute left-1/2 top-0 h-1/2 w-0.5 bg-gray-700" style="z-index:2; transform:translateX(-50%);"></div>
+                          <div class="absolute left-[83.33%] top-0 h-1/2 w-0.5 bg-gray-700" style="z-index:2;"></div>
+                        </div>
+                        <!-- Agents Grid (dynamic) -->
+                        <div id="agent-status-container" class="w-full grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-8 relative"></div>
+                        <div id="final-result-bubble" class="w-full flex flex-col items-center"></div>
+                    </div>
+                </div>
+                <!-- Conversation history below -->
+                <div id="conversation-history" class="flex flex-col space-y-2"></div>
                 <!-- User message -->
             
                 <!-- Multi-Agent Status Visualization -->
 
                     <!-- Wrap the Multi-Agent Status Visualization in a container with id="multi-agent-visualization-container" and hide it by default -->
-                    <div id="multi-agent-visualization-container" style="display:none;">
-                        <div class="w-full max-w-3xl flex flex-col items-center">
-                            
-                            <!-- Top Icon -->
-                            <div class="p-2 rounded-full border" style="border-color: var(--border-color); background-color: #222;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                            </div>
-            
-                            <!-- Connector Line -->
-                            <div class="w-px h-8 line"></div>
-            
-                            <!-- Main Process Card -->
-                            <div class="card rounded-lg p-5 w-full">
-                                <h1 class="text-lg font-semibold" style="color: var(--text-primary);">Calista Supervisor</h1>
-                                <div class="flex justify-between items-center mt-3">
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="status-dot"></div>
-                                        <span class="text-sm font-medium tracking-wider" style="color: var(--custom-orange-light);">PROCESSING</span>
-                                    </div>
-                                    <span class="text-sm font-mono" style="color: var(--text-secondary);">~ 03 MIN LEFT</span>
-                                </div>
-                            </div>
-            
-                            <!-- Connectors to Agents -->
-                            <div class="relative w-full h-16 flex items-end justify-between" id="agent-connectors">
-                              <!-- Horizontal connector line -->
-                              <div class="absolute left-0 right-0 top-1/2 h-0.5 bg-gray-700" style="z-index:1;"></div>
-                              <!-- Vertical lines for each agent (will be centered above each agent card) -->
-                              <div class="absolute left-[16.66%] top-0 h-1/2 w-0.5 bg-gray-700" style="z-index:2;"></div>
-                              <div class="absolute left-1/2 top-0 h-1/2 w-0.5 bg-gray-700" style="z-index:2; transform:translateX(-50%);"></div>
-                              <div class="absolute left-[83.33%] top-0 h-1/2 w-0.5 bg-gray-700" style="z-index:2;"></div>
-                            </div>
-
-                        
-            
-                            <!-- Agents Grid (dynamic) -->
-                            <div id="agent-status-container" class="w-full grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-8 relative"></div>
-                            <div id="final-result-bubble" class="w-full flex flex-col items-center"></div>
-                        </div>
-                    </div>
+                    <!-- This block is now redundant as the visualization is moved to the top -->
+                </div>
    
                 <!-- End Multi-Agent Status Visualization -->
 
@@ -163,35 +97,39 @@
             </div>
 
             <!-- Related Questions Section -->
+
+
+        </div>
+        
+        <div class="bg-[#1c1c1e]/80 backdrop-blur-lg border-t border-gray-700/60 p-4">
+            <div class="max-w-3xl mx-auto">
+                <form id="form">
+                    <div class="relative">
+                        <input
+                            type="text"
+                            id="inpot"
+                            placeholder="Ask a follow-up..."
+                            class="w-full bg-[#2c2c2e] border border-gray-700/60 rounded-xl py-3 pl-5 pr-28 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                        >
+                        <button type="button" id="clear_btn" class="clear-input-button"><i class="fas fa-times-circle"></i></button>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <button type="button" class="text-gray-400 hover:text-white mr-2"><i class="fas fa-search"></i></button>
+                            <button type="button" class="text-gray-400 hover:text-white mr-2"><i class="fas fa-paperclip"></i></button>
+                            <button type="button" class="text-gray-400 hover:text-white mr-2"><i class="fas fa-microphone"></i></button>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
     <div id="loadingIndicator" class="text-center text-gray-500 text-sm mt-4 hidden">
         <div class="spinner"></div>
         Thinking...
     </div>
-    <div class="bg-[#1c1c1e]/80 backdrop-blur-lg border-t border-gray-700/60 p-4">
-        <div class="max-w-3xl mx-auto">
-            <form id="form">
-                <div class="relative">
-                    <input
-                        type="text"
-                        id="inpot"
-                        placeholder="Ask a follow-up..."
-                        class="w-full bg-[#2c2c2e] border border-gray-700/60 rounded-xl py-3 pl-5 pr-28 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                    >
-                    <button type="button" id="clear_btn" class="clear-input-button"><i class="fas fa-times-circle"></i></button>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                        <button type="button" class="text-gray-400 hover:text-white mr-2"><i class="fas fa-search"></i></button>
-                        <button type="button" class="text-gray-400 hover:text-white mr-2"><i class="fas fa-paperclip"></i></button>
-                        <button type="button" class="text-gray-400 hover:text-white mr-2"><i class="fas fa-microphone"></i></button>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors">
-                            <i class="fas fa-arrow-up"></i>
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+
     <script>
 const agents = ["Rina", "Emilia", "Shirokatsuya", "Synthesizer"];
 const agentStatus = {};
@@ -227,6 +165,12 @@ function renderAgents() {
         `;
     });
     updateThinkingIndicator();
+    
+    // Scroll to keep the agent status updates visible
+    const responseContainerWrapper = document.getElementById('responseContainerWrapper');
+    if (responseContainerWrapper) {
+        scrollToBottom(); // Use the controlled scroll function
+    }
 }
 
 // Animate progress for agents in PROCESSING state
@@ -248,9 +192,55 @@ function stopAgentProgress(agent) {
     }
 }
 
+function loadConversationHistoryAllAgent() {
+    fetch('/get_all_conversation/agent')
+    .then(response => response.json())
+    .then(data => {
+        if (data.conversation_messages && data.conversation_messages.length > 0) {
+            // Show results state
+            $initialState.addClass('hidden');
+            $resultsState.removeClass('hidden');
+            
+            // Set conversation title
+            const $conversationTitle = $('#conversationTitle');
+            if ($conversationTitle.length && data.conversation_title) {
+                $conversationTitle.text(data.conversation_title);
+            }
+            
+            // Display existing messages
+            data.conversation_messages.forEach(msg => {
+                if (msg.type === 'HumanMessage') {
+                    addMessage(msg.content, 'user');
+                } else if (msg.type === 'AIMessage') {
+                    addMessage(msg.content, msg.name || 'ai');
+                }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error loading conversation history:', error);
+    });
+}
+
+function appendUserMessage(query) {
+    const conversationHistory = document.getElementById('conversation-history');
+    const userMsgDiv = document.createElement('div');
+    userMsgDiv.className = "message-bubble user-message mt-8 p-4 rounded-lg shadow-md mb-4 relative bg-blue-900 text-white";
+    userMsgDiv.style.maxWidth = "80%";
+    userMsgDiv.style.alignSelf = "flex-end";
+    userMsgDiv.innerHTML = `
+        <div class="sender-label font-bold mb-1">You:</div>
+        <div class="user-message-content">${query}</div>
+    `;
+    conversationHistory.appendChild(userMsgDiv);
+    setTimeout(scrollToBottom, 50);
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     renderAgents();
+    // Load conversation history only on page load
+    loadConversationHistoryAllAgent();
     // Hook up form submission to startMultiAgentStream with the value from #inpot
     const input = document.getElementById('inpot');
     const form = input && input.form ? input.form : document.querySelector('form');
@@ -261,18 +251,9 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const query = input.value.trim();
             if (!query) return;
-            // Optionally clear previous results
-            document.getElementById('final-result-bubble').innerHTML = '';
+            // Do NOT clear previous results or conversation history
             // Insert user message bubble
-            const userMsgContainer = document.getElementById('user-message-bubble');
-            if (userMsgContainer) {
-                userMsgContainer.innerHTML = `
-                    <div class="message-bubble user-message p-4 rounded-lg shadow-md mb-4 relative bg-blue-900 text-white" style="max-width:80%; align-self: flex-end;">
-                        <div class="sender-label font-bold mb-1">You:</div>
-                        <div class="user-message-content">${query}</div>
-                    </div>
-                `;
-            }
+            appendUserMessage(query);
             // Show the Multi-Agent Status Visualization below the user message
             const viz = document.getElementById('multi-agent-visualization-container');
             if (viz) {
@@ -281,6 +262,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Force reflow to restart animation if needed
                 void viz.offsetWidth;
                 viz.classList.add('fade-in-scale');
+                // Scroll to show the newly displayed visualization
+                setTimeout(() => {
+                    scrollToBottom(); // Use the controlled scroll function
+                }, 100); // Small delay to ensure the element is rendered
             }
             // Clear input
             input.value = '';
@@ -328,7 +313,15 @@ function updateThinkingIndicator() {
     // Show if all agents are PENDING, hide otherwise
     const allPending = agents.every(agent => agentStatus[agent] && agentStatus[agent].status === 'PENDING');
     if (indicator) {
+        const wasHidden = indicator.style.display === 'none' || indicator.style.display === '';
         indicator.style.display = allPending ? '' : 'none';
+        
+        // Scroll to show the thinking indicator when it first appears
+        if (allPending && wasHidden) {
+            setTimeout(() => {
+                scrollToBottom(); // Use the controlled scroll function
+            }, 50);
+        }
     }
 }
     </script>
