@@ -14,4 +14,4 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-prod
 from routes import *
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8888)
+    app.run(debug=True)

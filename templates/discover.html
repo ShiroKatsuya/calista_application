@@ -34,8 +34,9 @@
                 <span>Customize</span>
             </button>
         </div>
+        
 
-        <nav class="flex items-center gap-2 sm:gap-4 border-b border-gray-800 pb-3">
+        <nav class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 border-b border-gray-800 pb-3">
             <a href="{{ url_for('discover', category='foryou') }}"
                class="px-3 py-1.5 text-sm sm:text-base font-semibold {{ 'bg-gray-700/50 text-white' if active_category == 'foryou' else 'text-gray-400 hover:text-white transition-colors' }} rounded-full">
                 For You

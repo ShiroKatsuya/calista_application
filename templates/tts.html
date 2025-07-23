@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #F7F9F5; /* A closer match to the image background */
+    }
+    /* Pulsating animation for the central circle */
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+        50% {
+            transform: scale(1.05);
+            opacity: 1;
+        }
+    }
+    .pulsating-circle {
+        animation: pulse 2.5s infinite ease-in-out;
+    }
+    /* Shockwave animation */
+    @keyframes shockwave {
+        0% {
+            transform: scale(0.5);
+            opacity: 0.7;
+        }
+        80% {
+            transform: scale(1.5);
+            opacity: 0.2;
+        }
+        100% {
+            transform: scale(2.5); /* Large scale added */
+            opacity: 0;
+        }
+    }
+    .shockwave {
+        position: absolute;
+        border: 2px solid #C6D1B6; /* Adjust color to match inner circle */
+        border-radius: 50%;
+        animation: shockwave 1s ease-out forwards;
+        pointer-events: none; /* Allows clicks to pass through */
+    }
+</style>
+</head>
+<body class="text-gray-800 " style="background-color: #F7F9F5 !important;">
+
+<div class="flex flex-col h-screen p-4 sm:p-6 md:p-8" style="color: #2d2d2d;">
+    <!-- Header Section -->
+    <header class="w-full max-w-7xl mx-auto">
+        <div class=" items-start py-2">
+            <!-- Centered Title and Timer -->
+            <div class="text-center justify-center items-center">
+                <h1 id="callTitle" class="text-xl sm:text-2xl font-medium text-white"> <span id="timer">00:00</span></h1>
+                <p class="text-white text-sm mt-1">Rina</p>
+            </div>
+
+
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-center text-center">
+        <!-- Central Visual Element -->
+        <div class="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 flex items-center justify-center my-8" id="visualizer-container">
+            <div class="absolute inset-0 bg-[#EAEFE5] rounded-full"></div>
+            <div class="pulsating-circle w-3/4 h-3/4 bg-[#C6D1B6] rounded-full shadow-inner"></div>
+            <!-- Shockwave container -->
+            <div id="shockwave-container" class="absolute inset-0 flex items-center justify-center"></div>
+        </div>
+        <div id="chat-container" class="w-full max-w-2xl mx-auto space-y-2 chat-area">
+            <!-- Chat messages will be appended here -->
+             
+        </div>
+    </main>
+
+
+
+    <!-- Footer Controls -->
+    <footer class="flex justify-center items-center p-4 md:p-6 space-x-4 flex-shrink-0">
+        <button class="bg-black bg-opacity-40 w-14 h-14 rounded-full flex items-center justify-center text-white hover:bg-opacity-60 transition-all shadow-lg">
+            <i class="fas fa-video text-xl"></i>
+        </button>
+        <button class="bg-black bg-opacity-40 w-14 h-14 rounded-full flex items-center justify-center text-white hover:bg-opacity-60 transition-all shadow-lg">
+            <i class="fas fa-arrow-up text-xl"></i>
+        </button>
+        <button id="pause-btn" class="bg-black bg-opacity-40 w-14 h-14 rounded-full flex items-center justify-center text-white hover:bg-opacity-60 transition-all shadow-lg">
+            <i id="pause-icon" class="fas fa-pause text-xl"></i>
+        </button>
+        <button id="end-call-btn" class="bg-red-600 w-16 h-16 rounded-full flex items-center justify-center text-white hover:bg-red-700 transition-all shadow-2xl shadow-red-500/50">
+            <i id="record-icon" class="fas fa-times text-2xl"></i>
+        </button>
+    </footer>
+</div>
+
+<script src="{{ url_for('static', filename='js/tts.js') }}"></script>
+
+{% endblock %}

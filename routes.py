@@ -14,6 +14,11 @@ from bs4 import BeautifulSoup as soup
 from langchain_community.utilities import GoogleSerperAPIWrapper
 search = GoogleSerperAPIWrapper()
 
+@app.route('/tts')
+def tts():
+    """Route for the TTS page"""
+    return render_template('tts.html')
+
 
 @app.route('/')
 def index():
