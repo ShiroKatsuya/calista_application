@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let micStream = null;
     let isRecognitionActive = false;
     let isRecording = false;
+    let isBotSpeaking = false; // New flag
 
     // If muteButton, muteText, micIcon are not present, create dummy elements to avoid errors
     if (!muteButton) {
@@ -49,13 +50,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const SpeechSynthesis = window.speechSynthesis;
 
     function speak(text) {
-        if (SpeechSynthesis) {
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.onstart = () => {
-                triggerShockwave(); // Trigger shockwave when speech starts
-            };
-            SpeechSynthesis.speak(utter);
+        // Temporarily disable SpeechRecognition when the bot starts speaking
+        if (recognition && isRecognitionActive) {
+            recognition.stop();
+            isRecognitionActive = false; // Ensure state is updated correctly
         }
+        isBotSpeaking = true; // Indicate that the bot is speaking
+
+        // Fetch the cleaned_response and audio_url from the backend
+        fetch(`/speech?query=${encodeURIComponent(text)}`)
+            .then(response => response.json())
+            .then(data => {
+                const cleanedResponse = data.cleaned_response;
+                // Add cache-busting parameter to audio URL
+                const audioUrl = data.audio_url + '?t=' + Date.now();
+                // Display the cleaned_response in the chat
+                addMessage(cleanedResponse, true, true); // true, true: isBot, isPersistent
+                const audio = new Audio(audioUrl);
+                let shockwaveInterval;
+                audio.addEventListener('play', () => {
+                    triggerShockwave();
+                    shockwaveInterval = setInterval(triggerShockwave, 600);
+                });
+                function stopAllShockwavesAndResumeRecognition() {
+                    clearInterval(shockwaveInterval);
+                    stopShockwave();
+                    isBotSpeaking = false;
+                    // Hide the chat message after audio ends
+                    chatContainer.style.display = 'none';
+                    // Re-enable recognition only if recording is active and recognition is not already active
+                    if (isRecording && !isRecognitionActive) {
+                        recognition.start();
+                    }
+                }
+                audio.addEventListener('ended', stopAllShockwavesAndResumeRecognition);
+                audio.addEventListener('pause', stopAllShockwavesAndResumeRecognition);
+                audio.play();
+            });
     }
 
     function drawWaves() {
@@ -87,6 +118,15 @@ document.addEventListener('DOMContentLoaded', () => {
             drawWaves();
         };
 
+        recognition.onend = () => {
+            console.log('Speech recognition ended. Attempting to restart.');
+            isRecognitionActive = false;
+            // Only restart if the user intends to continue recording and the bot is not speaking
+            if (isRecording && !isBotSpeaking) {
+                recognition.start();
+            }
+        };
+
         recognition.onresult = (event) => {
             let interimTranscript = '';
             let finalTranscript = '';
@@ -114,16 +154,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(interimBox) interimBox.remove();
                 addMessage(finalTranscript, false);
                 speak(finalTranscript);
+                // Ensure recognition continues after a final result
+                if (!isRecognitionActive && isRecording) {
+                    recognition.start();
+                }
             }
         };
     }
 
-    function addMessage(text, isBot = true) {
-        // Clear previous messages
+    // Update addMessage to support persistent display (no timeout)
+    function addMessage(text, isBot = true, isPersistent = false) {
         chatContainer.innerHTML = '';
-        // Show chat-container only when there is a message
         chatContainer.style.display = 'block';
-        // Add the new message
         const messageDiv = document.createElement('div');
         messageDiv.className = 'p-2';
         const p = document.createElement('p');
@@ -132,11 +174,13 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.appendChild(p);
         chatContainer.appendChild(messageDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
-        // Hide chat-container after 3 seconds
-        if (window._chatHideTimeout) clearTimeout(window._chatHideTimeout);
-        window._chatHideTimeout = setTimeout(() => {
-            chatContainer.style.display = 'none';
-        }, 3000);
+        // Only hide if not persistent
+        if (!isPersistent) {
+            if (window._chatHideTimeout) clearTimeout(window._chatHideTimeout);
+            window._chatHideTimeout = setTimeout(() => {
+                chatContainer.style.display = 'none';
+            }, 3000);
+        }
     }
 
     recordToggleBtn.addEventListener('click', () => {
@@ -155,7 +199,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             recordIcon.classList.remove('fa-microphone');
             recordIcon.classList.add('fa-times');
-            if (recognition && isRecognitionActive) recognition.stop();
+            if (recognition && isRecognitionActive) {
+                recognition.stop();
+                isRecognitionActive = false; // Ensure state is updated correctly
+            }
             if (audioContext) audioContext.suspend && audioContext.suspend();
             chatContainer.innerHTML = '<div class="p-2"><p class="text-lg text-gray-300">Recording ended.</p></div>';
             canvasCtx.clearRect(0, 0, visualizer.width, visualizer.height);
@@ -194,6 +241,14 @@ document.addEventListener('DOMContentLoaded', () => {
         shockwave.addEventListener('animationend', () => {
             shockwave.remove();
         });
+    }
+
+    function stopShockwave() {
+        const shockwaveContainer = document.getElementById('shockwave-container');
+        if (!shockwaveContainer) return;
+        // Remove all shockwave elements
+        const shockwaves = shockwaveContainer.querySelectorAll('.shockwave');
+        shockwaves.forEach(sw => sw.remove());
     }
 
     // Fix: Use DOMContentLoaded, not window.onload, to avoid double event registration

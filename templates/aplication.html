@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+    /* Custom styles for the page */
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+    /* Style for the simulated terminal output */
+    #output-container {
+        font-family: 'Roboto Mono', monospace;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    /* Simple animation for the loading spinner */
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    .spinner {
+        animation: spin 1s linear infinite;
+    }
+</style>
+
+<div class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+<div class="w-full max-w-3xl bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700">
+    <!-- Header Section -->
+    <div class="p-6 border-b border-gray-700">
+        <h1 class="text-2xl font-bold text-white">Run Python Script</h1>
+        <p class="text-gray-400 mt-1">Click the button below to execute <code class="bg-gray-700 text-emerald-400 px-2 py-1 rounded-md text-sm">main_application.py</code> on the server.</p>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <button id="runScriptButton" class="w-full sm:w-auto flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 disabled:bg-gray-600 disabled:cursor-not-allowed">
+            <!-- SVG Icon for running the script -->
+            <svg id="runIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play">
+                <polygon points="6 3 20 12 6 21 6 3"/>
+            </svg>
+            <svg id="stopIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square hidden">
+                <rect x="6" y="6" width="12" height="12" rx="2"/>
+            </svg>
+            <span id="buttonText">Run Script</span>
+            <!-- Loading spinner, hidden by default -->
+            <div id="spinner" class="hidden w-5 h-5 border-2 border-t-transparent border-white rounded-full spinner"></div>
+        </button>
+        <div id="statusMessage" class="text-sm text-gray-400 font-medium">
+            Status: Idle
+        </div>
+    </div>
+
+    <!-- Output Terminal Section -->
+    <div class="bg-black/50 p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-300">Output Log</h2>
+            <button id="clearLogButton" class="text-sm text-gray-400 hover:text-white transition-colors">Clear Log</button>
+        </div>
+        <div id="output-container" class="bg-gray-900 p-4 rounded-lg min-h-[200px] max-h-96 overflow-y-auto text-sm leading-relaxed border border-gray-700">
+            <span class="text-gray-500">Awaiting execution...</span>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<script>
+    // Get references to all the interactive elements
+    const runScriptButton = document.getElementById('runScriptButton');
+    const buttonText = document.getElementById('buttonText');
+    const spinner = document.getElementById('spinner');
+    const statusMessage = document.getElementById('statusMessage');
+    const outputContainer = document.getElementById('output-container');
+    const clearLogButton = document.getElementById('clearLogButton');
+    const runIcon = document.getElementById('runIcon');
+    const stopIcon = document.getElementById('stopIcon');
+
+    // Track running state
+    let isRunning = false;
+
+    // --- Helper functions to switch button state ---
+    function setButtonToRun() {
+        isRunning = false;
+        runScriptButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+        runScriptButton.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+        buttonText.textContent = 'Run Script';
+        runIcon.classList.remove('hidden');
+        stopIcon.classList.add('hidden');
+        runScriptButton.disabled = false;
+    }
+
+    function setButtonToStop() {
+        isRunning = true;
+        runScriptButton.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+        runScriptButton.classList.add('bg-red-600', 'hover:bg-red-700');
+        buttonText.textContent = 'Stop Script';
+        runIcon.classList.add('hidden');
+        stopIcon.classList.remove('hidden');
+        runScriptButton.disabled = false;
+    }
+
+    // --- Event Listener for the Run/Stop Script Button ---
+    runScriptButton.addEventListener('click', async () => {
+        if (!isRunning) {
+            // RUN SCRIPT
+            runScriptButton.disabled = true;
+            spinner.classList.remove('hidden');
+            buttonText.textContent = 'Running...';
+            statusMessage.textContent = 'Status: Executing...';
+            outputContainer.innerHTML = '<span class="text-yellow-400">[INFO] Attempting to run main_application.py...</span>';
+
+            try {
+                const response = await fetch('/run_script', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    statusMessage.textContent = `Status: ${data.status.charAt(0).toUpperCase() + data.status.slice(1)} - ${data.message}`;
+                    statusMessage.classList.remove('text-red-400');
+                    statusMessage.classList.add('text-emerald-400');
+                    outputContainer.innerHTML = `<span class="text-green-400">[SUCCESS] ${data.message}</span>`;
+                    setButtonToStop();
+                } else {
+                    statusMessage.textContent = `Status: ${data.status.charAt(0).toUpperCase() + data.status.slice(1)} - ${data.message}`;
+                    statusMessage.classList.remove('text-emerald-400');
+                    statusMessage.classList.add('text-red-400');
+                    outputContainer.innerHTML = `<span class="text-red-500">[ERROR] ${data.message}</span>`;
+                    setButtonToRun();
+                }
+            } catch (error) {
+                const errorMessage = `Failed to run script. ${error.message}`;
+                statusMessage.textContent = `Error: ${errorMessage}`;
+                statusMessage.classList.remove('text-emerald-400');
+                statusMessage.classList.add('text-red-400');
+                outputContainer.innerHTML += `\n<span class="text-red-500">[ERROR] ${errorMessage}</span>`;
+                setButtonToRun();
+                console.error('Error:', error);
+            } finally {
+                spinner.classList.add('hidden');
+            }
+        } else {
+            // STOP SCRIPT
+            runScriptButton.disabled = true;
+            spinner.classList.remove('hidden');
+            buttonText.textContent = 'Stopping...';
+            statusMessage.textContent = 'Status: Stopping...';
+            outputContainer.innerHTML += `<br><span class="text-yellow-400">[INFO] Attempting to stop main_application.py...</span>`;
+
+            try {
+                const response = await fetch('/stop_script', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    statusMessage.textContent = `Status: ${data.status.charAt(0).toUpperCase() + data.status.slice(1)} - ${data.message}`;
+                    statusMessage.classList.remove('text-red-400');
+                    statusMessage.classList.add('text-emerald-400');
+                    outputContainer.innerHTML += `<br><span class="text-green-400">[SUCCESS] ${data.message}</span>`;
+                    setButtonToRun();
+                } else if (data.status === 'error') {
+                    statusMessage.textContent = `Status: ${data.status.charAt(0).toUpperCase() + data.status.slice(1)} - ${data.message}`;
+                    statusMessage.classList.remove('text-emerald-400');
+                    statusMessage.classList.add('text-red-400');
+                    outputContainer.innerHTML += `<br><span class="text-red-500">[ERROR] ${data.message}</span>`;
+                    setButtonToRun();
+                } else {
+                    // info or other
+                    statusMessage.textContent = `Status: ${data.status.charAt(0).toUpperCase() + data.status.slice(1)} - ${data.message}`;
+                    statusMessage.classList.remove('text-red-400', 'text-emerald-400');
+                    outputContainer.innerHTML += `<br><span class="text-gray-400">[INFO] ${data.message}</span>`;
+                    setButtonToRun();
+                }
+            } catch (error) {
+                const errorMessage = `Failed to stop script. ${error.message}`;
+                statusMessage.textContent = `Error: ${errorMessage}`;
+                statusMessage.classList.remove('text-emerald-400');
+                statusMessage.classList.add('text-red-400');
+                outputContainer.innerHTML += `<br><span class="text-red-500">[ERROR] ${errorMessage}</span>`;
+                setButtonToRun();
+                console.error('Error:', error);
+            } finally {
+                spinner.classList.add('hidden');
+            }
+        }
+    });
+
+    // --- Event Listener for the Clear Log Button ---
+    clearLogButton.addEventListener('click', () => {
+        outputContainer.innerHTML = '<span class="text-gray-500">Log cleared. Awaiting execution...</span>';
+        statusMessage.textContent = 'Status: Idle';
+        statusMessage.classList.remove('text-emerald-400', 'text-red-400');
+        setButtonToRun();
+    });
+
+    // Optionally, on page load, check if script is running (not implemented here)
+    setButtonToRun();
+</script>
+
+{% endblock %}

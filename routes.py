@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, Response, stream_with_context, session, redirect, url_for
+from flask import render_template, request, jsonify, Response, stream_with_context, session, redirect, url_for, Flask, send_file
 from app import app
 from MultiAgent import app as multi_agent_app  # Import the Langchain graph app
 from MultiAgent import model_rina, model_emilia, model_supervisor, rina_simple_prompt, emilia_simple_prompt, supervisor_routing_prompt, is_difficult_question, web_tools, rina_tool_executor, emilia_tool_executor
@@ -13,11 +13,53 @@ from bs4 import BeautifulSoup as soup
 
 from langchain_community.utilities import GoogleSerperAPIWrapper
 search = GoogleSerperAPIWrapper()
+import wave
+from io import BytesIO
+
+
+
+
 
 @app.route('/tts')
 def tts():
     """Route for the TTS page"""
     return render_template('tts.html')
+
+@app.route('/main_aplication')
+def main_aplications():
+    return render_template('aplication.html')
+
+
+
+
+@app.route('/speech')
+def speech():
+    from example import text_to_speech
+    from ollamas import ollama_full_text
+    query = request.args.get('query', '')
+    response = ollama_full_text(query)
+    print(response)
+    import re
+    cleaned_response = re.sub(r'\*+', '', response)
+    cleaned_response = re.sub(r'\n\s*\n', '\n', cleaned_response)
+    cleaned_response = cleaned_response.strip()
+
+    output_file = "output.wav"
+    text_to_speech(cleaned_response, voice="tara", output_file=output_file)
+
+    # Return JSON with cleaned_response and audio file URL
+    from flask import jsonify, url_for
+    return jsonify({
+        'cleaned_response': cleaned_response,
+        'audio_url': url_for('get_speech_audio')
+    })
+
+@app.route('/speech_audio')
+def get_speech_audio():
+    output_file = "output.wav"
+    return send_file(output_file, mimetype='audio/wav', as_attachment=False)
+
+
 
 
 @app.route('/')

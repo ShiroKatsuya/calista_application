@@ -1,0 +1,19 @@
+2025-07-24 16:03:36,045 - INFO - posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-24 16:04:46,392 - INFO - models - AFC is enabled with max remote calls: 10.
+2025-07-24 16:04:55,323 - INFO - _client - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-07-24 16:09:08,260 - INFO - posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-24 16:11:35,415 - INFO - posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-24 16:12:02,576 - INFO - models - AFC is enabled with max remote calls: 10.
+2025-07-24 16:12:03,556 - INFO - models - AFC remote call 1 is done.
+2025-07-24 16:12:11,852 - INFO - _client - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-07-24 16:27:15,754 - INFO - posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-24 16:30:33,383 - INFO - posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-24 16:31:22,068 - INFO - posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-24 16:32:05,110 - INFO - models - AFC is enabled with max remote calls: 10.
+2025-07-24 16:32:06,079 - INFO - models - AFC remote call 1 is done.
+2025-07-24 16:32:08,471 - INFO - _client - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 500 Internal Server Error"
+2025-07-24 16:32:54,011 - INFO - posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-25 06:21:23,853 - INFO - posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-25 06:21:34,406 - INFO - posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-25 06:38:46,164 - INFO - posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-25 06:41:42,591 - INFO - posthog - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.

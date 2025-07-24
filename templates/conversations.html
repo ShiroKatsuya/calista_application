@@ -177,37 +177,33 @@
             </div>
         </div>
     </div>
-    <!-- <div id="loadingIndicator" class="text-center text-gray-500 text-sm mt-4 hidden">
-        <div class="spinner"></div>
-        Thinking...
+    <!-- TTS specific controls -->
+    <div class="fixed bottom-0 left-0 right-0 bg-[#1c1c1e] p-4 flex justify-center items-center space-x-4 border-t border-gray-700/60">
+        <button id="pause-btn" class="icon-btn-gray">
+            <i id="pause-icon" class="fas fa-pause"></i>
+        </button>
+        <button id="end-call-btn" class="pulse-btn text-white bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors">
+            <i id="record-icon" class="fas fa-microphone text-2xl"></i>
+        </button>
+        <button id="mute-btn" class="action-btn-gray">
+            <img id="mic-icon" src="{{ url_for('static', filename='icons/microphone.png') }}" alt="Mic Icon" class="w-5 h-5 mr-2">
+            <span id="mute-text">Mute</span>
+        </button>
+        <div id="timer" class="text-lg font-semibold text-gray-300">00:00</div>
     </div>
-    <div class="bg-[#1c1c1e]/80 backdrop-blur-lg border-t border-gray-700/60 p-4">
-        <div class="max-w-3xl mx-auto">
-            <form id="followUpForm">
-                <div class="relative">
-                    <input
-                        type="text"
-                        id="followUpInput"
-                        placeholder="Ask a follow-up..."
-                        class="w-full bg-[#2c2c2e] border border-gray-700/60 rounded-xl py-3 pl-5 pr-28 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                    >
-                    <button type="button" id="clearInputButton" class="clear-input-button"><i class="fas fa-times-circle"></i></button>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                        <button type="button" class="text-gray-400 hover:text-white mr-2"><i class="fas fa-search"></i></button>
-                        <button type="button" class="text-gray-400 hover:text-white mr-2"><i class="fas fa-paperclip"></i></button>
-                        <button type="button" class="text-gray-400 hover:text-white mr-2"><i class="fas fa-microphone"></i></button>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors">
-                            <i class="fas fa-arrow-up"></i>
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
+    <!-- interim box for speech recognition -->
+    <div id="interim-box" class="p-2 hidden">
+        <p class="text-lg text-gray-400"></p>
     </div>
--->
+    <!-- Shockwave container -->
+    <div id="shockwave-container" class="shockwave-container fixed bottom-24 flex justify-center items-center w-full">
+        <!-- Pulsating circle (for visual effect related to shockwave) -->
+        <div class="pulsating-circle"></div>
+    </div>
 </div>
 
 <!-- Custom JavaScript for conversations -->
 <script src="{{ url_for('static', filename='js/conversations.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tts.js') }}"></script>
 
 {% endblock %}

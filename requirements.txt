@@ -1,9 +1,63 @@
-Flask
-python-dotenv
-Gunicorn
-langchain_core
+pywin32
+langchain
 langchain_ollama
-langgraph
+langchain-community
+langchain_chroma
 langchain_google_genai
-langchain_community
-bs4
+ollama
+python-dotenv
+requests
+Pillow
+monsterapi
+google-generativeai
+google-genai
+tiktoken
+tiktoken
+tavily-python
+opencv-python
+click
+PyAudio
+moviepy
+SpeechRecognition
+deep_translator
+pyautogui
+macros
+google-search-results
+pytubefix
+whisper
+youtube-search-python
+simpleaudio
+webrtcvad
+gtts
+pydub
+loguru
+number2text
+pytest
+psutil
+playwright
+backoff
+pandas
+httpx==0.28
+yt-dlp
+retrying
+transformers
+dataclasses
+bitsandbytes
+rouge-score
+bert-score
+nltk
+sentence-transformers 
+huggingface-hub
+deepeval==0.20.57
+flask
+sounddevice
+langgraph
+snac
+#for windows :
+#pip install git+https://github.com/openai/whisper.git
+#for mac:
+#openai-whisper
+#for cpu:
+#torch
+#for cuda:
+#pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128

@@ -12,6 +12,7 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-prod
 # Import routes after app creation to avoid circular imports
 
 from routes import *
+from routes_aplication import *
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

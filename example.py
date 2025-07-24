@@ -37,16 +37,16 @@ def main():
         output_file="example_tara.wav"
     )
     
-    # Example 2: Generate speech with a different voice
-    text_to_speech(
-        "Hi there, I'm Leo. I have a different voice than Tara.",
-        voice="leo",
-        output_file="example_leo.wav"
-    )
+    # # Example 2: Generate speech with a different voice
+    # text_to_speech(
+    #     "Hi there, I'm Leo. I have a different voice than Tara.",
+    #     voice="leo",
+    #     output_file="example_leo.wav"
+    # )
     
-    print("All available voices:")
-    for voice in AVAILABLE_VOICES:
-        print(f"- {voice}")
+    # print("All available voices:")
+    # for voice in AVAILABLE_VOICES:
+    #     print(f"- {voice}")
 
 if __name__ == "__main__":
     main() 

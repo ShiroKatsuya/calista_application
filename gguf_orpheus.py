@@ -11,9 +11,11 @@ import threading
 import queue
 import asyncio
 
-# Ollama API settings
-OLLAMA_API_URL = "http://127.0.0.1:11434/api/generate"
-OLLAMA_MODEL = "legraphista/Orpheus:latest"  # Change as needed
+# LM Studio API settings
+API_URL = "http://127.0.0.1:1234/v1/completions"
+HEADERS = {
+    "Content-Type": "application/json"
+}
 
 # Model parameters
 MAX_TOKENS = 1200
@@ -40,7 +42,7 @@ def format_prompt(prompt, voice=DEFAULT_VOICE):
     # Format similar to how engine_class.py does it with special tokens
     formatted_prompt = f"{voice}: {prompt}"
     
-    # Add special token markers for the Orpheus model
+    # Add special token markers for the LM Studio API
     special_start = "<|audio|>"  # Using the additional_special_token from config
     special_end = "<|eot_id|>"   # Using the eos_token from config
     
@@ -48,48 +50,50 @@ def format_prompt(prompt, voice=DEFAULT_VOICE):
 
 def generate_tokens_from_api(prompt, voice=DEFAULT_VOICE, temperature=TEMPERATURE, 
                             top_p=TOP_P, max_tokens=MAX_TOKENS, repetition_penalty=REPETITION_PENALTY):
-    """Generate tokens from text using Ollama API."""
+    """Generate tokens from text using LM Studio API."""
     formatted_prompt = format_prompt(prompt, voice)
     print(f"Generating speech for: {formatted_prompt}")
-
-    # Ollama API expects a POST with model, prompt, and options
+    
+    # Create the request payload for the LM Studio API
     payload = {
-        "model": OLLAMA_MODEL,
+        "model": "orpheus-3b-0.1-ft-q4_k_m",  # Model name can be anything, LM Studio ignores it
         "prompt": formatted_prompt,
-        "stream": True,
-        "options": {
-            "temperature": temperature,
-            "top_p": top_p,
-            "num_predict": max_tokens,
-            "repeat_penalty": repetition_penalty
-        }
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "top_p": top_p,
+        "repeat_penalty": repetition_penalty,
+        "stream": True
     }
-
+    
     # Make the API request with streaming
-    response = requests.post(OLLAMA_API_URL, json=payload, stream=True)
+    response = requests.post(API_URL, headers=HEADERS, json=payload, stream=True)
     
     if response.status_code != 200:
         print(f"Error: API request failed with status code {response.status_code}")
         print(f"Error details: {response.text}")
         return
-
+    
     # Process the streamed response
     token_counter = 0
     for line in response.iter_lines():
         if line:
-            try:
-                data = json.loads(line.decode('utf-8'))
-                # Ollama streams with {"response": "...", ...}
-                token_text = data.get("response", "")
-                if token_text:
-                    token_counter += 1
-                    yield token_text
-                if data.get("done", False):
+            line = line.decode('utf-8')
+            if line.startswith('data: '):
+                data_str = line[6:]  # Remove the 'data: ' prefix
+                if data_str.strip() == '[DONE]':
                     break
-            except json.JSONDecodeError as e:
-                print(f"Error decoding JSON: {e}")
-                continue
-
+                    
+                try:
+                    data = json.loads(data_str)
+                    if 'choices' in data and len(data['choices']) > 0:
+                        token_text = data['choices'][0].get('text', '')
+                        token_counter += 1
+                        if token_text:
+                            yield token_text
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON: {e}")
+                    continue
+    
     print("Token generation complete")
 
 def turn_token_into_id(token_string, index):
@@ -214,7 +218,7 @@ def stream_audio(audio_buffer):
 
 def generate_speech_from_api(prompt, voice=DEFAULT_VOICE, output_file=None, temperature=TEMPERATURE, 
                      top_p=TOP_P, max_tokens=MAX_TOKENS, repetition_penalty=REPETITION_PENALTY):
-    """Generate speech from text using Orpheus model via Ollama API."""
+    """Generate speech from text using Orpheus model via LM Studio API."""
     return tokens_decoder_sync(
         generate_tokens_from_api(
             prompt=prompt, 
@@ -240,7 +244,7 @@ def list_available_voices():
 
 def main():
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description="Orpheus Text-to-Speech using Ollama API")
+    parser = argparse.ArgumentParser(description="Orpheus Text-to-Speech using LM Studio API")
     parser.add_argument("--text", type=str, help="Text to convert to speech")
     parser.add_argument("--voice", type=str, default=DEFAULT_VOICE, help=f"Voice to use (default: {DEFAULT_VOICE})")
     parser.add_argument("--output", type=str, help="Output WAV file path")
