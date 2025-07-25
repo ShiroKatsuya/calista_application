@@ -58,7 +58,7 @@ def main():
     global detection_thread
     # voice("""To access features, please provide a suitable voice command, such as 'windows access', 'Open Camera', 'Access Internet', 'Run Application', 'Search on Youtube', or 'General Mode' for general questions. To stop an operation, please issue the corresponding command, such as 'stop windows access', 'Stop Internet', 'Stop Youtube', 'Stop Camera', or 'Stop General Mode'.""")
     # After voice, open image (if available)
-    image_path = "perintah_interaksi.png"
+    image_path = "aplication/perintah_interaksi.png"
     if os.path.exists(image_path):
         try:
             image = Image.open(image_path)

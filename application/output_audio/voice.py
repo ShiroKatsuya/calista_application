@@ -5,7 +5,7 @@ import time
 import subprocess
 from deep_translator import GoogleTranslator
 import sys
-sys.path.insert(0, 'silero_tts')
+sys.path.insert(0, 'application/silero_tts')
 from silero_tts import SileroTTS
 from concurrent.futures import ThreadPoolExecutor
 import tkinter as tk

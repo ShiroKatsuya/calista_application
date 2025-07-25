@@ -523,7 +523,7 @@ def setup_jarvis_ui(root_window, pause_func, resume_func):
     
     # Set application icon
     try:
-        root.iconbitmap('assets/eye.ico')
+        root.iconbitmap('application/assets/eye.ico')
     except tk.TclError:
         print("Warning: icon.ico not found or invalid.")
         pass

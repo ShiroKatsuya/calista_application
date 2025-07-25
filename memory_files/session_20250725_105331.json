@@ -1,0 +1,10 @@
+[
+  {
+    "type": "human",
+    "content": "Hello Hello"
+  },
+  {
+    "type": "ai",
+    "content": "Hello! How can I help you today?"
+  }
+]

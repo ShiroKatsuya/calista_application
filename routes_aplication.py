@@ -2,9 +2,10 @@ import subprocess
 import os
 from flask import Flask, jsonify, request
 from threading import Lock
-app = Flask(__name__)
-# Lock to prevent concurrent execution of the script
+from app import app
 process_lock = Lock()
+
+
 @app.route('/run_script', methods=['POST'])
 def run_script():
     if process_lock.acquire(blocking=False):
@@ -19,7 +20,8 @@ def run_script():
                 return jsonify({'status': 'error', 'message': 'Virtual environment Python executable not found.'}), 500
 
             # Start the process and save its PID to a file for later termination
-            process = subprocess.Popen([venv_python_path, 'main_aplication.py'], cwd=os.path.dirname(os.path.abspath(__file__)))
+            main_app_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'application', 'main_aplication.py')
+            process = subprocess.Popen([venv_python_path, main_app_path], cwd=os.path.dirname(os.path.abspath(__file__)))
             pid_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'main_aplication.pid')
             with open(pid_file, 'w') as f:
                 f.write(str(process.pid))

@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isRecognitionActive = false; // Ensure state is updated correctly
         }
         isBotSpeaking = true; // Indicate that the bot is speaking
+        showHeart(); // Show heart animation when bot speaks
         streamSpeech(text);
     }
 
@@ -224,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatContainer.innerHTML = '';
         chatContainer.style.display = 'block';
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'p-2';
+        messageDiv.className = 'p-2 bubble-animate'; // Add bubble pop-in animation
         const p = document.createElement('p');
         p.className = 'text-lg text-white';
         if (isBot) {
@@ -242,6 +243,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 chatContainer.style.display = 'none';
             }, 3000);
         }
+        // Show confetti for positive bot messages
+        if (isBot && /great|good|love|happy|wonderful|amazing|terima kasih|senang/i.test(text)) {
+            showConfetti();
+        }
     }
 
     recordToggleBtn.addEventListener('click', () => {
@@ -257,6 +262,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (audioContext) audioContext.resume();
                 drawWaves();
             }
+            showEmoji('👋'); // Show waving hand when user starts speaking
+            if (!window._confettiShown) { showConfetti(); window._confettiShown = true; }
         } else {
             recordIcon.classList.remove('fa-microphone');
             recordIcon.classList.add('fa-times');
@@ -273,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gradient.addColorStop(1, '#1c96c5');
             canvasCtx.fillStyle = gradient;
             canvasCtx.fillRect(0, 0, visualizer.width, visualizer.height);
+            showEmoji('😊'); // Show smile when user stops speaking
         }
     });
 
@@ -311,6 +319,48 @@ document.addEventListener('DOMContentLoaded', () => {
         const shockwaves = shockwaveContainer.querySelectorAll('.shockwave');
         shockwaves.forEach(sw => sw.remove());
     }
+
+    // --- Animation helpers ---
+    function showHeart() {
+        const heartContainer = document.getElementById('heart-container');
+        if (!heartContainer) return;
+        const heart = document.createElement('span');
+        heart.className = 'heart';
+        heart.textContent = ['💖','❤️','💕','💓','💞'][Math.floor(Math.random()*5)];
+        heart.style.left = (45 + Math.random()*10) + '%';
+        heart.style.fontSize = (2 + Math.random()) + 'rem';
+        heartContainer.appendChild(heart);
+        heart.addEventListener('animationend', () => heart.remove());
+    }
+    function showEmoji(emoji) {
+        const emojiContainer = document.getElementById('emoji-container');
+        if (!emojiContainer) return;
+        emojiContainer.innerHTML = '';
+        const e = document.createElement('span');
+        e.className = 'emoji';
+        e.textContent = emoji;
+        emojiContainer.appendChild(e);
+        setTimeout(() => { emojiContainer.innerHTML = ''; }, 1200);
+    }
+    function showConfetti() {
+        const confettiContainer = document.getElementById('confetti-container');
+        if (!confettiContainer) return;
+        for (let i = 0; i < 18; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.background = ['#ff6b81','#feca57','#48dbfb','#1dd1a1','#f368e0'][i%5];
+            const angle = Math.random() * 2 * Math.PI;
+            const radius = 90 + Math.random()*40;
+            confetti.style.setProperty('--x', `${Math.cos(angle)*radius}px`);
+            confetti.style.setProperty('--y', `${Math.sin(angle)*radius}px`);
+            confetti.style.left = '50%';
+            confetti.style.top = '50%';
+            confetti.style.animation = 'confetti-burst 1.1s ease-out forwards';
+            confettiContainer.appendChild(confetti);
+            confetti.addEventListener('animationend', () => confetti.remove());
+        }
+    }
+    // --- End animation helpers ---
 
     // Fix: Use DOMContentLoaded, not window.onload, to avoid double event registration
     // chatContainer.style.display = 'none'; // Removed: always visible now

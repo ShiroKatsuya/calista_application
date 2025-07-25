@@ -10,13 +10,14 @@ from datetime import datetime
 import re
 from urllib.request import urlopen
 from bs4 import BeautifulSoup as soup
-
+from application.output_audio.voice_natural import voice
 from langchain_community.utilities import GoogleSerperAPIWrapper
 search = GoogleSerperAPIWrapper()
+
+
+
 import wave
 from io import BytesIO
-
-
 
 
 
@@ -34,30 +35,22 @@ def main_aplications():
 
 @app.route('/speech')
 def speech():
-    from example import text_to_speech
-    from ollamas import ollama_full_text
+    from application.output_audio.voice_natural import stream_voice
+    from ollamas import handle_ollama_conversation
+    from flask import Response, stream_with_context, request
+    import base64
+    import json
+    import os
     query = request.args.get('query', '')
-    response = ollama_full_text(query)
-    print(response)
-    import re
-    cleaned_response = re.sub(r'\*+', '', response)
-    cleaned_response = re.sub(r'\n\s*\n', '\n', cleaned_response)
-    cleaned_response = cleaned_response.strip()
+    model_name = os.getenv("MODEL_NAME_GENERAL_MODE") # Using a default model if not set
 
-    output_file = "output.wav"
-    text_to_speech(cleaned_response, voice="tara", output_file=output_file)
-
-    # Return JSON with cleaned_response and audio file URL
-    from flask import jsonify, url_for
-    return jsonify({
-        'cleaned_response': cleaned_response,
-        'audio_url': url_for('get_speech_audio')
-    })
-
-@app.route('/speech_audio')
-def get_speech_audio():
-    output_file = "output.wav"
-    return send_file(output_file, mimetype='audio/wav', as_attachment=False)
+    def generate():
+        for audio_bytes, subtitle in handle_ollama_conversation(query, model_name):
+            yield json.dumps({
+                'audio': base64.b64encode(audio_bytes).decode('utf-8'),
+                'subtitle': subtitle
+            }) + '\n'
+    return Response(stream_with_context(generate()), mimetype='application/jsonlines')
 
 
 

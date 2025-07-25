@@ -15,4 +15,4 @@ from routes import *
 from routes_aplication import *
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True)

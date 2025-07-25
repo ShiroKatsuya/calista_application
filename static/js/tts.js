@@ -56,37 +56,86 @@ document.addEventListener('DOMContentLoaded', () => {
             isRecognitionActive = false; // Ensure state is updated correctly
         }
         isBotSpeaking = true; // Indicate that the bot is speaking
+        // Show a random affectionate animation when bot speaks
+        const anims = [showHeart, showSparkles, showHug];
+        anims[Math.floor(Math.random()*anims.length)]();
+        showHeart(); // Show heart animation when bot speaks
+        streamSpeech(text);
+    }
 
-        // Fetch the cleaned_response and audio_url from the backend
-        fetch(`/speech?query=${encodeURIComponent(text)}`)
-            .then(response => response.json())
-            .then(data => {
-                const cleanedResponse = data.cleaned_response;
-                // Add cache-busting parameter to audio URL
-                const audioUrl = data.audio_url + '?t=' + Date.now();
-                // Display the cleaned_response in the chat
-                addMessage(cleanedResponse, true, true); // true, true: isBot, isPersistent
-                const audio = new Audio(audioUrl);
-                let shockwaveInterval;
-                audio.addEventListener('play', () => {
-                    triggerShockwave();
-                    shockwaveInterval = setInterval(triggerShockwave, 600);
-                });
-                function stopAllShockwavesAndResumeRecognition() {
-                    clearInterval(shockwaveInterval);
-                    stopShockwave();
-                    isBotSpeaking = false;
-                    // Hide the chat message after audio ends
-                    chatContainer.style.display = 'none';
-                    // Re-enable recognition only if recording is active and recognition is not already active
-                    if (isRecording && !isRecognitionActive) {
-                        recognition.start();
-                    }
+    async function streamSpeech(query) {
+        // Remove floating subtitle div logic
+        // Only use chatContainer for subtitles
+        // chatContainer.innerHTML = ''; // Removed: addMessage appends now
+        // chatContainer.style.display = 'block'; // Removed: addMessage handles visibility
+        showTypingIndicator(); // Show typing indicator while waiting for response
+        const response = await fetch(`/speech?query=${encodeURIComponent(query)}`);
+        const reader = response.body.getReader();
+        let decoder = new TextDecoder();
+        let buffer = '';
+        let playing = Promise.resolve();
+        let firstChunk = true;
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            let lines = buffer.split('\n');
+            buffer = lines.pop(); // last may be incomplete
+            for (let line of lines) {
+                if (!line.trim()) continue;
+                let data;
+                try {
+                    data = JSON.parse(line);
+                } catch (e) { continue; }
+                const { subtitle, audio } = data;
+                // Format subtitle: split English and Indonesian into new lines using <br>
+                let formattedSubtitle = subtitle
+                    .replace(/\n\n/, '<br>') // double newline between English and Indonesian
+                    .replace(/\n/g, ' '); // single newlines to space (except the double, which is now <br>)
+                if (firstChunk) {
+                    hideTypingIndicator(); // Hide typing indicator on first chunk
+                    firstChunk = false;
                 }
-                audio.addEventListener('ended', stopAllShockwavesAndResumeRecognition);
-                audio.addEventListener('pause', stopAllShockwavesAndResumeRecognition);
-                audio.play();
+                // Call addMessage only when the audio is about to play
+                // Pass formattedSubtitle directly to playAudioChunk so it can display it
+                playing = playing.then(() => playAudioChunk(audio, formattedSubtitle));
+            }
+        }
+        await playing;
+        isBotSpeaking = false;
+        chatContainer.innerHTML = ''; // Clear chat container
+        chatContainer.style.display = 'none'; // Hide chat container after bot finishes speaking
+        if (isRecording && !isRecognitionActive) {
+            recognition.start();
+        }
+    }
+
+    function playAudioChunk(base64Audio, subtitleToDisplay) {
+        const binaryString = atob(base64Audio);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        return new Promise((resolve) => {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            context.decodeAudioData(bytes.buffer, (buffer) => {
+                // Display subtitle just before playing audio
+                addMessage(subtitleToDisplay, true, true); // Display the subtitle here
+                const source = context.createBufferSource();
+                source.buffer = buffer;
+                source.connect(context.destination);
+                source.onended = () => {
+                    context.close();
+                    resolve();
+                };
+                source.start(0);
+            }, (e) => {
+                // On decode error, skip this chunk
+                context.close();
+                resolve();
             });
+        });
     }
 
     function drawWaves() {
@@ -103,10 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
         drawWaves();
     }
 
+    // Set recognition language to Indonesian
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
         recognition.continuous = true;
-        recognition.lang = 'en-US';
+        recognition.lang = 'id-ID'; // Indonesian
         recognition.interimResults = true;
 
         recognition.onstart = () => {
@@ -152,8 +202,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (finalTranscript) {
                 if(interimBox) interimBox.remove();
-                addMessage(finalTranscript, false);
-                speak(finalTranscript);
+                // Show the user's Indonesian text in chat
+                addMessage(finalTranscript, false, false); // Make user message persistent
+                // Translate to English before sending to streamSpeech
+                translateToEnglish(finalTranscript).then(englishText => {
+                    speak(englishText);
+                });
                 // Ensure recognition continues after a final result
                 if (!isRecognitionActive && isRecording) {
                     recognition.start();
@@ -162,24 +216,47 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // Helper: Translate Indonesian to English using Google Translate API (or your backend proxy)
+    async function translateToEnglish(text) {
+        // You should replace this with your own backend endpoint for translation if needed
+        // Here we use Google Translate web API as a demo (subject to CORS and quota limits)
+        // For production, use your own backend translation endpoint
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=id&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            // The translated text is in data[0][0][0]
+            return data[0][0][0];
+        } catch (e) {
+            console.error('Translation error:', e);
+            return text; // fallback: return original
+        }
+    }
+
     // Update addMessage to support persistent display (no timeout)
     function addMessage(text, isBot = true, isPersistent = false) {
-        chatContainer.innerHTML = '';
+        chatContainer.innerHTML = ''; // Clear existing messages to only show the latest
         chatContainer.style.display = 'block';
+        // Remove any existing interim box before adding a new message
+        const interimBox = document.getElementById('interim-box');
+        if (interimBox) interimBox.remove();
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'p-2';
+        messageDiv.className = 'p-2'; // Removed bubble-animate
         const p = document.createElement('p');
         p.className = 'text-lg text-white';
-        p.textContent = text;
+        if (isBot) {
+            p.innerHTML = text; // Use innerHTML for bot messages (subtitles with <br>)
+        } else {
+            p.textContent = text;
+        }
         messageDiv.appendChild(p);
         chatContainer.appendChild(messageDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
         // Only hide if not persistent
-        if (!isPersistent) {
-            if (window._chatHideTimeout) clearTimeout(window._chatHideTimeout);
-            window._chatHideTimeout = setTimeout(() => {
-                chatContainer.style.display = 'none';
-            }, 3000);
+        // Show random affectionate animation for positive bot messages
+        if (isBot && /great|good|love|happy|wonderful|amazing|terima kasih|senang|bagus|mantap|hebat|keren|terbaik|semangat|hug|peluk/i.test(text)) {
+            const anims = [showConfetti, showHeart, showSparkles, showHug];
+            anims[Math.floor(Math.random()*anims.length)]();
         }
     }
 
@@ -196,6 +273,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (audioContext) audioContext.resume();
                 drawWaves();
             }
+            // Show a random greeting/affectionate animation when user starts speaking
+            const greetings = [() => showEmoji('��'), () => showEmoji('😊'), showSparkles, showConfetti, showHeart];
+            greetings[Math.floor(Math.random()*greetings.length)]();
+            if (!window._confettiShown) { showConfetti(); window._confettiShown = true; }
         } else {
             recordIcon.classList.remove('fa-microphone');
             recordIcon.classList.add('fa-times');
@@ -204,7 +285,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 isRecognitionActive = false; // Ensure state is updated correctly
             }
             if (audioContext) audioContext.suspend && audioContext.suspend();
-            chatContainer.innerHTML = '<div class="p-2"><p class="text-lg text-gray-300">Recording ended.</p></div>';
             canvasCtx.clearRect(0, 0, visualizer.width, visualizer.height);
             // Draw a static background after recording ends
             const gradient = canvasCtx.createLinearGradient(0, 0, 0, visualizer.height);
@@ -212,6 +292,9 @@ document.addEventListener('DOMContentLoaded', () => {
             gradient.addColorStop(1, '#1c96c5');
             canvasCtx.fillStyle = gradient;
             canvasCtx.fillRect(0, 0, visualizer.width, visualizer.height);
+            // Show a random affectionate animation when user stops speaking
+            const endings = [() => showEmoji('😊'), showHeart, showSparkles];
+            endings[Math.floor(Math.random()*endings.length)]();
         }
     });
 
@@ -251,11 +334,94 @@ document.addEventListener('DOMContentLoaded', () => {
         shockwaves.forEach(sw => sw.remove());
     }
 
+    // --- Animation helpers ---
+    function showHeart() {
+        const heartContainer = document.getElementById('heart-container');
+        if (!heartContainer) return;
+        const heart = document.createElement('span');
+        heart.className = 'heart';
+        heart.textContent = ['💖','❤️','💕','💓','💞'][Math.floor(Math.random()*5)];
+        heart.style.left = (45 + Math.random()*10) + '%';
+        heart.style.fontSize = (2 + Math.random()) + 'rem';
+        heartContainer.appendChild(heart);
+        heart.addEventListener('animationend', () => heart.remove());
+    }
+    function showEmoji(emoji) {
+        const emojiContainer = document.getElementById('emoji-container');
+        if (!emojiContainer) return;
+        emojiContainer.innerHTML = '';
+        const e = document.createElement('span');
+        e.className = 'emoji';
+        e.textContent = emoji;
+        emojiContainer.appendChild(e);
+        setTimeout(() => { emojiContainer.innerHTML = ''; }, 1200);
+    }
+    function showConfetti() {
+        const confettiContainer = document.getElementById('confetti-container');
+        if (!confettiContainer) return;
+        for (let i = 0; i < 18; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.background = ['#ff6b81','#feca57','#48dbfb','#1dd1a1','#f368e0'][i%5];
+            const angle = Math.random() * 2 * Math.PI;
+            const radius = 90 + Math.random()*40;
+            confetti.style.setProperty('--x', `${Math.cos(angle)*radius}px`);
+            confetti.style.setProperty('--y', `${Math.sin(angle)*radius}px`);
+            confetti.style.left = '50%';
+            confetti.style.top = '50%';
+            confetti.style.animation = 'confetti-burst 1.1s ease-out forwards';
+            confettiContainer.appendChild(confetti);
+            confetti.addEventListener('animationend', () => confetti.remove());
+        }
+    }
+    // New: Sparkles animation
+    function showSparkles() {
+        const emojiContainer = document.getElementById('emoji-container');
+        if (!emojiContainer) return;
+        for (let i = 0; i < 8; i++) {
+            const sparkle = document.createElement('span');
+            sparkle.className = 'emoji';
+            sparkle.textContent = '✨';
+            sparkle.style.left = (30 + Math.random()*40) + '%';
+            sparkle.style.top = (30 + Math.random()*40) + '%';
+            sparkle.style.fontSize = (1.2 + Math.random()) + 'rem';
+            sparkle.style.opacity = 0.7 + Math.random()*0.3;
+            sparkle.style.animation = 'emoji-bounce 1.2s';
+            emojiContainer.appendChild(sparkle);
+            setTimeout(() => sparkle.remove(), 1200);
+        }
+    }
+    // New: Hug animation
+    function showHug() {
+        showEmoji('🤗');
+    }
+    // New: Typing indicator
+    function showTypingIndicator() {
+        let typing = document.getElementById('typing-indicator');
+        if (!typing) {
+            typing = document.createElement('div');
+            typing.id = 'typing-indicator';
+            typing.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:40px;">
+                <span style="display:inline-block;width:10px;height:10px;margin:0 2px;background:#C6D1B6;border-radius:50%;animation:typing-bounce 1s infinite alternate 0s;"></span>
+                <span style="display:inline-block;width:10px;height:10px;margin:0 2px;background:#C6D1B6;border-radius:50%;animation:typing-bounce 1s infinite alternate 0.2s;"></span>
+                <span style="display:inline-block;width:10px;height:10px;margin:0 2px;background:#C6D1B6;border-radius:50%;animation:typing-bounce 1s infinite alternate 0.4s;"></span>
+            </div>`;
+            chatContainer.appendChild(typing);
+        }
+    }
+    function hideTypingIndicator() {
+        let typing = document.getElementById('typing-indicator');
+        if (typing) typing.remove();
+    }
+    // Add keyframes for typing indicator
+    const style = document.createElement('style');
+    style.innerHTML = `@keyframes typing-bounce { 0%{transform:translateY(0);} 100%{transform:translateY(-8px);} }`;
+    document.head.appendChild(style);
+    // --- End animation helpers ---
+
     // Fix: Use DOMContentLoaded, not window.onload, to avoid double event registration
     // chatContainer.style.display = 'none'; // Removed: always visible now
     // Do not call setupVisualizer here; only call when user interacts (record button)
-    // Hide chat-container on load
-    chatContainer.style.display = 'none';
 
     let isMuted = false;
     let seconds = 0;

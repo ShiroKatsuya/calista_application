@@ -35,21 +35,24 @@
 
     <!-- Control Panel -->
     <div class="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <button id="runScriptButton" class="w-full sm:w-auto flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 disabled:bg-gray-600 disabled:cursor-not-allowed">
-            <!-- SVG Icon for running the script -->
+        <!--
+        <button id="runScriptButton" class="w-full sm:w-auto flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
+
             <svg id="runIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play">
                 <polygon points="6 3 20 12 6 21 6 3"/>
             </svg>
             <svg id="stopIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square hidden">
                 <rect x="6" y="6" width="12" height="12" rx="2"/>
             </svg>
-            <span id="buttonText">Run Script</span>
-            <!-- Loading spinner, hidden by default -->
+            <span id="buttonText" disabled>Run Script</span>
+
             <div id="spinner" class="hidden w-5 h-5 border-2 border-t-transparent border-white rounded-full spinner"></div>
         </button>
+        -->
         <div id="statusMessage" class="text-sm text-gray-400 font-medium">
             Status: Idle
         </div>
+
     </div>
 
     <!-- Output Terminal Section -->

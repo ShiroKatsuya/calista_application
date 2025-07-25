@@ -43,65 +43,6 @@
         animation: shockwave 1s ease-out forwards;
         pointer-events: none; /* Allows clicks to pass through */
     }
-    /* Heart pulse and float animation */
-    @keyframes heart-float {
-        0% { transform: scale(0.8) translateY(0); opacity: 0.7; }
-        50% { transform: scale(1.1) translateY(-30px); opacity: 1; }
-        100% { transform: scale(1) translateY(-80px); opacity: 0; }
-    }
-    .heart {
-        position: absolute;
-        left: 50%;
-        top: 60%;
-        transform: translate(-50%, 0);
-        font-size: 2.5rem;
-        color: #ff6b81;
-        opacity: 0.8;
-        pointer-events: none;
-        animation: heart-float 1.2s ease-out forwards;
-    }
-    /* Emoji bounce/wink */
-    @keyframes emoji-bounce {
-        0%, 100% { transform: scale(1); }
-        30% { transform: scale(1.2) rotate(-10deg); }
-        60% { transform: scale(1.1) rotate(10deg); }
-    }
-    .emoji {
-        position: absolute;
-        left: 50%;
-        top: 30%;
-        transform: translate(-50%, -50%);
-        font-size: 2.5rem;
-        z-index: 10;
-        animation: emoji-bounce 1s;
-        pointer-events: none;
-    }
-    /* Confetti burst */
-    .confetti {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: 50%;
-        opacity: 0.8;
-        pointer-events: none;
-        z-index: 20;
-    }
-    @keyframes confetti-burst {
-        0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        80% { opacity: 1; }
-        100% { transform: translate(var(--x), var(--y)) scale(0.7); opacity: 0; }
-    }
-    /* Speech bubble pop-in */
-    @keyframes bubble-pop {
-        0% { transform: scale(0.7); opacity: 0; }
-        80% { transform: scale(1.1); opacity: 1; }
-        100% { transform: scale(1); opacity: 1; }
-    }
-    .bubble-animate {
-        animation: bubble-pop 0.4s cubic-bezier(.68,-0.55,.27,1.55);
-    }
 </style>
 </head>
 <body class="text-gray-800 " style="background-color: #F7F9F5 !important;">
@@ -128,12 +69,6 @@
             <div class="pulsating-circle w-3/4 h-3/4 bg-[#C6D1B6] rounded-full shadow-inner"></div>
             <!-- Shockwave container -->
             <div id="shockwave-container" class="absolute inset-0 flex items-center justify-center"></div>
-            <!-- Heart animation container -->
-            <div id="heart-container" class="absolute inset-0 pointer-events-none"></div>
-            <!-- Emoji animation container -->
-            <div id="emoji-container" class="absolute inset-0 pointer-events-none"></div>
-            <!-- Confetti animation container -->
-            <div id="confetti-container" class="absolute inset-0 pointer-events-none"></div>
         </div>
         <div id="chat-container" class="w-full max-w-2xl mx-auto space-y-2 chat-area">
             <!-- Chat messages will be appended here -->
