@@ -1,7 +1,3 @@
-import ollama
-import ollama
-
-
 from langchain_community.utilities import GoogleSerperAPIWrapper
 import requests
 from bs4 import BeautifulSoup

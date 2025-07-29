@@ -1,5 +1,12 @@
 #! /usr/bin/env python
 
+from google import genai
+from PIL import Image # For handling image files
+import os
+
+import dotenv
+# Load environment variables from .env file
+dotenv.load_dotenv()
 import operator
 import os
 import asyncio
@@ -38,31 +45,50 @@ logger = logging.getLogger(__name__)
 
 # Model configurations with optimized parameters
 # Initialize models with better configurations
-# model_rina = ChatOllama(
-#     model="llama3.2:3b",
-#     streaming=True,
-#     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
-# )
+model_Riset = ChatOllama(
+    model="llama3.2:3b",
+    streaming=True,
+    # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
+)
 
-# model_emilia = ChatOllama(
-#     model="llama3-2.3b:latest", 
-#     streaming=True,
-#     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
-# )
+model_Implementasi = ChatOllama(
+    model="llama3-2.3b:latest", 
+    streaming=True,
+    # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
+)
 
 
 
-# model_supervisor = ChatOllama(
-#     model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M",
-#     streaming=True,
-#     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
-# )
+model_supervisor = ChatOllama(
+    model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M",
+    streaming=True,
+    # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
+)
+
+
+
+
+model_vision = os.getenv("GEMINI_MODEL")
 
 # import os
 # from dotenv import load_dotenv
 
 # # Load environment variables from a .env file
 # load_dotenv()
+
+import os
+import base64
+import io
+import json
+from PIL import Image
+from openai import OpenAI
+import dotenv
+# Load environment variables from .env file
+dotenv.load_dotenv()
+
+# Load environment variables
+nebius_api_key = os.getenv("NEBIUS_API_KEY")
+image_generation_model = os.getenv("IMAGE_GENERATION")
 
 
 
@@ -71,23 +97,37 @@ logger = logging.getLogger(__name__)
 # GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 
-search = GoogleSerperAPIWrapper(
-    serper_api_key=SERPER_API_KEY
+# search = GoogleSerperAPIWrapper(
+#     serper_api_key=SERPER_API_KEY
+# )
+
+# model_Riset = ChatGoogleGenerativeAI(
+#     model="gemini-1.5-flash",
+# )
+
+# model_Implementasi = ChatGoogleGenerativeAI(
+#     model="gemini-1.5-flash", 
+
+# )
+
+# model_supervisor = ChatGoogleGenerativeAI(
+#     model="gemini-1.5-flash",
+
+# )
+
+
+if not nebius_api_key:
+    raise ValueError("NEBIUS_API_KEY environment variable is not set.")
+if not image_generation_model or not isinstance(image_generation_model, str):
+    raise ValueError("IMAGE_GENERATION environment variable is not set or is not a string.")
+
+# Initialize OpenAI client
+client = OpenAI(
+    base_url="https://api.studio.nebius.com/v1/",
+    api_key=nebius_api_key
 )
 
-model_rina = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
-)
 
-model_emilia = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash", 
-
-)
-
-model_supervisor = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
-
-)
 
 
 search = GoogleSerperAPIWrapper()
@@ -164,8 +204,8 @@ def is_difficult_question(question: str) -> Dict[str, Union[bool, str, List[str]
 
 # --- Enhanced Agent Prompts ---
 
-# Rina: Enhanced General Knowledge Agent
-rina_simple_prompt = PromptTemplate.from_template(
+# Riset: Enhanced General Knowledge Agent
+Riset_simple_prompt = PromptTemplate.from_template(
     """
 Riwayat Percakapan:
 {chat_history}
@@ -176,7 +216,7 @@ Permintaan Pengguna:
 Tanggapan Anda (jawab dalam Bahasa Indonesia):"""
 )
 
-rina_tool_prompt = ChatPromptTemplate.from_messages([
+Riset_tool_prompt = ChatPromptTemplate.from_messages([
     ("system", 
      """
 Saat menggunakan alat:
@@ -191,8 +231,9 @@ Selalu balas dalam Bahasa Indonesia."""),
     MessagesPlaceholder(variable_name="agent_scratchpad")
 ])
 
-# Emilia: Enhanced Technical Implementation Agent
-emilia_simple_prompt = PromptTemplate.from_template(
+
+# Implementasi: Enhanced Technical Implementation Agent
+Implementasi_simple_prompt = PromptTemplate.from_template(
     """
 
 Riwayat Percakapan:
@@ -204,7 +245,7 @@ Permintaan Pengguna:
 Tanggapan Anda (jawab dalam Bahasa Indonesia):"""
 )
 
-emilia_tool_prompt = ChatPromptTemplate.from_messages([
+Implementasi_tool_prompt = ChatPromptTemplate.from_messages([
     ("system", 
      """
 Saat menggunakan alat:
@@ -225,8 +266,9 @@ supervisor_routing_prompt = ChatPromptTemplate.from_messages([
      """Anda adalah supervisor cerdas yang mengelola tim berisi dua agen spesialis:
 
 PANDUAN ROUTING:
-- Rute ke Rina untuk: ["sains", "teknologi", "humaniora", "seni", "bisnis", "riset", "analisis"]
-- Rute ke Emilia untuk: ["pemrograman", "implementasi", "teknis", "arsitektur", "pengembangan"]
+- Rute ke Riset untuk: ["sains", "teknologi", "humaniora", "seni", "bisnis", "riset", "analisis"]
+- Rute ke Implementasi untuk: ["pemrograman", "implementasi", "teknis", "arsitektur", "pengembangan"]
+- Rute ke Creator untuk: ["pembuatan gambar", "membuat gambar", "menghasilkan gambar", "gambar", "buat gambar"]
 
 FORMAT KEPUTUSAN:
 - Untuk merutekan: "ROUTE_TO: [NamaAgen] - [Alasan singkat dan langsung untuk routing]"
@@ -235,8 +277,8 @@ FORMAT KEPUTUSAN:
 PENTING: Selalu rute ke anggota tim jika tugas memerlukan pekerjaan lanjutan. Hanya gunakan FINISH jika semua aspek sudah sepenuhnya dijawab. Pertimbangkan keahlian dan beban kerja/keseimbangan dalam keputusan Anda.
 
 Beban Kerja Saat Ini:
-Rina: {rina_workload} tugas
-Emilia: {emilia_workload} tugas
+Riset: {Riset_workload} tugas
+Implementasi: {Implementasi_workload} tugas
 
 Riwayat Percakapan:
 {messages}
@@ -248,18 +290,18 @@ Selalu balas dalam Bahasa Indonesia."""),
 # --- Enhanced Agent Creation ---
 
 # Create tool-calling agents with better error handling
-rina_tool_agent = create_tool_calling_agent(model_rina, web_tools, rina_tool_prompt)
-rina_tool_executor = AgentExecutor(
-    agent=rina_tool_agent, 
+Riset_tool_agent = create_tool_calling_agent(model_Riset, web_tools, Riset_tool_prompt)
+Riset_tool_executor = AgentExecutor(
+    agent=Riset_tool_agent, 
     tools=web_tools, 
     verbose=False,
     max_iterations=3,
     early_stopping_method="generate"
 )
 
-emilia_tool_agent = create_tool_calling_agent(model_emilia, web_tools, emilia_tool_prompt)
-emilia_tool_executor = AgentExecutor(
-    agent=emilia_tool_agent, 
+Implementasi_tool_agent = create_tool_calling_agent(model_Implementasi, web_tools, Implementasi_tool_prompt)
+Implementasi_tool_executor = AgentExecutor(
+    agent=Implementasi_tool_agent, 
     tools=web_tools, 
     verbose=False,
     max_iterations=3,
@@ -267,8 +309,22 @@ emilia_tool_executor = AgentExecutor(
 )
 
 # Enhanced simple runnables with better streaming
-rina_simple_runnable = rina_simple_prompt | model_rina | StrOutputParser()
-emilia_simple_runnable = emilia_simple_prompt | model_emilia | StrOutputParser()
+Riset_simple_runnable = Riset_simple_prompt | model_Riset | StrOutputParser()
+Implementasi_simple_runnable = Implementasi_simple_prompt | model_Implementasi | StrOutputParser()
+
+# Creator: Image Generation Agent
+creator_simple_prompt = PromptTemplate.from_template(
+    """Anda adalah agen pembuat gambar. Tugas Anda adalah menghasilkan gambar berdasarkan deskripsi pengguna.
+Riwayat Percakapan:
+{chat_history}
+
+Permintaan Pengguna:
+{input}
+
+Tanggapan Anda (jawab dalam Bahasa Indonesia):"""
+)
+
+creator_simple_runnable = creator_simple_prompt | model_Implementasi | StrOutputParser() # Using model_Implementasi for now, can be changed if a specific image generation model is needed later.
 
 # --- Enhanced Graph State ---
 
@@ -286,7 +342,7 @@ def agent_node(state: AgentState, agent_simple, agent_tools, name: str):
     current_question = state["messages"][-1].content
     difficulty_analysis = is_difficult_question(current_question)
     use_tools = difficulty_analysis["use_tools"]
-    if name in ["Rina", "Emilia"]:
+    if name in ["Riset", "Implementasi"]:
         use_tools = True
     logger.info(f"[{name}] Processing question: {current_question[:50]}...")
     logger.info(f"[{name}] Difficulty analysis: {difficulty_analysis}")
@@ -377,17 +433,82 @@ def agent_node(state: AgentState, agent_simple, agent_tools, name: str):
             "metadata": {"error": str(e)}
         }
 
+def creator_agent_node(state: AgentState, agent_simple, name: str):
+    """Creator agent node for image generation."""
+    current_question = state["messages"][-1].content
+    logger.info(f"[{name}] Processing image generation request: {current_question[:50]}...")
+    start_time = time.time()
+    metadata = state.get("metadata", {})
+    from deep_translator import GoogleTranslator
+    translate = GoogleTranslator(source='auto', target='en').translate(current_question)
+    logger.info(f"[{name}] Translating image generation request: {translate}")
+
+    prompt = translate # Use the user\'s prompt for image generation
+
+    try:
+        response = client.images.generate(
+            model=image_generation_model,
+            response_format="b64_json",
+            extra_body={
+                "response_extension": "png",
+                "width": 1024,
+                "height": 1024,
+                "num_inference_steps": 30,
+                "negative_prompt": "",
+                "seed": -1
+            },
+            prompt=prompt
+        )
+
+        # Parse the JSON response
+        image_data_json = response.to_json()
+        image_data = json.loads(image_data_json)
+
+        # Extract and decode the base64 image
+        b64_image = image_data['data'][0]['b64_json']
+        decoded_image_bytes = base64.b64decode(b64_image)
+        image_stream = io.BytesIO(decoded_image_bytes)
+
+        # Save image to static\image_generation
+        output_dir = os.path.join("static", "image_generation")
+        os.makedirs(output_dir, exist_ok=True)
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = os.path.join(output_dir, f"generated_image_{timestamp}.png")
+        image = Image.open(image_stream)
+        image.save(output_path)
+        
+        success_message = f"Gambar berhasil dibuat dan disimpan di: {output_path}"
+        yield {"type": "complete", "content": success_message, "sender": name}
+
+        processing_time = time.time() - start_time
+        metadata[f"{name.lower()}_processing_time"] = processing_time
+        metadata[f"{name.lower()}_output_path"] = output_path
+        
+        return {
+            "messages": [AIMessage(content=success_message, name=name)],
+            "metadata": metadata
+        }
+    except Exception as e:
+        logger.error(f"[{name}] Critical error during image generation: {str(e)}")
+        error_message = f"Saya mohon maaf, tetapi terjadi kesalahan saat membuat gambar: {str(e)}. Mohon coba lagi atau berikan deskripsi yang berbeda."
+        yield {"type": "system", "content": error_message, "sender": "system-error"}
+        return {
+            "messages": [AIMessage(content=error_message, name=name)],
+            "metadata": {"error": str(e)}
+        }
+
 # --- Enhanced Supervisor Node ---
 
-members = ["Rina", "Emilia"]
+members = ["Riset", "Implementasi", "Creator"]
 
 def supervisor_node(state: AgentState):
     """Enhanced supervisor node with dynamic, fair task distribution."""
     last_message = state["messages"][-1].content
     metadata = state.get("metadata", {})
     # Defensive: always provide integer values for workloads
-    rina_workload = int(metadata.get("rina_workload", 0) or 0)
-    emilia_workload = int(metadata.get("emilia_workload", 0) or 0)
+    Riset_workload = int(metadata.get("Riset_workload", 0) or 0)
+    Implementasi_workload = int(metadata.get("Implementasi_workload", 0) or 0)
     last_agent = metadata.get("last_agent", None)
 
     logger.info("[Supervisor] Making routing decision")
@@ -398,8 +519,8 @@ def supervisor_node(state: AgentState):
             "messages": state["messages"],
             "input": last_message,
             "members": ", ".join(members),
-            "rina_workload": rina_workload,
-            "emilia_workload": emilia_workload,
+            "Riset_workload": Riset_workload,
+            "Implementasi_workload": Implementasi_workload,
         }
         full_decision = ""
         for chunk in model_supervisor.stream(supervisor_routing_prompt.format_messages(**supervisor_input)):
@@ -415,25 +536,25 @@ def supervisor_node(state: AgentState):
         # Workload balancing: if ambiguous, alternate or pick less-busy agent
         if next_agent not in members and next_agent != "FINISH":
             # Alternate if last_agent exists, else pick less-busy
-            if last_agent == "Rina":
-                next_agent = "Emilia"
-            elif last_agent == "Emilia":
-                next_agent = "Rina"
+            if last_agent == "Riset":
+                next_agent = "Implementasi"
+            elif last_agent == "Implementasi":
+                next_agent = "Riset"
             else:
-                next_agent = "Rina" if rina_workload <= emilia_workload else "Emilia"
+                next_agent = "Riset" if Riset_workload <= Implementasi_workload else "Implementasi"
 
         processing_time = time.time() - start_time
         logger.info(f"[Supervisor] Decision made in {processing_time:.2f}s: {next_agent}")
 
         # Update workload
-        if next_agent == "Rina":
-            rina_workload += 1
-        elif next_agent == "Emilia":
-            emilia_workload += 1
+        if next_agent == "Riset":
+            Riset_workload += 1
+        elif next_agent == "Implementasi":
+            Implementasi_workload += 1
         if next_agent in members:
             metadata["last_agent"] = next_agent
-        metadata["rina_workload"] = rina_workload
-        metadata["emilia_workload"] = emilia_workload
+        metadata["Riset_workload"] = Riset_workload
+        metadata["Implementasi_workload"] = Implementasi_workload
         metadata["supervisor_processing_time"] = processing_time
         metadata["supervisor_decision"] = next_agent
 
@@ -446,12 +567,12 @@ def supervisor_node(state: AgentState):
     except Exception as e:
         logger.error(f"[Supervisor] Error in decision making: {str(e)}")
         # Default to alternate or less-busy agent
-        if last_agent == "Rina":
-            fallback_agent = "Emilia"
-        elif last_agent == "Emilia":
-            fallback_agent = "Rina"
+        if last_agent == "Riset":
+            fallback_agent = "Implementasi"
+        elif last_agent == "Implementasi":
+            fallback_agent = "Riset"
         else:
-            fallback_agent = "Rina" if rina_workload <= emilia_workload else "Emilia"
+            fallback_agent = "Riset" if Riset_workload <= Implementasi_workload else "Implementasi"
         return {
             "messages": [AIMessage(content=f"ROUTE_TO: {fallback_agent} - Default routing due to decision error", name="Supervisor")],
             "next_agent": fallback_agent,
@@ -492,16 +613,17 @@ def _parse_supervisor_decision(decision: str) -> str:
         if member.lower() in decision_lower:
             return member
     
-    # Default to Rina for general questions
-    return "Rina"
+    # Default to Riset for general questions
+    return "Riset"
 
 # --- Enhanced Graph Construction ---
 
 builder = StateGraph(AgentState)
 
 # Add nodes with enhanced error handling
-builder.add_node("Rina", lambda state: agent_node(state, rina_simple_runnable, rina_tool_executor, "Rina"))
-builder.add_node("Emilia", lambda state: agent_node(state, emilia_simple_runnable, emilia_tool_executor, "Emilia"))
+builder.add_node("Riset", lambda state: agent_node(state, Riset_simple_runnable, Riset_tool_executor, "Riset"))
+builder.add_node("Implementasi", lambda state: agent_node(state, Implementasi_simple_runnable, Implementasi_tool_executor, "Implementasi"))
+builder.add_node("Creator", lambda state: creator_agent_node(state, creator_simple_runnable, "Creator"))
 builder.add_node("Supervisor", supervisor_node)
 
 # Add edges
@@ -511,7 +633,7 @@ for member in members:
 builder.add_conditional_edges(
     "Supervisor",
     lambda state: state.get("next_agent"),
-    {"Rina": "Rina", "Emilia": "Emilia", "FINISH": END},
+    {"Riset": "Riset", "Implementasi": "Implementasi", "FINISH": END},
 )
 
 builder.set_entry_point("Supervisor")

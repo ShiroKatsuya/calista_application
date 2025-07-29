@@ -116,23 +116,23 @@ web_tools = [
 ]
 
 # # Models
-# model_rina = ChatOllama(model="llama3.2:3b")
-# model_emilia = ChatOllama(model="llama3-2.3b:latest")
+# model_Analisis_Penyebab = ChatOllama(model="llama3.2:3b")
+# model_Analisis_Dampak = ChatOllama(model="llama3-2.3b:latest")
 # model_charlie = ChatOllama(model="llama3.2:3b")
 # model_coordinator = ChatOllama(model="llama3.2:3b")
 
 
 
-model_rina = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-model_emilia = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-model_shirokatsuya = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-model_synthesizer = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+# model_Analisis_Penyebab = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+# model_Analisis_Dampak = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+# model_Mengusulkan_Solusi = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+# model_synthesizer = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
-# model_rina = ChatOllama(model="llama3-2.3b:latest")
-# model_emilia = ChatOllama(model="llama3.2:3b")
-# model_shirokatsuya = ChatOllama(model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M")
-# # model_coordinator = ChatOllama(model="llama3.2:3b", temperature=0.5)
-# model_synthesizer = ChatOllama(model="hf.co/unsloth/gemma-3n-E2B-it-GGUF:Q4_K_M")  # New synthesis model
+model_Analisis_Penyebab = ChatOllama(model="llama3-2.3b:latest")
+model_Analisis_Dampak = ChatOllama(model="llama3.2:3b")
+model_Mengusulkan_Solusi = ChatOllama(model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M")
+# model_coordinator = ChatOllama(model="llama3.2:3b", temperature=0.5)
+model_synthesizer = ChatOllama(model="hf.co/unsloth/gemma-3n-E2B-it-GGUF:Q4_K_M")  # New synthesis model
 
 class Agent:
     def __init__(self, name: str, model, description: str, expertise: List[str], tools=None):

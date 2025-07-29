@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pauseIcon = document.getElementById('pause-icon');
     const endCallBtn = document.getElementById('end-call-btn');
     const timerDisplay = document.getElementById('timer');
+    const newSessionBtn = document.getElementById('new-session-btn');
 
     // Fix: Add missing elements and variables
     // These elements must exist in the DOM for the code to work
@@ -48,6 +49,83 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Speech Recognition and Synthesis Setup ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const SpeechSynthesis = window.speechSynthesis;
+
+    // New Session Button Functionality
+    async function createNewSession() {
+        try {
+            // Show loading state
+            newSessionBtn.disabled = true;
+            newSessionBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-xl"></i>';
+            
+            const response = await fetch('/create_new_session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                // Clear chat container
+                chatContainer.innerHTML = '';
+                
+                // Update session display
+                const sessionDisplay = document.getElementById('current-session');
+                if (sessionDisplay && result.session_id) {
+                    const timestamp = result.session_id.replace('session_', '');
+                    sessionDisplay.textContent = timestamp;
+                }
+                
+                // Show success animation
+                showConfetti();
+                showEmoji('✨');
+                
+                // Add a welcome message for the new session
+                addMessage('Hello! I\'m ready for a new conversation. How can I help you today?', true, true);
+                
+                console.log('New session created:', result.session_id);
+            } else {
+                console.error('Failed to create new session:', result.message);
+                showEmoji('❌');
+            }
+        } catch (error) {
+            console.error('Error creating new session:', error);
+            showEmoji('❌');
+        } finally {
+            // Restore button state
+            newSessionBtn.disabled = false;
+            newSessionBtn.innerHTML = '<i class="fas fa-plus text-xl"></i>';
+        }
+    }
+
+    // Add event listener for new session button
+    if (newSessionBtn) {
+        newSessionBtn.addEventListener('click', createNewSession);
+    }
+
+    // Load current session ID
+    async function loadCurrentSession() {
+        try {
+            const response = await fetch('/get_current_session');
+            const result = await response.json();
+            
+            if (result.status === 'success' && result.session_id) {
+                const sessionDisplay = document.getElementById('current-session');
+                if (sessionDisplay) {
+                    // Show only the timestamp part of the session ID for cleaner display
+                    const sessionId = result.session_id;
+                    const timestamp = sessionId.replace('session_', '');
+                    sessionDisplay.textContent = timestamp;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading current session:', error);
+        }
+    }
+
+    // Load session ID when page loads
+    loadCurrentSession();
 
     function speak(text) {
         // Temporarily disable SpeechRecognition when the bot starts speaking

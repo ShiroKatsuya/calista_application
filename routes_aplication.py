@@ -1,6 +1,6 @@
 import subprocess
 import os
-from flask import Flask, jsonify, request
+from flask import jsonify
 from threading import Lock
 from app import app
 process_lock = Lock()

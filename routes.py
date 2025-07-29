@@ -1,16 +1,12 @@
 from flask import render_template, request, jsonify, Response, stream_with_context, session, redirect, url_for, Flask, send_file
 from app import app
-from MultiAgent import app as multi_agent_app  # Import the Langchain graph app
-from MultiAgent import model_rina, model_emilia, model_supervisor, rina_simple_prompt, emilia_simple_prompt, supervisor_routing_prompt, is_difficult_question, web_tools, rina_tool_executor, emilia_tool_executor
+from MultiAgent import model_Riset, model_Implementasi, model_supervisor, Riset_simple_prompt, Implementasi_simple_prompt, supervisor_routing_prompt, is_difficult_question, web_tools, Riset_tool_executor, Implementasi_tool_executor
 from langchain.schema import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 import json
 import os
 from datetime import datetime
 import re
-from urllib.request import urlopen
-from bs4 import BeautifulSoup as soup
-from application.output_audio.voice_natural import voice
 from langchain_community.utilities import GoogleSerperAPIWrapper
 search = GoogleSerperAPIWrapper()
 
@@ -21,21 +17,20 @@ from io import BytesIO
 
 
 
-@app.route('/tts')
-def tts():
-    """Route for the TTS page"""
-    return render_template('tts.html')
 
 @app.route('/main_aplication')
 def main_aplications():
     return render_template('aplication.html')
 
 
+@app.route('/tts')
+def tts():
+    """Route for the TTS page"""
+    return render_template('tts.html')
 
 
 @app.route('/speech')
 def speech():
-    from application.output_audio.voice_natural import stream_voice
     from ollamas import handle_ollama_conversation
     from flask import Response, stream_with_context, request
     import base64
@@ -52,7 +47,33 @@ def speech():
             }) + '\n'
     return Response(stream_with_context(generate()), mimetype='application/jsonlines')
 
+@app.route('/create_new_session', methods=['POST'])
+def create_new_session_route():
+    """Create a new chat session"""
+    from ollamas import create_new_session
+    try:
+        result = create_new_session()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
+@app.route('/get_current_session', methods=['GET'])
+def get_current_session_route():
+    """Get the current session ID"""
+    from ollamas import _current_session_id
+    try:
+        return jsonify({
+            "session_id": _current_session_id,
+            "status": "success"
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 
 @app.route('/')
@@ -75,6 +96,16 @@ def clear_conversation():
     session.pop('conversation_title', None)
     return redirect(url_for('chat'))
 
+
+@app.route('/refresh_web_page', methods=['POST', 'GET'])
+def refresh_web_page():
+    """
+    Route to clear the query and messages from the session.
+    Call this when the web page is refreshed and you want to clear conversation state.
+    """
+    session['conversation_messages'] = []
+    session['conversation_title'] = ''
+    return jsonify({'status': 'cleared'})
 
 
 @app.route('/discover')
@@ -219,8 +250,8 @@ def article_summary(link):
         article_text = result.get('scraped_data', {}).get('full_text', '')
         user_question = f"{user_query}\n{article_text}\n"
         # Use the no-tools agent for successful scraping to avoid google_search
-        from scraping_website import emilia_no_tools_agent
-        agent_result = emilia_no_tools_agent.invoke({"input": user_question, "chat_history": []})
+        from scraping_website import Implementasi_no_tools_agent
+        agent_result = Implementasi_no_tools_agent.invoke({"input": user_question, "chat_history": []})
         agent_response = agent_result.content if hasattr(agent_result, 'content') else str(agent_result)
         # URLs are only available when fallback search is used (handled in backend)
         # No additional URL search needed here
@@ -293,15 +324,7 @@ def handle_action(action_type):
         'message': f'{actions[action_type]} would be performed for: "{query}"'
     })
 
-@app.route('/refresh_web_page', methods=['POST', 'GET'])
-def refresh_web_page():
-    """
-    Route to clear the query and messages from the session.
-    Call this when the web page is refreshed and you want to clear conversation state.
-    """
-    session['conversation_messages'] = []
-    session['conversation_title'] = ''
-    return jsonify({'status': 'cleared'})
+
 
 @app.route('/multi-agent-stream', methods=['POST'])
 def multi_agent_stream():
@@ -328,8 +351,50 @@ def multi_agent_stream():
             yield update
 
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
-    
-    
+
+from google import genai
+from PIL import Image # For handling image files
+import os
+
+import dotenv
+# Load environment variables from .env file
+dotenv.load_dotenv()
+
+model_id = os.getenv("GEMINI_MODEL")
+
+@app.route('/explain_image', methods=['POST'])
+def explain_image():
+    """Handle image explanation requests"""
+    data = request.get_json()
+    image_path = data.get('image_path', '')
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    query = "Jelaskan secara singkat dengan fokus pada informasi yang disampaikan oleh gambar"
+
+    # Open the image file using PIL
+    try:
+        img = Image.open(image_path)
+    except Exception as e:
+        return jsonify({'error': f'Failed to open image: {str(e)}'}), 400
+
+    try:
+        explanation_response = client.models.generate_content(
+            model=model_id,
+            # config=generation_config,
+            contents=[
+                img,
+                query
+            ]
+        )
+        # Check if explanation_response and explanation_response.text are not None
+        if explanation_response and hasattr(explanation_response, 'text') and explanation_response.text:
+            cleaned_response = explanation_response.text.replace('*', '').replace('\n\n', '\n')
+            return jsonify({'explanation': cleaned_response})
+        else:
+            return jsonify({'error': 'No explanation returned from model.'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Failed to generate explanation: {str(e)}'}), 500
+
+
 
 @app.route('/chat_stream', methods=['POST'])
 def chat_stream():
@@ -365,14 +430,16 @@ def chat_stream():
             
             if current_agent == "Supervisor":
                 # Supervisor makes decision
-                rina_workload = session.get('rina_workload', 0)
-                emilia_workload = session.get('emilia_workload', 0)
+                Riset_workload = session.get('Riset_workload', 0)
+                Implementasi_workload = session.get('Implementasi_workload', 0)
+                vision_workload = session.get('vision_workload', 0)
                 supervisor_input = {
                     "messages": conversation_messages,
                     "input": conversation_messages[-1].content,
-                    "members": "Rina, Emilia",
-                    "rina_workload": rina_workload,
-                    "emilia_workload": emilia_workload,
+                    "members": "Riset, Implementasi, Creator, Vision", # Added Creator
+                    "Riset_workload": Riset_workload,
+                    "Implementasi_workload": Implementasi_workload,
+                    "vision_workload": vision_workload,
                 }
                 
                 # Stream supervisor's decision
@@ -397,21 +464,23 @@ def chat_stream():
                 
                 # Parse supervisor's decision
                 def parse_supervisor_decision(decision):
-                    match = re.search(r"route_to:\s*(rina|emilia)", decision, re.IGNORECASE)
+                    match = re.search(r"route_to:\s*(Riset|Implementasi|creator|vision)", decision, re.IGNORECASE) # Added creator
                     if match:
                         return match.group(1).capitalize()
                     if "finish" in decision.lower():
                         return "FINISH"
-                    return "Rina"  # Default fallback
+                    return "Riset"  # Default fallback
 
                 next_agent_name = parse_supervisor_decision(full_decision)
-                if next_agent_name in ["Rina", "Emilia"]:
+                if next_agent_name in ["Riset", "Implementasi", "Creator", "Vision"]: # Added Creator
                     current_agent = next_agent_name
                     # Update workload in session
-                    if current_agent == "Rina":
-                        session['rina_workload'] = rina_workload + 1
-                    elif current_agent == "Emilia":
-                        session['emilia_workload'] = emilia_workload + 1
+                    if current_agent == "Riset":
+                        session['Riset_workload'] = Riset_workload + 1
+                    elif current_agent == "Implementasi":
+                        session['Implementasi_workload'] = Implementasi_workload + 1
+                    elif current_agent == "Vision":
+                        session['vision_workload'] = vision_workload + 1
                     # Send routing message
                     yield f"data: {json.dumps({'sender': 'Supervisor', 'content': f'ROUTE_TO: {next_agent_name} - Routing to {next_agent_name}', 'type': 'complete'})}\n\n"
                     continue
@@ -423,18 +492,18 @@ def chat_stream():
                     yield f"data: {json.dumps({'sender': 'Supervisor', 'content': 'ROUTE_TO: FINISH - Default finish', 'type': 'complete'})}\n\n"
                     break
             
-            elif current_agent in ["Rina", "Emilia"]:
+            elif current_agent in ["Riset", "Implementasi"]:
                 # Agent responds to the current question
                 current_question = conversation_messages[-1].content
                 chat_history = conversation_messages[:-1]
                 difficulty_analysis = is_difficult_question(current_question)
                 use_tools = difficulty_analysis["use_tools"]
-                if current_agent in ["Rina", "Emilia"]:
+                if current_agent in ["Riset", "Implementasi"]:
                     use_tools = True
                 full_content = ""
                 try:
-                    executor_to_use = rina_tool_executor if current_agent == "Rina" else emilia_tool_executor
-                    simple_runnable_to_use = rina_simple_prompt | model_rina | StrOutputParser() if current_agent == "Rina" else emilia_simple_prompt | model_emilia | StrOutputParser()
+                    executor_to_use = Riset_tool_executor if current_agent == "Riset" else Implementasi_tool_executor
+                    simple_runnable_to_use = Riset_simple_prompt | model_Riset | StrOutputParser() if current_agent == "Riset" else Implementasi_simple_prompt | model_Implementasi | StrOutputParser()
                     # Use new agent_node streaming logic
                     from MultiAgent import agent_node
                     agent_stream = agent_node(
@@ -466,6 +535,43 @@ def chat_stream():
                             yield f"data: {json.dumps({'sender': current_agent, 'content': chunk, 'type': 'chunk'})}\n\n"
                     yield f"data: {json.dumps({'sender': current_agent, 'content': full_content, 'type': 'complete'})}\n\n"
                     agent_message = AIMessage(content=full_content, name=current_agent)
+                    conversation_messages.append(agent_message)
+                    session['conversation_messages'] = conversation_messages
+                current_agent = "Supervisor"
+        
+     
+            
+            elif current_agent == "Creator": # Added Creator Agent Handling
+                current_question = conversation_messages[-1].content
+                full_content = ""
+                try:
+                    from MultiAgent import creator_agent_node, creator_simple_runnable
+                    agent_stream = creator_agent_node(
+                        {"messages": conversation_messages, "metadata": {}},
+                        creator_simple_runnable,
+                        current_agent
+                    )
+                    for item in agent_stream:
+                        if item["type"] == "chunk":
+                            full_content += item["content"]
+                            yield f"data: {json.dumps({'sender': current_agent, 'content': item['content'], 'type': 'chunk'})}\n\n"
+                        elif item["type"] == "system":
+                            yield f"data: {json.dumps({'sender': item['sender'], 'content': item['content'], 'type': 'system'})}\n\n"
+                        elif item["type"] == "complete":
+                            # Ensure that the full_content passed to AIMessage is the image path for Creator
+                            # The creator_agent_node returns a complete message with the path in its content.
+                            # So, we should use item['content'] for the AIMessage.
+                            yield f"data: {json.dumps({'sender': current_agent, 'content': item['content'], 'type': 'complete'})}\n\n"
+                            full_content = item['content'] # Update full_content with the final message/path
+
+                    agent_message = AIMessage(content=full_content, name=current_agent)
+                    conversation_messages.append(agent_message)
+                    session['conversation_messages'] = conversation_messages
+                except Exception as e:
+                    print(f"[DEBUG] {current_agent} execution failed: {str(e)}")
+                    error_message = f"Saya mohon maaf, tetapi terjadi kesalahan saat memproses permintaan Anda: {str(e)}."
+                    yield f"data: {json.dumps({'sender': current_agent, 'content': error_message, 'type': 'complete'})}\n\n"
+                    agent_message = AIMessage(content=error_message, name=current_agent)
                     conversation_messages.append(agent_message)
                     session['conversation_messages'] = conversation_messages
                 current_agent = "Supervisor"

@@ -38,6 +38,7 @@ function renderFinalResultBubble(result) {
             <button class="action-button share-button text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1" title="Share"><i class="fas fa-share-alt"></i><span>Share</span></button>
         </div>
     `;
+    console.log(result);
     conversationHistory.appendChild(resultDiv);
     addConversationMessage('all_agents', result, 'final_result');
     scrollToBottom();

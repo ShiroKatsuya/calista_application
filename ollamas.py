@@ -1,9 +1,7 @@
-
 import os
 import json
 from datetime import datetime
 from uuid import uuid4
-from langchain_ollama.llms import OllamaLLM
 from langchain.memory.vectorstore_token_buffer_memory import ConversationVectorStoreTokenBufferMemory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -12,10 +10,13 @@ from langchain_core.messages import HumanMessage, AIMessage
 from google import genai
 from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 from langchain_chroma import Chroma
-import google.generativeai as genai_embed
-
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from application.output_audio.voice_natural import stream_voice
+from voice_natural import stream_voice
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+
 
 query_instruction=(
         "You are a retrieval_oriented embedding model. "
@@ -103,14 +104,27 @@ MEMORY_KEY = "history"
 MAX_WINDOW_TURNS = 120000
 MEMORY_DIR = "memory_files"
 
+model_realtime = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+)
+
 # --- Define a default LLM for fallback ---
-DEFAULT_OLLAMA_MODEL_NAME = os.getenv("MODEL_NAME_GENERAL_MODE")
+# DEFAULT_OLLAMA_MODEL_NAME = os.getenv("MODEL_NAME_GENERAL_MODE")
 try:
-    default_llm_for_memory = OllamaLLM(model=DEFAULT_OLLAMA_MODEL_NAME, temperature=TEMPERATURE)
-    print(f"Default LLM for memory fallback initialized: {DEFAULT_OLLAMA_MODEL_NAME}")
+    default_llm_for_memory = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=TEMPERATURE)
+    print(f"Default LLM for memory fallback initialized: {default_llm_for_memory}")
 except Exception as e:
-    print(f"CRITICAL WARNING: Failed to initialize default LLM ('{DEFAULT_OLLAMA_MODEL_NAME}'). Memory fallback might fail. Error: {e}")
+    print(f"CRITICAL WARNING: Failed to initialize default LLM ('{default_llm_for_memory}'). Memory fallback might fail. Error: {e}")
     default_llm_for_memory = None
+
+# # --- Define a default LLM for fallback ---
+# DEFAULT_OLLAMA_MODEL_NAME = os.getenv("MODEL_NAME_GENERAL_MODE")
+# try:
+#     default_llm_for_memory = OllamaLLM(model=DEFAULT_OLLAMA_MODEL_NAME, temperature=TEMPERATURE)
+#     print(f"Default LLM for memory fallback initialized: {DEFAULT_OLLAMA_MODEL_NAME}")
+# except Exception as e:
+#     print(f"CRITICAL WARNING: Failed to initialize default LLM ('{DEFAULT_OLLAMA_MODEL_NAME}'). Memory fallback might fail. Error: {e}")
+#     default_llm_for_memory = None
 
 # --- Global Store for Session History (Initialized Once) ---
 chat_session_store = {}
@@ -193,6 +207,51 @@ def save_current_conversation_history():
     except Exception as e:
         print(f"Error saving conversation history to {_current_memory_file}: {e}")
 
+def create_new_session():
+    """Creates a new chat session and returns the session ID."""
+    global _current_session_id, _current_memory_file, chat_session_store
+    
+    try:
+        # Save current session before creating new one
+        if _current_session_id and _current_session_id in chat_session_store:
+            save_current_conversation_history()
+        
+        # Create new session
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        new_session_id = f"session_{timestamp}"
+        new_memory_file = os.path.join(MEMORY_DIR, f"{new_session_id}.json")
+        
+        # Create new memory buffer
+        new_memory = ConversationVectorStoreTokenBufferMemory(
+            llm=default_llm_for_memory,
+            return_messages=True,
+            retriever=retriever,
+            max_token_limit=MAX_WINDOW_TURNS,
+        )
+        
+        # Update global variables
+        _current_session_id = new_session_id
+        _current_memory_file = new_memory_file
+        chat_session_store[_current_session_id] = new_memory.chat_memory
+        
+        print(f"Created new session: {_current_session_id}")
+        print(f"New session file: {_current_memory_file}")
+        
+        return {
+            "session_id": _current_session_id,
+            "timestamp": timestamp,
+            "status": "success"
+        }
+        
+    except Exception as e:
+        print(f"Error creating new session: {e}")
+        return {
+            "session_id": None,
+            "timestamp": None,
+            "status": "error",
+            "message": str(e)
+        }
+
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
     """Retrieves the chat history for the given session ID from the global store.
        Called by RunnableWithMessageHistory. Expects the session_id passed during invoke/stream.
@@ -229,16 +288,20 @@ Contextual information, potentially including real-time data relevant to the use
             raise ValueError("model_name is required.")
 
         print(f"Initializing Ollama model: {model_name}")
-        llm = OllamaLLM(
-            model=model_name,
-            temperature=TEMPERATURE,
+        # llm = OllamaLLM(
+        #     model=model_name,
+        #     temperature=TEMPERATURE,
+        # )
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+
         )
         print("LLM Initialized.")
 
         needs_search = False
         search_results_content = "No real-time data fetched as it wasn't deemed necessary for this query."
         try:
-            pre_check_prompt = f'''Analyze the following user query. Determine if fetching up-to-date, real-time information (like current events, weather, prices, future dates, recent developments) is likely necessary to provide an accurate and relevant answer. Respond with ONLY "SEARCH_NEEDED" if real-time data is likely required, or "NO_SEARCH_NEEDED" otherwise. Do not provide any explanation.
+            pre_check_prompt = f'''Analyze the following user query. Determine if fetching up-to-date, real-time information (like current events, weather, prices, future dates, recent, 2025, 2026 developments) is likely necessary to provide an accurate and relevant answer. Respond with ONLY "SEARCH_NEEDED" if real-time data is likely required, or "NO_SEARCH_NEEDED" otherwise. Do not provide any explanation.
 
 User Query:
 {user_input}'''

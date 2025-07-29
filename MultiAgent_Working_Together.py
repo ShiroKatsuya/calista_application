@@ -4,11 +4,11 @@ import json
 
 
 agents = {
-    "Rina": Agent("Rina", model_rina, "General Knowledge Agent (Bahasa Indonesia)", 
+    "Analisis_Penyebab": Agent("Analisis_Penyebab", model_Analisis_Penyebab, "General Knowledge Agent (Bahasa Indonesia)", 
                    ["ilmu pengetahuan", "teknologi", "humaniora", "seni", "bisnis", "riset", "analisis"], web_tools),
-    "Emilia": Agent("Emilia", model_emilia, "Technical Implementation Agent (Bahasa Indonesia)", 
+    "Analisis_Dampak": Agent("Analisis_Dampak", model_Analisis_Dampak, "Technical Implementation Agent (Bahasa Indonesia)", 
                  ["pengkodean", "pemrograman", "implementasi", "teknis", "arsitektur", "pengembangan"], web_tools),
-    "Shirokatsuya": Agent("Shirokatsuya", model_shirokatsuya, "Creative Problem Solver (Bahasa Indonesia)", 
+    "Mengusulkan_Solusi": Agent("Mengusulkan_Solusi", model_Mengusulkan_Solusi, "Creative Problem Solver (Bahasa Indonesia)", 
                      ["kreativitas", "inovasi", "pemecahan masalah", "desain", "strategi", "brainstorming"], web_tools),
     "Synthesizer": Agent("Synthesizer", model_synthesizer, "Enhanced Response Synthesis Specialist (Bahasa Indonesia)", 
                         ["sintesis", "integrasi", "ringkasan", "kejelasan", "koherensi", "optimasi"], []),
@@ -59,9 +59,9 @@ class EnhancedParallelTaskExecutor:
         self.execution_metrics = {"total_tasks": 0, "successful_tasks": 0, "avg_execution_time": 0.0}
         # Define agent roles for parallel execution
         self.agent_roles = {
-            "Rina": "Menganalisis Penyebab (Analyzing Causes)",
-            "Emilia": "Menganalisis Dampak (Analyzing Impacts)",
-            "Shirokatsuya": "Mengusulkan Solusi (Proposing Solutions)",
+            "Analisis_Penyebab": "Menganalisis Penyebab (Analyzing Causes)",
+            "Analisis_Dampak": "Menganalisis Dampak (Analyzing Impacts)",
+            "Mengusulkan_Solusi": "Mengusulkan Solusi (Proposing Solutions)",
             "Synthesizer": "Menyintesis Laporan Komprehensif (Synthesizing Comprehensive Report)"
         }
     
@@ -101,8 +101,8 @@ class EnhancedParallelTaskExecutor:
             
             task.result = result["output"]
             
-            # Hidden <think> tags from supervisor respond for Shirokatsuya
-            if agent.name == "Shirokatsuya":
+            # Hidden <think> tags from supervisor respond for Mengusulkan_Solusi
+            if agent.name == "Mengusulkan_Solusi":
                 import re
                 task.result = re.sub(r"<think>.*?</think>\n?", "", task.result, flags=re.DOTALL).strip()
                 
@@ -133,9 +133,9 @@ class IntelligentTaskDistributor:
         self.task_executor = EnhancedParallelTaskExecutor()
         # Define agent roles for parallel execution
         self.agent_roles = {
-            "Rina": "Menganalisis Penyebab (Analyzing Causes)",
-            "Emilia": "Menganalisis Dampak (Analyzing Impacts)",
-            "Shirokatsuya": "Mengusulkan Solusi (Proposing Solutions)",
+            "Analisis_Penyebab": "Menganalisis Penyebab (Analyzing Causes)",
+            "Analisis_Dampak": "Menganalisis Dampak (Analyzing Impacts)",
+            "Mengusulkan_Solusi": "Mengusulkan Solusi (Proposing Solutions)",
             "Synthesizer": "Menyintesis Laporan Komprehensif (Synthesizing Comprehensive Report)"
         }
     
@@ -257,12 +257,12 @@ class EnhancedCoordinator:
             return "Tidak ada output agen untuk disintesis."
 
         synthesis_start = time.time()
-        # Satu prompt sintesis terpadu untuk agen Synthesizer (Bahasa Indonesia)
+        # Satu prompt sintesis  untuk agen Synthesizer (Bahasa Indonesia)
         agent_outputs_text = "\n".join([
             output for name, output in state["agent_outputs"].items() if name != "Synthesizer"
         ])
         synthesis_prompt = PromptTemplate.from_template(
-            """Anda adalah SYNTHESIZER, seorang ahli dalam membuat satu jawaban terpadu, berkualitas tinggi dari berbagai kontribusi agen.
+            """Anda adalah SYNTHESIZER, seorang ahli dalam membuat satu jawaban , berkualitas tinggi dari berbagai kontribusi agen.
 
 Kontribusi Agen (mentah, jangan sebut nama agen):
 {agent_outputs}
@@ -273,11 +273,11 @@ Instruksi:
 - Analisis, bandingkan, dan integrasikan semua kontribusi agen secara cermat.
 - JANGAN sebut atau identifikasi nama/role agen manapun.
 - JANGAN membuat daftar kontribusi.
-- Tulis satu jawaban terpadu, terstruktur baik, jelas, mendalam, dan bernilai bagi pengguna.
+- Tulis satu jawaban, terstruktur baik, jelas, mendalam, dan bernilai bagi pengguna.
 - Hasil akhir harus terasa seperti ditulis satu pakar terbaik, bukan tim.
 - Selalu berikan jawaban terbaik, maksimalkan wawasan dan manfaat.
 
-Jawaban Sintesis Terpadu:"""
+Jawaban Sintesis :"""
         )
         synthesizer = agents["Synthesizer"]
         synthesis_runnable = synthesis_prompt | synthesizer.model | StrOutputParser()
@@ -337,7 +337,7 @@ def run_enhanced_agent_system(user_input: str, use_all_agents: bool = True, sing
             final_message = state["messages"][-1]
             if isinstance(final_message, AIMessage):
                 synthesized_response = final_message.content
-                print(f"\n🎯 JAWABAN SINTESIS TERPADU")
+                print(f"\n🎯 JAWABAN SINTESIS ")
                 print(f"{'='*80}")
                 print(f"{synthesized_response}")
                 print(f"{'='*80}")
@@ -456,7 +456,7 @@ def run_enhanced_agent_system_stream(user_input: str, messages=None, use_all_age
     # --- Streaming output Synthesizer (Bahasa Indonesia) ---
     synthesis_prompt = PromptTemplate.from_template(
        
-        """Anda adalah SYNTHESIZER, seorang ahli dalam membuat satu jawaban terpadu, berkualitas tinggi dari berbagai kontribusi agen.
+        """Anda adalah SYNTHESIZER, seorang ahli dalam membuat satu jawaban , berkualitas tinggi dari berbagai kontribusi agen.
 
             Kontribusi Agen (mentah, jangan sebut nama agen):
             {agent_outputs}
@@ -467,11 +467,11 @@ def run_enhanced_agent_system_stream(user_input: str, messages=None, use_all_age
             - Analisis, bandingkan, dan integrasikan semua kontribusi agen secara cermat.
             - JANGAN sebut atau identifikasi nama/role agen manapun.
             - JANGAN membuat daftar kontribusi.
-            - Tulis satu jawaban terpadu, terstruktur baik, jelas, mendalam, dan bernilai bagi pengguna.
+            - Tulis satu jawaban , terstruktur baik, jelas, mendalam, dan bernilai bagi pengguna.
             - Hasil akhir harus terasa seperti ditulis satu pakar terbaik, bukan tim.
             - Selalu berikan jawaban terbaik, maksimalkan wawasan dan manfaat.
 
-            Jawaban Sintesis Terpadu:"""
+            Jawaban Sintesis :"""
 
     )
     agent_outputs_text = "\n".join([
@@ -526,6 +526,6 @@ if __name__ == "__main__":
     print("✅ Distribusi tugas cerdas")
     print("✅ Load balancing")
     print("✅ Optimasi performa")
-    print("✅ Sintesis jawaban terpadu")
+    print("✅ Sintesis jawaban ")
     print("=" * 80)
     run_all_agents_system(question)

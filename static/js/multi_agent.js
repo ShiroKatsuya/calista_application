@@ -71,10 +71,12 @@ $(document).ready(function() {
                 $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
             } else if (sender === 'system-error') {
                 $messageDiv.addClass('bg-red-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
-            } else if (sender === 'Rina') {
+            } else if (sender === 'Riset') {
                 $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
-            } else if (sender === 'Emilia') {
+            } else if (sender === 'Implementasi') {
                 $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
+            } else if (sender === 'Creator') { // Add Creator agent styling
+                $messageDiv.addClass(' text-green-300 mr-auto rounded-bl-none').css('max-width', '80%'); // Example styling for Creator
             }
 
             // Add sender label for AI/agent messages
@@ -85,7 +87,17 @@ $(document).ready(function() {
             }
 
             const $messageContent = $('<div>').addClass('message-content prose prose-invert max-w-none');
-            $messageContent.html(renderMarkdown(text));
+
+            // Check if the message is an image path from the Creator agent
+            const imagePathRegex = /^Gambar berhasil dibuat dan disimpan di: (static\\image_generation\\generated_image_\d{8}_\d{6}\.png)$/;
+            const match = text.match(imagePathRegex);
+
+            if (sender === 'Creator' && match && match[1]) {
+                const imagePath = match[1].replace(/\\/g, '/'); // Normalize path for web
+                $messageContent.html(`<p>Berikut adalah gambar yang dihasilkan:</p><img src="/${imagePath}" alt="Generated Image" class="max-w-full h-auto rounded-lg my-4 shadow-lg">`);
+            } else {
+                $messageContent.html(renderMarkdown(text));
+            }
 
             $messageDiv.append($messageContent);
 
@@ -102,7 +114,7 @@ $(document).ready(function() {
             Prism.highlightAllUnder($messageDiv[0]);
 
             // Add action buttons to all messages
-            const $actionButtonsContainer = createActionButtons();
+            const $actionButtonsContainer = createActionButtons(sender);
             $messageDiv.append($actionButtonsContainer);
 
             // Store reference to current streaming message
@@ -136,17 +148,16 @@ $(document).ready(function() {
         // Apply sender-specific Tailwind classes and margin
         if (sender === 'user') {
             $messageDiv.addClass('bg-blue-600 text-white ml-auto rounded-br-none').css('max-width', '80%');
-        // } else if (sender == 'ai') {
-        //     $messageDiv.addClass('bg-gray-700 text-gray-100 mr-auto rounded-bl-none').css('max-width', '80%');
-    
         } else if (sender === 'supervisor') {
             $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
         } else if (sender === 'system-error') {
             $messageDiv.addClass('bg-red-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
-        } else if (sender === 'Rina') {
+        } else if (sender === 'Riset') {
             $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
-        } else if (sender === 'Emilia') {
+        } else if (sender === 'Implementasi') {
             $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
+        } else if (sender === 'Creator') { // Add Creator agent styling
+            $messageDiv.addClass(' text-green-300 mr-auto rounded-bl-none').css('max-width', '80%'); // Example styling for Creator
         }
 
         // Add sender label for AI/agent messages
@@ -157,10 +168,18 @@ $(document).ready(function() {
         }
 
         // Replace \n with <br> for newlines
-        const formattedText = renderMarkdown(text);
-
         const $messageContent = $('<div>').addClass('message-content prose prose-invert max-w-none');
-        $messageContent.html(formattedText);
+
+        // Check if the message is an image path from the Creator agent
+        const imagePathRegex = /^Gambar berhasil dibuat dan disimpan di: (static\\image_generation\\generated_image_\d{8}_\d{6}\.png)$/;
+        const match = text.match(imagePathRegex);
+
+        if (sender === 'Creator' && match && match[1]) {
+            const imagePath = match[1].replace(/\\/g, '/'); // Normalize path for web
+            $messageContent.html(`<p>Berikut adalah gambar yang dihasilkan:</p><img src="/${imagePath}" alt="Generated Image" class="max-w-full h-auto rounded-lg my-4 shadow-lg">`);
+        } else {
+            $messageContent.html(renderMarkdown(text));
+        }
 
         $messageDiv.append($messageContent);
 
@@ -177,7 +196,7 @@ $(document).ready(function() {
         Prism.highlightAllUnder($messageDiv[0]);
 
         // Add action buttons to all messages
-        const $actionButtonsContainer = createActionButtons();
+        const $actionButtonsContainer = createActionButtons(sender);
         $messageDiv.append($actionButtonsContainer);
 
         console.log("Message Div InnerHTML after buttons:", $messageDiv.html());
@@ -375,7 +394,7 @@ $(document).ready(function() {
                                             if (routeMatch[1] === "FINISH") {
                                                 addSystemMessage(`--- Supervisor: ${routeMatch[2]} ---`, 'supervisor');
                                             } else {
-                                                // Use the routeMatch[1] as sender (e.e.g., Rina, Emilia, etc.)
+                                                // Use the routeMatch[1] as sender (e.e.g., Riset, Implementasi, etc.)
                                                 addSystemMessage(`--- Supervisor routing to: ${routeMatch[1]} - ${routeMatch[2]} ---`, routeMatch[1].toLowerCase());
                                             }
                                         }
@@ -686,7 +705,7 @@ $(document).ready(function() {
         }
 
         // Function to create and return a container with action buttons
-        function createActionButtons() {
+        function createActionButtons(sender = null) {
             const $buttonsContainer = $('<div>').addClass('action-buttons flex mt-4 space-x-3 ml-auto pr-2');
 
             const buttonConfigs = [
@@ -697,6 +716,14 @@ $(document).ready(function() {
                 { icon: 'fas fa-share-alt', label: 'Share', className: 'share-button' }
             ];
 
+            // Add "Explain The Image" button only for Creator agent
+            if (sender === 'Creator') {
+                buttonConfigs.push({ icon: 'fas fa-eye', label: 'Explain The Image', className: 'explain-image-button' });
+            }
+
+
+
+
             buttonConfigs.forEach(config => {
                 const $button = $('<button>').addClass(`action-button ${config.className} text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1`);
                 $button.html(`<i class="${config.icon}"></i><span>${config.label}</span>`);
@@ -706,6 +733,7 @@ $(document).ready(function() {
             return $buttonsContainer;
         }
 
+
         // Clear input button logic
         $searchInput.on('input', toggleClearButton);
         $clearInputButton.on('click', function() {
@@ -713,5 +741,58 @@ $(document).ready(function() {
             toggleClearButton();
             $searchInput.focus();
         });
+
+        // Handle "Explain The Image" button click (event delegation)
+        $responseContainer.on('click', '.explain-image-button', function() {
+            const $button = $(this);
+            // Disable the button immediately
+            $button.prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
+
+            // Find the closest message bubble
+            const $messageBubble = $button.closest('.message-bubble');
+            // Find the image inside this bubble
+            const $img = $messageBubble.find('img');
+            if ($img.length === 0) {
+                addMessage('No image found to explain.', 'system-error');
+                return;
+            }
+            // Get the image src and convert to server path (remove leading slash)
+            let imagePath = $img.attr('src');
+            if (imagePath.startsWith('/')) {
+                imagePath = imagePath.substring(1);
+            }
+
+            // Show a loading message
+            addSystemMessage('Explaining the image...');
+
+            // Send request to backend
+            fetch('/explain_image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image_path: imagePath })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove the loading message
+                //From Ai
+                $responseContainer.find('.system-message').remove();
+                if (data.explanation) {
+                    addMessage(data.explanation, 'ai');
+                    addSystemMessage('Explaining the image Completed');
+                } else if (data.error) {
+                    addMessage('Error: ' + data.error, 'system-error');
+                } else {
+                    addMessage('Unknown error occurred while explaining the image.', 'system-error');
+                }
+            })
+            .catch(err => {
+                $responseContainer.find('.system-message').remove();
+                addMessage('Network error while explaining the image.', 'system-error');
+            });
+        });
+        
     }
+
+
+
 });
