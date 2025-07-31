@@ -97,21 +97,21 @@ image_generation_model = os.getenv("IMAGE_GENERATION")
 # GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 
-# search = GoogleSerperAPIWrapper(
-#     serper_api_key=SERPER_API_KEY
-# )
+search = GoogleSerperAPIWrapper(
+    serper_api_key=SERPER_API_KEY
+)
 
 # model_Riset = ChatGoogleGenerativeAI(
-#     model="gemini-1.5-flash",
+#     model="gemini-2.5-flash",
 # )
 
 # model_Implementasi = ChatGoogleGenerativeAI(
-#     model="gemini-1.5-flash", 
+#     model="gemini-2.5-flash", 
 
 # )
 
 # model_supervisor = ChatGoogleGenerativeAI(
-#     model="gemini-1.5-flash",
+#     model="gemini-2.5-flash",
 
 # )
 
@@ -153,13 +153,13 @@ web_tools = [
 def is_difficult_question(question: str) -> Dict[str, Union[bool, str, List[str], int]]:
     """Enhanced difficulty assessment with detailed analysis."""
     difficult_keywords = [
-        "current", "latest", "recent", "today", "2024", "2025", "news",
-        "stock price", "weather", "events", "what happened", "when did",
-        "latest version", "recent developments", "breaking news",
-        "research", "study", "scientific", "technical", "complex",
-        "detailed explanation", "in-depth", "comprehensive", "compare",
-        "analysis", "statistics", "data", "trends", "forecast",
-        "implementation", "code", "programming", "algorithm", "architecture"
+        "terkini", "terbaru", "hari ini", "2024", "2025", "berita",
+        "harga saham", "cuaca", "acara", "apa yang terjadi", "kapan",
+        "versi terbaru", "perkembangan terbaru", "berita terkini",
+        "riset", "studi", "ilmiah", "teknis", "kompleks",
+        "penjelasan detail", "mendalam", "komprehensif", "bandingkan",
+        "analisis", "statistik", "data", "tren", "prediksi",
+        "implementasi", "kode", "pemrograman", "algoritma", "arsitektur"
     ]
     
     question_lower = question.lower()

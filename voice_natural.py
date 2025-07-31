@@ -4,6 +4,20 @@ import re
 from silero_tts import SileroTTS
 from deep_translator import GoogleTranslator
 import os
+import asyncio
+
+def ensure_event_loop():
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        try:
+            asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+ensure_event_loop()
+
 def stream_voice(text):
     """
     Generator that yields (audio_bytes, subtitle) for each sentence in the input text.

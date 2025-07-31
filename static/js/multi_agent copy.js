@@ -60,28 +60,28 @@ $(document).ready(function() {
         } else {
             // Create new streaming message
             console.log(`Creating new streaming message for ${sender}`);
-            const $messageDiv = $('<div>').addClass('message-bubble fade-in-up p-4 rounded-lg shadow-md mb-4 relative');
+            const $messageDiv = $('<div>').addClass('message-bubble fade-in-up p-4 rounded-lg shadow-md mb-4 relative text-white');
 
             // Apply sender-specific Tailwind classes and margin
             if (sender === 'user') {
-                $messageDiv.addClass('text-white ml-auto rounded-br-none text-center').css('max-width', '20%');
+                $messageDiv.addClass('bg-blue-600 text-white ml-auto rounded-br-none').css('max-width', '80%');
             // } else if (sender == 'ai') {
-            //     $messageDiv.addClass('bg-gray-700 text-gray-100 mr-auto rounded-bl-none')
+            //     $messageDiv.addClass('bg-gray-700 text-gray-100 mr-auto rounded-bl-none').css('max-width', '80%');
             } else if (sender === 'supervisor') {
-                $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none')
+                $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
             } else if (sender === 'system-error') {
-                $messageDiv.addClass('bg-red-800 text-white mr-auto rounded-bl-none')
+                $messageDiv.addClass('bg-red-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
             } else if (sender === 'Riset') {
-                $messageDiv.addClass(' text-white mr-auto rounded-bl-none')
+                $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
             } else if (sender === 'Implementasi') {
-                $messageDiv.addClass(' text-white mr-auto rounded-bl-none')
+                $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
             } else if (sender === 'Creator') { // Add Creator agent styling
-                $messageDiv.addClass(' text-green-300 mr-auto rounded-bl-none') // Example styling for Creator
+                $messageDiv.addClass(' text-green-300 mr-auto rounded-bl-none').css('max-width', '80%'); // Example styling for Creator
             }
 
             // Add sender label for AI/agent messages
             if (sender !== 'user') {
-                const $senderLabel = $('<div>').addClass('sender-label font-bold mb-1 text-gray-300');
+                const $senderLabel = $('<div>').addClass('sender-label font-bold mb-1 text-white');
                 $senderLabel.text(sender.charAt(0).toUpperCase() + sender.slice(1) + ':');
                 $messageDiv.append($senderLabel);
             }
@@ -143,26 +143,26 @@ $(document).ready(function() {
             currentStreamingMessage = null;
         }
         
-        const $messageDiv = $('<div>').addClass('message-bubble fade-in-up p-4 rounded-lg shadow-md mb-4 relative');
+        const $messageDiv = $('<div>').addClass('message-bubble fade-in-up p-4 rounded-lg shadow-md mb-4 relative text-white');
 
         // Apply sender-specific Tailwind classes and margin
         if (sender === 'user') {
-            $messageDiv.addClass('text-white ml-auto rounded-br-none ').css('max-width', '20%');
+            $messageDiv.addClass('bg-blue-600 text-white ml-auto rounded-br-none').css('max-width', '80%');
         } else if (sender === 'supervisor') {
-            $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none')
+            $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
         } else if (sender === 'system-error') {
-            $messageDiv.addClass('bg-red-800 text-white mr-auto rounded-bl-none')
+            $messageDiv.addClass('bg-red-800 text-white mr-auto rounded-bl-none').css('max-width', '80%');
         } else if (sender === 'Riset') {
-            $messageDiv.addClass(' text-white mr-auto rounded-bl-none')
+            $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
         } else if (sender === 'Implementasi') {
-            $messageDiv.addClass(' text-white mr-auto rounded-bl-none')
+            $messageDiv.addClass(' text-white mr-auto rounded-bl-none').css('max-width', '80%');
         } else if (sender === 'Creator') { // Add Creator agent styling
-            $messageDiv.addClass(' text-green-300 mr-auto rounded-bl-none') // Example styling for Creator
+            $messageDiv.addClass(' text-green-300 mr-auto rounded-bl-none').css('max-width', '80%'); // Example styling for Creator
         }
 
         // Add sender label for AI/agent messages
         if (sender !== 'user') {
-            const $senderLabel = $('<div>').addClass('sender-label font-bold mb-1 text-gray-300');
+            const $senderLabel = $('<div>').addClass('sender-label font-bold mb-1 text-white');
             $senderLabel.text(sender.charAt(0).toUpperCase() + sender.slice(1) + ':');
             $messageDiv.append($senderLabel);
         }
@@ -208,47 +208,9 @@ $(document).ready(function() {
         // Remove any existing system-message divs to ensure only one is shown
         $responseContainer.find('.system-message').remove();
 
-        // Check if this is a role that should have action buttons
-        const allowedRoles = ['supervisor', 'Riset', 'Implementasi', 'Creator'];
-        const shouldShowButtons = allowedRoles.includes(sender);
-
-        if (shouldShowButtons) {
-            // Create a message bubble similar to regular messages for roles that need buttons
-            const $messageDiv = $('<div>').addClass('message-bubble fade-in-up p-4 rounded-lg shadow-md mb-4 relative');
-            
-            // Apply sender-specific styling
-            if (sender === 'supervisor') {
-                // $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none');
-            } else if (sender === 'Riset') {
-                $messageDiv.addClass('text-white mr-auto rounded-bl-none');
-            } else if (sender === 'Implementasi') {
-                $messageDiv.addClass('text-white mr-auto rounded-bl-none');
-            } else if (sender === 'Creator') {
-                $messageDiv.addClass('text-green-300 mr-auto rounded-bl-none');
-            }
-
-            // Add sender label
-            const $senderLabel = $('<div>').addClass('sender-label font-bold mb-1 text-gray-300');
-            $senderLabel.text(sender.charAt(0).toUpperCase() + sender.slice(1) + ':');
-            $messageDiv.append($senderLabel);
-
-            // Add message content
-            const $messageContent = $('<div>').addClass('message-content prose prose-invert max-w-none');
-            $messageContent.html(renderMarkdown(text));
-            $messageDiv.append($messageContent);
-
-            // Add action buttons
-            const $actionButtonsContainer = createActionButtons(sender);
-            $messageDiv.append($actionButtonsContainer);
-
-            $responseContainer.append($messageDiv);
-        } else {
-            // Regular system message without buttons
-            const $systemMessageDiv = $('<div>').addClass('system-message text-center text-gray-400 text-sm my-3');
-            $systemMessageDiv.text(text);
-            $responseContainer.append($systemMessageDiv);
-        }
-        
+        const $systemMessageDiv = $('<div>').addClass('system-message text-center text-gray-400 text-sm my-3');
+        $systemMessageDiv.text(text);
+        $responseContainer.append($systemMessageDiv);
         scrollToBottom();
         // Save as a chat message with sender, not just as type system
         conversationMessages.push({ type: 'chat', sender: sender, content: text });
@@ -518,7 +480,7 @@ $(document).ready(function() {
                                 addMessage(currentStreamingMessage.content, currentStreamingMessage.sender);
                                 currentStreamingMessage = null;
                             }
-                            // addSystemMessage('--- Follow-up Conversation Complete ---');
+                            addSystemMessage('--- Follow-up Conversation Complete ---');
                             isChatStreamActive = false; // Reset flag on stream completion
                             saveConversationToJson(); // Save conversation after follow-up
                             return;
@@ -597,149 +559,118 @@ $(document).ready(function() {
         }
 
         // Advanced Markdown to HTML converter with Tailwind classes
-        // Advanced Markdown to HTML converter with CSS Modules
-function renderMarkdown(markdownText) {
-    // 1. First, handle <think> blocks.
-    // We'll replace them with placeholders, and for their content,
-    // we'll use the _renderThinkContentMarkdown helper.
-    const thinkBlockData = [];
-    const tempHtml = markdownText.replace(/<think>([\s\S]*?)<\/think>/g, (match, content) => {
-        const placeholder = `__THINK_BLOCK_${thinkBlockData.length}__`;
-        thinkBlockData.push(content);
-        return placeholder;
-    });
+        function renderMarkdown(markdownText) {
+            // Escape HTML entities first to prevent unwanted HTML rendering
+            let html = escapeHtml(markdownText);
 
-    // 2. Now, escape HTML for the rest of the text that's not part of <think>
-    let html = escapeHtml(tempHtml);
+            // Store code blocks and replace with placeholders
+            const codeBlocks = [];
+            html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+                const placeholder = `CODE_BLOCK_PLACEHOLDER_${codeBlocks.length}__`;
+                codeBlocks.push({ lang: lang, code: code });
+                return placeholder;
+            });
 
-    // Store code blocks and replace with placeholders
-    const codeBlocks = [];
-    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-        const placeholder = `CODE_BLOCK_PLACEHOLDER_${codeBlocks.length}__`;
-        codeBlocks.push({ lang: lang, code: code });
-        return placeholder;
-    });
+            // Wrap the entire HTML in a div with the prose class
+            html = `<div class="prose dark:prose-invert max-w-none text-white">${html}</div>`;
 
-    // Horizontal Rule
-    html = html.replace(/^[\s\*\-_]{3,}\s*$/gm, '<hr class="markdown-hr">');
+            // Horizontal Rule
+            html = html.replace(/^[\s\*\-_]{3,}\s*$/gm, '<hr>');
 
-    // Headers (H1-H6) with CSS Module classes
-    html = html.replace(/^###### (.*)$/gm, '<h6 class="markdown-h6">$1</h6>');
-    html = html.replace(/^##### (.*)$/gm, '<h5 class="markdown-h5">$1</h5>');
-    html = html.replace(/^#### (.*)$/gm, '<h4 class="markdown-h4">$1</h4>');
-    html = html.replace(/^### (.*)$/gm, '<h3 class="markdown-h3">$1</h3>');
-    html = html.replace(/^## (.*)$/gm, '<h2 class="markdown-h2">$1</h2>');
-    html = html.replace(/^# (.*)$/gm, '<h1 class="markdown-h1">$1</h1>');
+            // Headers (H1-H6) - no inline classes needed, handled by prose
+            html = html.replace(/^###### (.*)$/gm, '<h6>$1</h6>');
+            html = html.replace(/^##### (.*)$/gm, '<h5>$1</h5>');
+            html = html.replace(/^#### (.*)$/gm, '<h4>$1</h4>');
+            html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
 
-    // Blockquotes
-    html = html.replace(/^> (.*)$/gm, '<blockquote class="markdown-blockquote"><p class="markdown-p">$1</p></blockquote>');
+            // Blockquotes - no inline classes needed, handled by prose
+            html = html.replace(/^> (.*)$/gm, '<blockquote>$1</blockquote>');
 
-    // Lists (unordered and ordered) - more robust handling
-    html = html.replace(/\n(?= *- |^\d+\. )/g, '@@NEWLINE_HOLDER@@');
-    // Unordered lists
-    html = html.replace(/^- (.*)$/gm, '<li class="markdown-li">$1</li>');
-    // Ordered lists
-    html = html.replace(/^(\d+)\. (.*)$/gm, '<li class="markdown-li">$1. $2</li>');
-    // Wrap consecutive <li> elements into a single <ul> with CSS Module classes
-    html = html.replace(/((?:<li class="markdown-li">.*?<\/li>\n?)+)/g, (match, listItems) => {
-        listItems = listItems.trim();
-        return `<ul class="markdown-ul">${listItems}</ul>`;
-    });
-    html = html.replace(/@@NEWLINE_HOLDER@@/g, '<br>');
+            // Lists (unordered and ordered) - more robust handling
+            html = html.replace(/\n(?= *- |^\d+\. )/g, '@@NEWLINE_HOLDER@@');
+            // Unordered lists
+            // Convert markdown list items to <li> tags
+            html = html.replace(/^- (.*)$/gm, '<li>$1</li>');
 
-    // Links
-    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="markdown-a">$1</a>');
+            // Ordered lists
+            // Convert markdown ordered list items to <li> tags, keeping the number in the text
+            html = html.replace(/^(\d+)\. (.*)$/gm, '<li>$1. $2</li>');
 
-    // Images
-    html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="markdown-img">');
+            // Wrap consecutive <li> elements into a single <ul> or <ol> with list-style: none
+            // This regex looks for one or more lines that start with <li> and end with </li>.
+            // The \n? allows for a single newline between list items, ensuring blocks are correctly grouped.
+            // It differentiates between ordered and unordered lists based on the content of the first li.
+            html = html.replace(/((?:<li>.*?<\/li>\n?)+)/g, (match, listItems) => {
+                // Remove any trailing newlines from the captured listItems block before wrapping
+                listItems = listItems.trim();
+                // Check if the list is ordered by looking for a number followed by a period in the first item
+                const isOrdered = /^\\d+\\./.test(listItems);
+                if (isOrdered) {
+                    return `<ol class="list-none">${listItems}</ol>`;
+                } else {
+                    return `<ul class="list-none">${listItems}</ul>`;
+                }
+            });
+            html = html.replace(/@@NEWLINE_HOLDER@@/g, '<br>');
 
-    // Enhanced Table parsing with support for various table formats
-    html = html.replace(/((?:\|.*\|(?:\r?\n|\r)?)+)/g, (match) => {
-        const lines = match.trim().split(/\r?\n/);
-        if (lines.length < 2) return match; // Need at least header and separator
-        
-        // Check if it's a proper markdown table (has separator line with dashes)
-        const hasSeparator = lines.some(line => 
-            line.trim().match(/^\|[\s\-:|]+\|$/)
-        );
-        
-        if (!hasSeparator) return match; // Not a table
-        
-        let tableHtml = '<div class="markdown-table-wrapper"><table class="markdown-table">';
-        let inHeader = true;
-        let headerAdded = false;
-        
-        lines.forEach((line, index) => {
-            line = line.trim();
-            if (!line.startsWith('|') || !line.endsWith('|')) return;
-            
-            // Skip separator lines (lines with only dashes, colons, and pipes)
-            if (line.match(/^\|[\s\-:|]+\|$/)) {
-                inHeader = false;
-                return;
-            }
-            
-            // Parse cells
-            const cells = line.split('|').slice(1, -1).map(cell => cell.trim());
-            
-            if (inHeader && !headerAdded) {
-                tableHtml += '<thead><tr>';
-                cells.forEach(cell => {
-                    tableHtml += `<th>${escapeHtml(cell)}</th>`;
-                });
+            // Links - no inline classes needed, handled by prose
+            html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+            // Images - no inline classes needed, handled by prose
+            html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">');
+
+            // Tables (basic: assumes header and at least one row, no alignment parsing) - no inline classes needed, handled by prose
+            html = html.replace(/\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\n\|\s*---+\s*\|\s*---+\s*\|\s*---+\s*\|\n((?:\|\s*.*?\s*\|\s*.*?\s*\|\s*.*?\s*\|\n)+)/g, (match, header1, header2, header3, rows) => {
+                let tableHtml = '<table><thead><tr>';
+                tableHtml += `<th>${header1}</th>`;
+                tableHtml += `<th>${header2}</th>`;
+                tableHtml += `<th>${header3}</th>`;
                 tableHtml += '</tr></thead><tbody>';
-                headerAdded = true;
-            } else if (!inHeader) {
-                tableHtml += '<tr>';
-                cells.forEach(cell => {
-                    tableHtml += `<td>${escapeHtml(cell)}</td>`;
+
+                rows.trim().split('\n').forEach(row => {
+                    const cols = row.split('|').map(c => c.trim()).filter(c => c);
+                    if (cols.length === 3) {
+                        tableHtml += '<tr>';
+                        tableHtml += `<td>${cols[0]}</td>`;
+                        tableHtml += `<td>${cols[1]}</td>`;
+                        tableHtml += `<td>${cols[2]}</td>`;
+                        tableHtml += '</tr>';
+                    }
                 });
-                tableHtml += '</tr>';
+
+                tableHtml += '</tbody></table>';
+                return tableHtml;
+            });
+
+            // Math Notation (basic: inline $...$ and block $$...$$) - no inline classes needed, handled by prose
+            html = html.replace(/\$\$(.*?)\$\$/gs, '<div class="math-block">$1</div>');
+            html = html.replace(/\$(.*?)\$/g, '<span class="math-inline">$1</span>');
+
+            // Inline code - no inline classes needed, handled by prose
+            html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+
+            // Newlines to <br> (this should be after block-level elements are handled)
+            html = html.replace(/\n/g, '<br>');
+
+            // Basic bold
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>');
+
+            // Basic italics
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            // Restore code blocks
+            for (let i = 0; i < codeBlocks.length; i++) {
+                const placeholder = `CODE_BLOCK_PLACEHOLDER_${i}__`;
+                const block = codeBlocks[i];
+                const languageClass = block.lang ? `language-${block.lang}` : 'language-markup';
+                const codeHtml = `<pre><code class="${languageClass}">${block.code}</code></pre>`;
+                html = html.replace(placeholder, codeHtml);
             }
-        });
-        
-        tableHtml += '</tbody></table></div>';
-        return tableHtml;
-    });
 
-    // Math Notation (basic: inline $...$ and block $$...$$)
-    html = html.replace(/\$\$(.*?)\$\$/gs, '<div class="markdown-math-block">$1</div>');
-    html = html.replace(/\$(.*?)\$/g, '<span class="markdown-math-inline">$1</span>');
-
-    // Inline code
-    html = html.replace(/`(.*?)`/g, '<code class="markdown-code-inline">$1</code>');
-
-    // Newlines to <br> (this should be after block-level elements are handled)
-    html = html.replace(/\n/g, '<br>');
-
-    // Basic bold
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="markdown-strong">$1</strong>');
-
-    // Basic italics
-    html = html.replace(/\*(.*?)\*/g, '<em class="markdown-em">$1</em>');
-
-    // Restore code blocks
-    for (let i = 0; i < codeBlocks.length; i++) {
-        const placeholder = `CODE_BLOCK_PLACEHOLDER_${i}__`;
-        const block = codeBlocks[i];
-        const languageClass = block.lang ? `language-${block.lang}` : 'language-markup';
-        // Don't escape code content - we want to display the actual characters
-        const codeHtml = `<pre class="markdown-pre"><code class="markdown-code ${languageClass}">${block.code}</code></pre>`;
-        html = html.replace(placeholder, codeHtml);
-    }
-
-    // 4. Finally, restore the <think> blocks and recursively render their content
-    for (let i = 0; i < thinkBlockData.length; i++) {
-        const placeholder = `__THINK_BLOCK_${i}__`;
-        // Recursively render markdown for the content inside <think>
-        const renderedThinkContent = _renderThinkContentMarkdown(thinkBlockData[i]);
-        const thinkHtml = `<div class="markdown-thought-process"><details><summary class="markdown-thought-summary">Thought Process</summary><div class="markdown-thought-content">${renderedThinkContent}</div></details></div>`;
-        html = html.replace(placeholder, thinkHtml);
-    }
-
-    // Wrap the entire content in a markdown container
-    return `<div class="markdown-container markdown-fade-in">${html}</div>`;
-}
+            return html;
+        }
 
         // Helper function to escape HTML special characters
         function escapeHtml(unsafe) {
@@ -781,14 +712,6 @@ function renderMarkdown(markdownText) {
 
         // Function to create and return a container with action buttons
         function createActionButtons(sender = null) {
-            // Only show buttons for supervisor, research, implementation, and creator roles
-            const allowedRoles = ['supervisor', 'Riset', 'Implementasi', 'Creator'];
-            
-            // If sender is not in allowed roles, return empty container
-            if (!sender || !allowedRoles.includes(sender)) {
-                return $('<div>').addClass('action-buttons flex mt-4 space-x-3 ml-auto pr-2');
-            }
-
             const $buttonsContainer = $('<div>').addClass('action-buttons flex mt-4 space-x-3 ml-auto pr-2');
 
             const buttonConfigs = [
@@ -803,6 +726,9 @@ function renderMarkdown(markdownText) {
             if (sender === 'Creator') {
                 buttonConfigs.push({ icon: 'fas fa-eye', label: 'Explain The Image', className: 'explain-image-button' });
             }
+
+
+
 
             buttonConfigs.forEach(config => {
                 const $button = $('<button>').addClass(`action-button ${config.className} text-gray-400 hover:text-blue-500 transition-colors text-sm flex items-center space-x-1`);

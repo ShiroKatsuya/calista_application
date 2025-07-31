@@ -1,128 +1,134 @@
-{% extends "base.html" %}
-
-{% block content %}
-
-    <!-- Google Fonts: Inter -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quickstart - Getting Started with Your API</title>
     
- <!-- Feather Icons for new icons -->
-<script src="https://unpkg.com/feather-icons"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Feather Icons for new icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
     
     <!-- Alpine.js for interactivity (moved to head) -->
-<script src="https://unpkg.com/alpinejs" defer></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
     
     <!-- Prism.js for syntax highlighting -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-coldark-dark.min.css" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-coldark-dark.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 
-<style>
-    /* Custom styles to match the dark theme and font */
-    body {
-        font-family: 'Inter', sans-serif;
-        background-color: #0d1117; /* A slightly darker, more modern black */
-        color: #c9d1d9; /* text-gray-300 equivalent */
-    }
-    /* Custom focus ring color */
-    .focus-ring-brand {
-        --tw-ring-color: #4f46e5; /* A vibrant indigo for focus */
-    }
-    /* Updated style for the code blocks */
-    pre {
-        background-color: transparent; /* Background is now on the wrapper */
-        padding: 1rem;
-        overflow-x: auto;
-        color: #c9d1d9;
-        font-size: 0.875rem;
-        line-height: 1.5;
-    }
-    code {
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-    }
-    .code-block-container {
-        background-color: #000000;
-        border-radius: 0.5rem;
-        border: 1px solid #30363d;
-    }
-    
-    /* Override Prism.js theme for black background */
-    pre[class*="language-"] {
-        background: #000000 !important;
-        color: #ffffff !important;
-    }
-    
-    code[class*="language-"] {
-        background: #000000 !important;
-        color: #ffffff !important;
-    }
-    
-    /* Ensure syntax highlighting colors work well on black background */
-    /* .token.comment,
-    .token.prolog,
-    .token.doctype,
-    .token.cdata {
-        color: #6a737d !important;
-    }
-    
-    .token.punctuation {
-        color: #d1d5db !important;
-    }
-    
-    .token.property,
-    .token.tag,
-    .token.boolean,
-    .token.number,
-    .token.constant,
-    .token.symbol,
-    .token.deleted {
-        color: #79c0ff !important;
-    }
-    
-    .token.selector,
-    .token.attr-name,
-    .token.string,
-    .token.char,
-    .token.builtin,
-    .token.inserted {
-        color: #a5d6ff !important;
-    }
-    
-    .token.operator,
-    .token.entity,
-    .token.url,
-    .language-css .token.string,
-    .style .token.string {
-        color: #ff7b72 !important;
-    }
-    
-    .token.atrule,
-    .token.attr-value,
-    .token.keyword {
-        color: #ffa657 !important;
-    }
-    
-    .token.function,
-    .token.class-name {
-        color: #d2a8ff !important;
-    }
-    
-    .token.regex,
-    .token.important,
-    .token.variable {
-        color: #ffa198 !important;
-    } */
-    /* Hide scrollbar for cleaner look, but still allow scrolling */
-    pre::-webkit-scrollbar {
-        display: none;
-    }
-    pre {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
-    }
-</style>
-
+    <style>
+        /* Custom styles to match the dark theme and font */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* A slightly darker, more modern black */
+            color: #c9d1d9; /* text-gray-300 equivalent */
+        }
+        /* Custom focus ring color */
+        .focus-ring-brand {
+            --tw-ring-color: #4f46e5; /* A vibrant indigo for focus */
+        }
+        /* Updated style for the code blocks */
+        pre {
+            background-color: transparent; /* Background is now on the wrapper */
+            padding: 1rem;
+            overflow-x: auto;
+            color: #c9d1d9;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        code {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        }
+        .code-block-container {
+            background-color: #000000;
+            border-radius: 0.5rem;
+            border: 1px solid #30363d;
+        }
+        
+        /* Override Prism.js theme for black background */
+        pre[class*="language-"] {
+            background: #000000 !important;
+            color: #ffffff !important;
+        }
+        
+        code[class*="language-"] {
+            background: #000000 !important;
+            color: #ffffff !important;
+        }
+        
+        /* Ensure syntax highlighting colors work well on black background */
+        /* .token.comment,
+        .token.prolog,
+        .token.doctype,
+        .token.cdata {
+            color: #6a737d !important;
+        }
+        
+        .token.punctuation {
+            color: #d1d5db !important;
+        }
+        
+        .token.property,
+        .token.tag,
+        .token.boolean,
+        .token.number,
+        .token.constant,
+        .token.symbol,
+        .token.deleted {
+            color: #79c0ff !important;
+        }
+        
+        .token.selector,
+        .token.attr-name,
+        .token.string,
+        .token.char,
+        .token.builtin,
+        .token.inserted {
+            color: #a5d6ff !important;
+        }
+        
+        .token.operator,
+        .token.entity,
+        .token.url,
+        .language-css .token.string,
+        .style .token.string {
+            color: #ff7b72 !important;
+        }
+        
+        .token.atrule,
+        .token.attr-value,
+        .token.keyword {
+            color: #ffa657 !important;
+        }
+        
+        .token.function,
+        .token.class-name {
+            color: #d2a8ff !important;
+        }
+        
+        .token.regex,
+        .token.important,
+        .token.variable {
+            color: #ffa198 !important;
+        } */
+        /* Hide scrollbar for cleaner look, but still allow scrolling */
+        pre::-webkit-scrollbar {
+            display: none;
+        }
+        pre {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
 <body class="antialiased">
 
     <div class="flex max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -243,7 +249,7 @@ curl --location 'https://api.calista.ai/chat/completions' \
 --header 'content-type: application/json' \
 --header "Authorization: Bearer $CALISTA" \
 --data '{
-    "model": "llama3.2:3b_Enhanced",
+    "model": "llama3.2:3b",
     "messages": [
         {
             "role": "user",
@@ -260,7 +266,7 @@ curl --location 'https://api.calista.ai/chat/completions' \
 --header 'content-type: application/json' \
 --header "Authorization: Bearer $CALISTA" \
 --data '{
-    "model": "llama3.2:3b_Enhanced",
+    "model": "llama3.2:3b",
     "stream": true,
     "messages": [
         {
@@ -284,7 +290,7 @@ if not API_KEY:
 url = "https://api.calista.ai/chat/completions"
 
 payload = {
-    "model": "llama3.2:3b_Enhanced",
+    "model": "llama3.2:3b",
     "messages": [
         {
             "role": "user",
@@ -315,7 +321,7 @@ if not API_KEY:
 url = "https://api.calista.ai/chat/completions"
 
 payload = {
-    "model": "llama3.2:3b_Enhanced",
+    "model": "llama3.2:3b",
     "stream": True,
     "messages": [
         {
@@ -360,7 +366,7 @@ const options = {
     Authorization: `Bearer ${apiKey}`,
   },
   body: JSON.stringify({
-    model: 'llama3.2:3b_Enhanced',
+    model: 'llama3.2:3b',
     messages: [
       { role: 'user', content: 'How do I use TypeScript for API calls?' },
     ],
@@ -399,7 +405,7 @@ const options = {
     Authorization: `Bearer ${apiKey}`,
   },
   body: JSON.stringify({
-    model: 'llama3.2:3b_Enhanced',
+    model: 'llama3.2:3b',
     stream: true,
     messages: [
       { role: 'user', content: 'How do I stream responses in TypeScript?' },
@@ -597,5 +603,4 @@ makeStreamingRequest();
     </script>
 
 </body>
-
-{% endblock %}
+</html>

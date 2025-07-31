@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 isRecognitionActive = false; // Ensure state is updated correctly
             }
             if (audioContext) audioContext.suspend && audioContext.suspend();
-            chatContainer.innerHTML = '<div class="p-2"><p class="text-lg text-gray-300">Recording ended.</p></div>';
+            chatContainer.innerHTML = '<div class="p-2"><p class="text-lg text-white">Recording ended.</p></div>';
             canvasCtx.clearRect(0, 0, visualizer.width, visualizer.height);
             // Draw a static background after recording ends
             const gradient = canvasCtx.createLinearGradient(0, 0, 0, visualizer.height);

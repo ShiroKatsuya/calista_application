@@ -126,7 +126,7 @@
                         {% endif %}
 
                         <div class="{{ base_classes }} {{ sender_classes }}" style="max-width: 100%;">
-                        {% if sender_label_text %}<div class="sender-label font-bold mb-1 text-gray-300">{{ sender_label_text }}</div>{% endif %}
+                        {% if sender_label_text %}<div class="sender-label font-bold mb-1 text-white">{{ sender_label_text }}</div>{% endif %}
                         <div class="message-content prose prose-invert max-w-none" style="padding-left:0; margin-left:0; text-align:left;">{{ message_content|safe }}</div>
                         </div>
                     {% elif message_type == 'system' %}
@@ -144,7 +144,7 @@
 
                         <div class="{{ base_classes }} {{ sender_classes }}" {% if apply_max_width %}style="max-width: 80%;"{% endif %}>
                             {% if sender_label_text %}
-                                <div class="sender-label font-bold mb-1 text-gray-300">{{ sender_label_text }}</div>
+                                <div class="sender-label font-bold mb-1 text-white">{{ sender_label_text }}</div>
                             {% endif %}
                             <div class="message-content {% if apply_prose %}prose prose-invert max-w-none{% endif %}">
                                 {{ message_content }}
@@ -156,10 +156,7 @@
                 {% endfor %}
             </div>
             <!-- Thinking Indicator -->
-            <div id="thinkingIndicator" class="thinking-indicator hidden">
-                <div class="spinner"></div>
-                Thinking...
-            </div>
+    
 
             <!-- Related Questions Section -->
             <div class="mt-8 pt-8 border-t border-gray-700/60">
@@ -189,7 +186,7 @@
             <img id="mic-icon" src="{{ url_for('static', filename='icons/microphone.png') }}" alt="Mic Icon" class="w-5 h-5 mr-2">
             <span id="mute-text">Mute</span>
         </button>
-        <div id="timer" class="text-lg font-semibold text-gray-300">00:00</div>
+        <div id="timer" class="text-lg font-semibold text-white">00:00</div>
     </div>
     <!-- interim box for speech recognition -->
     <div id="interim-box" class="p-2 hidden">

@@ -493,6 +493,12 @@ textarea:focus {
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5); /* Purple ring */
 }
 
+/* No outline for specific elements */
+.no-outline:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
 /* Loading Pulse Animation */
 .loading-pulse {
     animation: pulse 1.5s infinite ease-in-out;

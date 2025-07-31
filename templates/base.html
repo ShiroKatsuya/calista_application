@@ -22,8 +22,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/conversation.css') }}">  
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/conversation.css') }}">  
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/markdown-modules.css') }}">
 </head>
 <body class="bg-background text-text font-inter min-h-screen overflow-x-hidden">
     <!-- Animated background -->
@@ -74,7 +75,7 @@
                 <li>
                     <a href="/main_aplication" class="nav-item flex items-center p-3 rounded-lg hover:bg-indigo-800/50 transition-colors duration-200 relative" style="--glow-color: rgba(99, 102, 241, 0.6);">
                         <i class="fa-solid fa-cubes w-6 text-center text-lg"></i>
-                        <span class="sidebar-text ml-4 font-medium whitespace-nowrap">Main</span>
+                        <span class="sidebar-text ml-4 font-medium whitespace-nowrap">API_KEY</span>
                         <div class="nav-glow absolute inset-0 rounded-lg -z-10 transition-shadow duration-300"></div>
                     </a>
                 </li>
@@ -135,6 +136,7 @@
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/multi_agent.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/emotion-utils.js') }}"></script>
     <!-- Prism.js for code highlighting -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script>

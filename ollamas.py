@@ -13,6 +13,7 @@ from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from voice_natural import stream_voice
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_ollama import OllamaLLM
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
@@ -293,7 +294,7 @@ Contextual information, potentially including real-time data relevant to the use
         #     temperature=TEMPERATURE,
         # )
         llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
 
         )
         print("LLM Initialized.")

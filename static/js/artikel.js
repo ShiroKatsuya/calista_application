@@ -1,108 +1,288 @@
 // Markdown rendering function
+// Enhanced Markdown to HTML converter with CSS Modules and Responsive Design
 function renderMarkdown(markdownText) {
-    // Escape HTML entities first to prevent unwanted HTML rendering
-    let html = escapeHtml(markdownText);
+    // Split by newlines for paragraphs/sections
+    const lines = markdownText.split('\n');
+    let html = '<div class="article-container article-fade-in">';
+    let inList = false;
+    let inMeta = false;
+    let metaLines = [];
+    let beritaTerkait = false;
+    let inBlockquote = false;
+    let inCodeBlock = false;
+    let codeBlockContent = '';
+    let codeBlockLang = '';
+    let tableOpen = false; // Track if table is open
+    let inOrderedList = false;
+    let listLevel = 0;
+    let headerLevel = 0;
 
-    // Store code blocks and replace with placeholders
-    const codeBlocks = [];
-    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-        const placeholder = `CODE_BLOCK_PLACEHOLDER_${codeBlocks.length}__`;
-        codeBlocks.push({ lang: lang, code: code });
-        return placeholder;
-    });
-
-    // Horizontal Rule
-    html = html.replace(/^[\s\*\-_]{3,}\s*$/gm, '<hr class="my-6 border-t-2 border-gray-600">');
-
-    // Headers (H1-H6)
-    html = html.replace(/^###### (.*)$/gm, '<h6 class="text-sm font-semibold mt-4 mb-2 text-gray-300">$1</h6>');
-    html = html.replace(/^##### (.*)$/gm, '<h5 class="text-base font-semibold mt-4 mb-2 text-gray-300">$1</h5>');
-    html = html.replace(/^#### (.*)$/gm, '<h4 class="text-lg font-semibold mt-4 mb-2 text-gray-300">$1</h4>');
-    html = html.replace(/^### (.*)$/gm, '<h3 class="text-xl font-semibold mt-4 mb-3 text-gray-200">$1</h3>');
-    html = html.replace(/^## (.*)$/gm, '<h2 class="text-2xl font-bold mt-5 mb-3 text-gray-100">$1</h2>');
-    html = html.replace(/^# (.*)$/gm, '<h1 class="text-3xl font-bold mt-6 mb-4 text-white">$1</h1>');
-
-    // Blockquotes
-    html = html.replace(/^> (.*)$/gm, '<blockquote class="border-l-4 border-blue-500 pl-4 py-1 italic text-gray-300 my-4">$1</blockquote>');
-
-    // Lists (unordered and ordered) - more robust handling
-    html = html.replace(/\n(?= *- |^\d+\. )/g, '@@NEWLINE_HOLDER@@');
-    // Unordered lists
-    // Convert markdown list items to <li> tags
-    html = html.replace(/^- (.*)$/gm, '<li class="mb-1">$1</li>');
-
-    // Ordered lists
-    // Convert markdown ordered list items to <li> tags, keeping the number in the text
-    html = html.replace(/^(\d+)\. (.*)$/gm, '<li class="mb-1">$1. $2</li>');
-
-    // Wrap consecutive <li> elements into a single <ul> with list-style: none
-    // This regex looks for one or more lines that start with <li class="mb-1"> and end with </li>.
-    // The \n? allows for a single newline between list items, ensuring blocks are correctly grouped.
-    // This handles both unordered and ordered lists by wrapping them in a single <ul> structure.
-    html = html.replace(/((?:<li class="mb-1">.*?<\/li>\n?)+)/g, (match, listItems) => {
-        // Remove any trailing newlines from the captured listItems block before wrapping
-        listItems = listItems.trim();
-        // Wrap the list items in a <ul> with the desired classes, including list-none
-        return `<ul class="list-none pl-5 mb-2 text-gray-200">${listItems}</ul>`;
-    });
-    html = html.replace(/@@NEWLINE_HOLDER@@/g, '<br>');
-
-    // Links
-    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">$1</a>');
-
-    // Images
-    html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4 shadow-lg">');
-
-    // Tables (basic: assumes header and at least one row, no alignment parsing)
-    html = html.replace(/\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\n\|\s*---+\s*\|\s*---+\s*\|\s*---+\s*\|\n((?:\|\s*.*?\s*\|\s*.*?\s*\|\s*.*?\s*\|\n)+)/g, (match, header1, header2, header3, rows) => {
-        let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full divide-y divide-gray-600 rounded-lg overflow-hidden">';
-        tableHtml += '<thead class="bg-gray-700"><tr class="text-left text-gray-200">';
-        tableHtml += `<th class="py-2 px-4 font-semibold">${header1}</th>`;
-        tableHtml += `<th class="py-2 px-4 font-semibold">${header2}</th>`;
-        tableHtml += `<th class="py-2 px-4 font-semibold">${header3}</th>`;
-        tableHtml += '</tr></thead>';
-        tableHtml += '<tbody class="bg-gray-800 divide-y divide-gray-700">';
-
-        rows.trim().split('\n').forEach(row => {
-            const cols = row.split('|').map(c => c.trim()).filter(c => c);
-            if (cols.length === 3) {
-                tableHtml += '<tr class="text-gray-200">';
-                tableHtml += `<td class="py-2 px-4">${cols[0]}</td>`;
-                tableHtml += `<td class="py-2 px-4">${cols[1]}</td>`;
-                tableHtml += `<td class="py-2 px-4">${cols[2]}</td>`;
-                tableHtml += '</tr>';
-            }
-        });
-
-        tableHtml += '</tbody></table></div>';
-        return tableHtml;
-    });
-
-    // Math Notation (basic: inline $...$ and block $$...$$)
-    html = html.replace(/\$\$(.*?)\$\$/gs, '<div class="math-block text-center my-4 p-3 bg-gray-800 rounded-md overflow-x-auto text-yellow-300 text-sm">$1</div>');
-    html = html.replace(/\$(.*?)\$/g, '<span class="math-inline bg-gray-800 text-yellow-300 px-1 py-0.5 rounded-sm text-sm">$1</span>');
-
-    // Inline code
-    html = html.replace(/`(.*?)`/g, '<code class="bg-gray-700 text-gray-100 px-1 py-0.5 rounded-sm text-sm font-mono">$1</code>');
-
-    // Newlines to <br> (this should be after block-level elements are handled)
-    html = html.replace(/\n/g, '<br>');
-
-    // Basic bold
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // Basic italics
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-    // Restore code blocks
-    for (let i = 0; i < codeBlocks.length; i++) {
-        const placeholder = `CODE_BLOCK_PLACEHOLDER_${i}__`;
-        const block = codeBlocks[i];
-        const languageClass = block.lang ? `language-${block.lang}` : 'language-markup';
-        const codeHtml = `<div class="code-block-container relative bg-gray-800 rounded-lg my-4 overflow-hidden group"><pre class="line-numbers text-sm p-5 overflow-x-auto"><code class="${languageClass}">${block.code}</code></pre></div>`;
-        html = html.replace(placeholder, codeHtml);
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
+    // Helper function to process inline formatting
+    function processInlineFormatting(text) {
+        return text
+            // Bold text
+            .replace(/\*\*(.*?)\*\*/g, '<strong class="article-strong">$1</strong>')
+            // Italic text
+            .replace(/\*(.*?)\*/g, '<em class="article-emphasis">$1</em>')
+            // Inline code
+            .replace(/`(.*?)`/g, '<code class="article-inline-code">$1</code>')
+            // Links
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="article-link">$1</a>')
+            // Highlight important terms
+            .replace(/\b(IMPORTANT|PENTING|KRITIS|URGENT)\b/gi, '<span class="article-highlight">$1</span>')
+            // Highlight numbers and percentages
+            .replace(/(\d+(?:\.\d+)?%?)/g, '<span class="article-number">$1</span>')
+            // Highlight currency
+            .replace(/(Rp\.?\s*\d+(?:,\d{3})*(?:\.\d{2})?)/gi, '<span class="article-currency">$1</span>');
+    }
+
+    lines.forEach((line, idx) => {
+        const trimmed = line.trim();
+        const escapedLine = escapeHtml(trimmed);
+
+        // Markdown Headers (H1-H6)
+        const headerMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
+        if (headerMatch) {
+            const level = headerMatch[1].length;
+            const text = headerMatch[2];
+            const headerClass = `article-h${level}`;
+            html += `<h${level} class="${headerClass}">${processInlineFormatting(escapeHtml(text))}</h${level}>`;
+            return;
+        }
+
+        // Headline (first non-empty line if no markdown headers)
+        if (idx === 0 && trimmed.length > 0 && !trimmed.startsWith('#')) {
+            html += `<h1 class="article-headline">${processInlineFormatting(escapedLine)}</h1>`;
+            return;
+        }
+
+        // Byline (Ditulis oleh ...)
+        if (/^Ditulis oleh/i.test(trimmed)) {
+            html += `<div class="article-byline">
+                <i class="fas fa-user-edit article-byline-icon"></i>
+                <span>${processInlineFormatting(escapedLine)}</span>
+            </div>`;
+            inMeta = true;
+            metaLines = [];
+            return;
+        }
+
+        // Date or A+/A- (meta info)
+        if (inMeta && (/^\d{1,2}\s+\w+\s+\d{4}$/.test(trimmed) || trimmed === 'A+' || trimmed === 'A−' || trimmed === 'A-')) {
+            metaLines.push(trimmed);
+            return;
+        }
+        if (inMeta && trimmed === '') {
+            // End of meta block
+            if (metaLines.length > 0) {
+                html += `<div class="article-meta">`;
+                metaLines.forEach((m, i) => {
+                    if (i > 0) html += '<span class="mx-1">•</span>';
+                    html += `<span class="article-meta-item">${escapeHtml(m)}</span>`;
+                });
+                html += `</div>`;
+            }
+            inMeta = false;
+            metaLines = [];
+            return;
+        }
+
+        // Code blocks
+        if (trimmed.startsWith('```')) {
+            if (!inCodeBlock) {
+                // Start code block
+                codeBlockLang = trimmed.slice(3).trim() || 'text';
+                codeBlockContent = '';
+                inCodeBlock = true;
+            } else {
+                // End code block
+                html += `<div class="article-code-block">
+                    <div class="article-code-header">
+                        <span>${codeBlockLang}</span>
+                        <button class="copy-code-btn text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded" onclick="copyToClipboard(this)">
+                            Copy
+                        </button>
+                    </div>
+                    <div class="article-code-content">
+                        <pre><code>${escapeHtml(codeBlockContent)}</code></pre>
+                    </div>
+                </div>`;
+                inCodeBlock = false;
+                codeBlockContent = '';
+                codeBlockLang = '';
+            }
+            return;
+        }
+
+        if (inCodeBlock) {
+            codeBlockContent += line + '\n';
+            return;
+        }
+
+        // Blockquotes
+        if (trimmed.startsWith('> ')) {
+            if (!inBlockquote) {
+                html += `<blockquote class="article-blockquote">`;
+                inBlockquote = true;
+            }
+            html += `<p>${processInlineFormatting(escapeHtml(trimmed.slice(2)))}</p>`;
+            return;
+        } else if (inBlockquote && trimmed === '') {
+            html += `</blockquote>`;
+            inBlockquote = false;
+            return;
+        }
+
+        // "Poin Penting :" or similar
+        if (/^Poin Penting\s*:/.test(trimmed)) {
+            html += `<div class="article-section-title">
+                <i class="fas fa-star"></i>
+                Poin Penting
+            </div>`;
+            return;
+        }
+
+        // "KABARBURSA.COM" or similar source
+        if (/^[A-Z0-9\.\-]+$/.test(trimmed) && trimmed.length > 5 && trimmed.length < 30) {
+            html += `<div class="article-source">${escapeHtml(trimmed)}</div>`;
+            return;
+        }
+
+        // "Berita Terkait"
+        if (/^Berita Terkait/i.test(trimmed)) {
+            beritaTerkait = true;
+            html += `<div class="article-section-title">
+                <i class="fas fa-newspaper"></i>
+                Berita Terkait
+            </div>`;
+            return;
+        }
+
+        // Tables (markdown table support)
+        if (trimmed.includes('|') && trimmed.split('|').length > 2) {
+            const cells = trimmed.split('|').map(cell => cell.trim()).filter(cell => cell);
+            if (cells.length > 1) {
+                // Check if this is a separator row (contains only dashes and colons)
+                const isSeparator = /^[\s\-\|:]+$/.test(trimmed);
+                
+                if (!tableOpen && !isSeparator) {
+                    // Start new table
+                    html += `<div class="article-table-wrapper">
+                        <table class="article-table">
+                            <thead><tr>`;
+                    cells.forEach(cell => {
+                        html += `<th>${processInlineFormatting(escapeHtml(cell))}</th>`;
+                    });
+                    html += `</tr></thead><tbody>`;
+                    tableOpen = true;
+                } else if (tableOpen && !isSeparator) {
+                    // Add data row
+                    html += '<tr>';
+                    cells.forEach(cell => {
+                        html += `<td>${processInlineFormatting(escapeHtml(cell))}</td>`;
+                    });
+                    html += '</tr>';
+                }
+            }
+            return;
+        } else if (tableOpen && trimmed === '') {
+            // Close table if a blank line is found after table rows
+            html += `</tbody></table></div>`;
+            tableOpen = false;
+            return;
+        }
+
+        // Unordered Lists (bullet points)
+        if (/^(–|-|\u2022|\*)\s+(.+)$/.test(trimmed)) {
+            if (!inList) {
+                html += `<ul class="article-list">`;
+                inList = true;
+                inOrderedList = false;
+            }
+            // Remove leading dash/bullet
+            let item = trimmed.replace(/^(–|-|\u2022|\*)\s+/, '');
+            html += `<li class="article-list-item">${processInlineFormatting(escapeHtml(item))}</li>`;
+            return;
+        }
+
+        // Ordered Lists (numbered)
+        const orderedListMatch = trimmed.match(/^(\d+)\.\s+(.+)$/);
+        if (orderedListMatch) {
+            if (!inOrderedList) {
+                html += `<ol class="article-ordered-list">`;
+                inOrderedList = true;
+                inList = false;
+            }
+            const item = orderedListMatch[2];
+            html += `<li class="article-ordered-list-item">${processInlineFormatting(escapeHtml(item))}</li>`;
+            return;
+        }
+
+        // Close lists when empty line is encountered
+        if ((inList || inOrderedList) && trimmed === '') {
+            if (inList) {
+                html += `</ul>`;
+                inList = false;
+            }
+            if (inOrderedList) {
+                html += `</ol>`;
+                inOrderedList = false;
+            }
+            beritaTerkait = false;
+            return;
+        }
+
+        // Images (markdown format)
+        const imageMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+        if (imageMatch) {
+            const alt = imageMatch[1];
+            const src = imageMatch[2];
+            html += `<div class="article-image-container">
+                <img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" class="article-image" loading="lazy">
+                ${alt ? `<div class="article-image-caption">${escapeHtml(alt)}</div>` : ''}
+            </div>`;
+            return;
+        }
+
+        // Image/photo credit
+        if (/^Foto\s*:/.test(trimmed)) {
+            html += `<div class="article-image-credit">${escapeHtml(trimmed)}</div>`;
+            return;
+        }
+
+        // Horizontal rules
+        if (/^[\s\*\-_]{3,}\s*$/.test(trimmed)) {
+            html += `<hr class="article-divider">`;
+            return;
+        }
+
+        // Section/paragraph
+        if (trimmed.length > 0) {
+            // Check if this is a special section that should be highlighted
+            if (/^(Poin|Point|Key|Important|Penting|Kunci)/i.test(trimmed)) {
+                html += `<p class="article-paragraph article-highlight-paragraph">${processInlineFormatting(escapedLine)}</p>`;
+            } else {
+                html += `<p class="article-paragraph">${processInlineFormatting(escapedLine)}</p>`;
+            }
+        }
+    });
+
+    // Close any open elements
+    if (inList) html += `</ul>`;
+    if (inOrderedList) html += `</ol>`;
+    if (inBlockquote) html += `</blockquote>`;
+    if (tableOpen) {
+        html += `</tbody></table></div>`;
+    }
+
+    html += '</div>';
     return html;
 }
 
@@ -249,28 +429,66 @@ document.addEventListener('DOMContentLoaded', function() {
             previewPanel.classList.remove('hidden');
             const previewResultContent = document.getElementById('preview-result-content');
             if (previewResultContent) {
-                // Helper: parse the plain text response into styled blocks
+                // Enhanced Article Renderer with CSS Modules and Responsive Design
                 function renderStyledArticle(text) {
                     // Split by double newlines for paragraphs/sections
                     const lines = text.split('\n');
-                    let html = '';
+                    let html = '<div class="article-container article-fade-in">';
                     let inList = false;
                     let inMeta = false;
                     let metaLines = [];
                     let beritaTerkait = false;
+                    let inBlockquote = false;
+                    let inCodeBlock = false;
+                    let codeBlockContent = '';
+                    let codeBlockLang = '';
+
+                    // Helper function to escape HTML
+                    function escapeHtml(text) {
+                        const div = document.createElement('div');
+                        div.textContent = text;
+                        return div.innerHTML;
+                    }
+
+                                         // Helper function to process inline formatting
+                     function processInlineFormatting(text) {
+                         return text
+                             // Bold text (handle nested formatting)
+                             .replace(/\*\*(.*?)\*\*/g, '<strong class="article-strong">$1</strong>')
+                             // Italic text (handle nested formatting)
+                             .replace(/\*(.*?)\*/g, '<em class="article-emphasis">$1</em>')
+                             // Inline code
+                             .replace(/`(.*?)`/g, '<code class="article-inline-code">$1</code>')
+                             // Links
+                             .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="article-link">$1</a>')
+                             // Highlight important terms
+                             .replace(/\b(IMPORTANT|PENTING|KRITIS|URGENT|PENTING|KRITIS|URGENT)\b/gi, '<span class="article-highlight">$1</span>')
+                             // Highlight numbers and percentages
+                             .replace(/(\d+(?:\.\d+)?%?)/g, '<span class="article-number">$1</span>')
+                             // Highlight currency
+                             .replace(/(Rp\.?\s*\d+(?:,\d{3})*(?:\.\d{2})?)/gi, '<span class="article-currency">$1</span>')
+                             // Highlight email addresses
+                             .replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, '<a href="mailto:$1" class="article-link">$1</a>')
+                             // Highlight URLs (basic)
+                             .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="article-link">$1</a>');
+                     }
 
                     lines.forEach((line, idx) => {
                         const trimmed = line.trim();
+                        const escapedLine = escapeHtml(trimmed);
 
                         // Headline (first non-empty line)
                         if (idx === 0 && trimmed.length > 0) {
-                            html += `<h1 class="text-2xl font-bold mb-2 text-white">${trimmed}</h1>`;
+                            html += `<h1 class="article-headline">${processInlineFormatting(escapedLine)}</h1>`;
                             return;
                         }
 
                         // Byline (Ditulis oleh ...)
                         if (/^Ditulis oleh/i.test(trimmed)) {
-                            html += `<div class="flex items-center gap-2 text-sm text-gray-400 mb-1 mt-2"><i class="fas fa-user-edit"></i> <span>${trimmed}</span></div>`;
+                            html += `<div class="article-byline">
+                                <i class="fas fa-user-edit article-byline-icon"></i>
+                                <span>${processInlineFormatting(escapedLine)}</span>
+                            </div>`;
                             inMeta = true;
                             metaLines = [];
                             return;
@@ -284,10 +502,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (inMeta && trimmed === '') {
                             // End of meta block
                             if (metaLines.length > 0) {
-                                html += `<div class="flex items-center gap-2 text-xs text-gray-500 mb-3">`;
+                                html += `<div class="article-meta">`;
                                 metaLines.forEach((m, i) => {
-                                    // if (i > 0) html += '<span class="mx-1">•</span>';
-                                    // html += `<span>${m}</span>`;
+                                    if (i > 0) html += '<span class="mx-1">•</span>';
+                                    html += `<span class="article-meta-item">${escapeHtml(m)}</span>`;
                                 });
                                 html += `</div>`;
                             }
@@ -296,34 +514,109 @@ document.addEventListener('DOMContentLoaded', function() {
                             return;
                         }
 
+                        // Code blocks
+                        if (trimmed.startsWith('```')) {
+                            if (!inCodeBlock) {
+                                // Start code block
+                                codeBlockLang = trimmed.slice(3).trim() || 'text';
+                                codeBlockContent = '';
+                                inCodeBlock = true;
+                            } else {
+                                // End code block
+                                html += `<div class="article-code-block">
+                                    <div class="article-code-header">
+                                        <span>${codeBlockLang}</span>
+                                        <button class="copy-code-btn text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded" onclick="copyToClipboard(this)">
+                                            Copy
+                                        </button>
+                                    </div>
+                                    <div class="article-code-content">
+                                        <pre><code>${escapeHtml(codeBlockContent)}</code></pre>
+                                    </div>
+                                </div>`;
+                                inCodeBlock = false;
+                                codeBlockContent = '';
+                                codeBlockLang = '';
+                            }
+                            return;
+                        }
+
+                        if (inCodeBlock) {
+                            codeBlockContent += line + '\n';
+                            return;
+                        }
+
+                        // Blockquotes
+                        if (trimmed.startsWith('> ')) {
+                            if (!inBlockquote) {
+                                html += `<blockquote class="article-blockquote">`;
+                                inBlockquote = true;
+                            }
+                            html += `<p>${processInlineFormatting(escapeHtml(trimmed.slice(2)))}</p>`;
+                            return;
+                        } else if (inBlockquote && trimmed === '') {
+                            html += `</blockquote>`;
+                            inBlockquote = false;
+                            return;
+                        }
+
                         // "Poin Penting :" or similar
                         if (/^Poin Penting\s*:/.test(trimmed)) {
-                            html += `<div class="mt-4 mb-2 text-base font-semibold text-indigo-400">Poin Penting</div>`;
+                            html += `<div class="article-section-title">
+                                <i class="fas fa-star"></i>
+                                Poin Penting
+                            </div>`;
                             return;
                         }
 
                         // "KABARBURSA.COM" or similar source
                         if (/^[A-Z0-9\.\-]+$/.test(trimmed) && trimmed.length > 5 && trimmed.length < 30) {
-                            html += `<div class="text-xs font-bold text-blue-400 mb-2">${trimmed}</div>`;
+                            html += `<div class="article-source">${escapeHtml(trimmed)}</div>`;
                             return;
                         }
 
                         // "Berita Terkait"
                         if (/^Berita Terkait/i.test(trimmed)) {
                             beritaTerkait = true;
-                            html += `<div class="mt-6 mb-2 text-base font-semibold text-indigo-400">Berita Terkait</div>`;
+                            html += `<div class="article-section-title">
+                                <i class="fas fa-newspaper"></i>
+                                Berita Terkait
+                            </div>`;
                             return;
                         }
 
-                        // List points (after "Poin Penting" or "Berita Terkait")
-                        if ((beritaTerkait || /^(–|-|\u2022)/.test(trimmed)) && trimmed.length > 2) {
+                        // Tables (basic markdown table support)
+                        if (trimmed.includes('|') && trimmed.split('|').length > 2) {
+                            const cells = trimmed.split('|').map(cell => cell.trim()).filter(cell => cell);
+                            if (cells.length > 1) {
+                                if (!html.includes('<table class="article-table">')) {
+                                    html += `<div class="article-table-wrapper">
+                                        <table class="article-table">
+                                            <thead><tr>`;
+                                    cells.forEach(cell => {
+                                        html += `<th>${processInlineFormatting(escapeHtml(cell))}</th>`;
+                                    });
+                                    html += `</tr></thead><tbody>`;
+                                } else {
+                                    html += '<tr>';
+                                    cells.forEach(cell => {
+                                        html += `<td>${processInlineFormatting(escapeHtml(cell))}</td>`;
+                                    });
+                                    html += '</tr>';
+                                }
+                            }
+                            return;
+                        }
+
+                        // List points (after "Poin Penting" or "Berita Terkait" or with bullets)
+                        if ((beritaTerkait || /^(–|-|\u2022|\*)/.test(trimmed)) && trimmed.length > 2) {
                             if (!inList) {
-                                html += `<ul class="list-disc pl-6 mb-2 text-gray-200">`;
+                                html += `<ul class="article-list">`;
                                 inList = true;
                             }
                             // Remove leading dash/bullet
-                            let item = trimmed.replace(/^(–|-|\u2022)\s*/, '');
-                            html += `<li class="mb-1">${item}</li>`;
+                            let item = trimmed.replace(/^(–|-|\u2022|\*)\s*/, '');
+                            html += `<li class="article-list-item">${processInlineFormatting(escapeHtml(item))}</li>`;
                             return;
                         } else if (inList && trimmed === '') {
                             html += `</ul>`;
@@ -334,46 +627,80 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         // Image/photo credit
                         if (/^Foto\s*:/.test(trimmed)) {
-                            html += `<div class="text-xs italic text-gray-500 mb-2">${trimmed}</div>`;
+                            html += `<div class="article-image-credit">${escapeHtml(trimmed)}</div>`;
+                            return;
+                        }
+
+                        // Horizontal rules
+                        if (/^[\s\*\-_]{3,}\s*$/.test(trimmed)) {
+                            html += `<hr class="article-divider">`;
                             return;
                         }
 
                         // Section/paragraph
                         if (trimmed.length > 0) {
-                            html += `<p class="mb-3 text-gray-200 leading-relaxed">${trimmed}</p>`;
+                            html += `<p class="article-paragraph">${processInlineFormatting(escapedLine)}</p>`;
                         }
                     });
+
+                    // Close any open elements
                     if (inList) html += `</ul>`;
+                    if (inBlockquote) html += `</blockquote>`;
+                    if (html.includes('<table class="article-table">')) {
+                        html += `</tbody></table></div>`;
+                    }
+
+                    html += '</div>';
                     return html;
+                }
+
+                // Copy to clipboard function
+                function copyToClipboard(button) {
+                    const codeBlock = button.closest('.article-code-block');
+                    const code = codeBlock.querySelector('code').textContent;
+                    
+                    navigator.clipboard.writeText(code).then(() => {
+                        button.textContent = 'Copied!';
+                        setTimeout(() => {
+                            button.textContent = 'Copy';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy text:', err);
+                        button.textContent = 'Error';
+                        setTimeout(() => {
+                            button.textContent = 'Copy';
+                        }, 2000);
+                    });
                 }
 
                 if (data.result && data.result.status === 'success' && data.result.full_text) {
                     previewResultContent.innerHTML = `
-                        <div>
-                          <h2 class="text-lg font-bold mb-3 text-indigo-300 flex items-center gap-2">
+                        <div class="article-preview-container">
+                          <h2 class="text-lg font-bold mb-4 text-indigo-300 flex items-center gap-2">
                             <i class="fas fa-eye"></i> Preview Artikel
                           </h2>
-                          <div class="bg-gray-900/80 rounded-xl p-4 text-gray-200 overflow-x-auto whitespace-normal prose prose-invert max-w-none">
+                          <div class="bg-gray-900/80 rounded-xl p-6 text-gray-200 overflow-x-auto whitespace-normal max-w-none border border-gray-700/50 shadow-xl">
                             ${renderStyledArticle(data.result.full_text)}
                           </div>
                         </div>
                     `;
                 } else if (data.result && data.result.summary) {
                     previewResultContent.innerHTML = `
-                        <div>
-                          <h2 class="text-lg font-bold mb-3 text-indigo-300 flex items-center gap-2">
+                        <div class="article-preview-container">
+                          <h2 class="text-lg font-bold mb-4 text-indigo-300 flex items-center gap-2">
                             <i class="fas fa-list-alt"></i> Ringkasan Artikel
                           </h2>
-                          <div class="bg-gray-900/80 rounded-xl p-4 text-gray-200 overflow-x-auto whitespace-normal prose prose-invert max-w-none">
+                          <div class="bg-gray-900/80 rounded-xl p-6 text-gray-200 overflow-x-auto whitespace-normal max-w-none border border-gray-700/50 shadow-xl">
                             ${renderStyledArticle(data.result.summary)}
                           </div>
                         </div>
                     `;
                 } else {
                     previewResultContent.innerHTML = `
-                        <p class="text-center text-gray-400 py-8">
-                          Tidak ada data hasil proses artikel untuk ditampilkan.
-                        </p>
+                        <div class="text-center text-gray-400 py-12">
+                          <i class="fas fa-file-alt text-4xl mb-4 opacity-50"></i>
+                          <p class="text-lg">Tidak ada data hasil proses artikel untuk ditampilkan.</p>
+                        </div>
                     `;
                 }
             }
@@ -442,7 +769,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Replace the existing content with the new response
         contentArea.innerHTML = `
-            <div class="space-y-4 text-gray-300 leading-relaxed">
+            <div class="space-y-4 text-gray-300 leading-relaxed article-fade-in">
                 ${renderedContent}
             </div>
         `;
@@ -454,6 +781,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof Prism !== 'undefined') {
             Prism.highlightAllUnder(contentArea);
         }
+        
+        // Add smooth scrolling to the content
+        contentArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     
     function updateSourceCards(urls) {

@@ -16,3 +16,4 @@ vercel.json
 Dockerfile
 berkas
 application\silero_tts\silero_models\v3_en_en.pt
+node_modules

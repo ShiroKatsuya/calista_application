@@ -49,106 +49,150 @@ $(document).ready(function() {
         });
     }
     
-    // Advanced Markdown to HTML converter with Tailwind classes (same as multi_agent.js)
-    function renderMarkdown(markdownText) {
-        // Escape HTML entities first to prevent unwanted HTML rendering
-        let html = escapeHtml(markdownText);
 
-        // Store code blocks and replace with placeholders
-        const codeBlocks = [];
-        html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-            const placeholder = `CODE_BLOCK_PLACEHOLDER_${codeBlocks.length}__`;
-            codeBlocks.push({ lang: lang, code: code });
-            return placeholder;
+// Advanced Markdown to HTML converter with CSS Modules
+function renderMarkdown(markdownText) {
+    // 1. First, handle <think> blocks.
+    // We'll replace them with placeholders, and for their content,
+    // we'll use the _renderThinkContentMarkdown helper.
+    const thinkBlockData = [];
+    const tempHtml = markdownText.replace(/<think>([\s\S]*?)<\/think>/g, (match, content) => {
+        const placeholder = `__THINK_BLOCK_${thinkBlockData.length}__`;
+        thinkBlockData.push(content);
+        return placeholder;
+    });
+
+    // 2. Now, escape HTML for the rest of the text that's not part of <think>
+    let html = escapeHtml(tempHtml);
+
+    // Store code blocks and replace with placeholders
+    const codeBlocks = [];
+    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+        const placeholder = `CODE_BLOCK_PLACEHOLDER_${codeBlocks.length}__`;
+        codeBlocks.push({ lang: lang, code: code });
+        return placeholder;
+    });
+
+    // Horizontal Rule
+    html = html.replace(/^[\s\*\-_]{3,}\s*$/gm, '<hr class="markdown-hr">');
+
+    // Headers (H1-H6) with CSS Module classes
+    html = html.replace(/^###### (.*)$/gm, '<h6 class="markdown-h6">$1</h6>');
+    html = html.replace(/^##### (.*)$/gm, '<h5 class="markdown-h5">$1</h5>');
+    html = html.replace(/^#### (.*)$/gm, '<h4 class="markdown-h4">$1</h4>');
+    html = html.replace(/^### (.*)$/gm, '<h3 class="markdown-h3">$1</h3>');
+    html = html.replace(/^## (.*)$/gm, '<h2 class="markdown-h2">$1</h2>');
+    html = html.replace(/^# (.*)$/gm, '<h1 class="markdown-h1">$1</h1>');
+
+    // Blockquotes
+    html = html.replace(/^> (.*)$/gm, '<blockquote class="markdown-blockquote"><p class="markdown-p">$1</p></blockquote>');
+
+    // Lists (unordered and ordered) - more robust handling
+    html = html.replace(/\n(?= *- |^\d+\. )/g, '@@NEWLINE_HOLDER@@');
+    // Unordered lists
+    html = html.replace(/^- (.*)$/gm, '<li class="markdown-li">$1</li>');
+    // Ordered lists
+    html = html.replace(/^(\d+)\. (.*)$/gm, '<li class="markdown-li">$1. $2</li>');
+    // Wrap consecutive <li> elements into a single <ul> with CSS Module classes
+    html = html.replace(/((?:<li class="markdown-li">.*?<\/li>\n?)+)/g, (match, listItems) => {
+        listItems = listItems.trim();
+        return `<ul class="markdown-ul">${listItems}</ul>`;
+    });
+    html = html.replace(/@@NEWLINE_HOLDER@@/g, '<br>');
+
+    // Links
+    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="markdown-a">$1</a>');
+
+    // Images
+    html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="markdown-img">');
+
+    // Enhanced Table parsing with support for various table formats
+    html = html.replace(/((?:\|.*\|(?:\r?\n|\r)?)+)/g, (match) => {
+        const lines = match.trim().split(/\r?\n/);
+        if (lines.length < 2) return match; // Need at least header and separator
+        
+        // Check if it's a proper markdown table (has separator line with dashes)
+        const hasSeparator = lines.some(line => 
+            line.trim().match(/^\|[\s\-:|]+\|$/)
+        );
+        
+        if (!hasSeparator) return match; // Not a table
+        
+        let tableHtml = '<div class="markdown-table-wrapper"><table class="markdown-table">';
+        let inHeader = true;
+        let headerAdded = false;
+        
+        lines.forEach((line, index) => {
+            line = line.trim();
+            if (!line.startsWith('|') || !line.endsWith('|')) return;
+            
+            // Skip separator lines (lines with only dashes, colons, and pipes)
+            if (line.match(/^\|[\s\-:|]+\|$/)) {
+                inHeader = false;
+                return;
+            }
+            
+            // Parse cells
+            const cells = line.split('|').slice(1, -1).map(cell => cell.trim());
+            
+            if (inHeader && !headerAdded) {
+                tableHtml += '<thead><tr>';
+                cells.forEach(cell => {
+                    tableHtml += `<th>${escapeHtml(cell)}</th>`;
+                });
+                tableHtml += '</tr></thead><tbody>';
+                headerAdded = true;
+            } else if (!inHeader) {
+                tableHtml += '<tr>';
+                cells.forEach(cell => {
+                    tableHtml += `<td>${escapeHtml(cell)}</td>`;
+                });
+                tableHtml += '</tr>';
+            }
         });
+        
+        tableHtml += '</tbody></table></div>';
+        return tableHtml;
+    });
 
-        // Horizontal Rule
-        html = html.replace(/^[\s\*\-_]{3,}\s*$/gm, '<hr class="my-6 border-t-2 border-gray-600">');
+    // Math Notation (basic: inline $...$ and block $$...$$)
+    html = html.replace(/\$\$(.*?)\$\$/gs, '<div class="markdown-math-block">$1</div>');
+    html = html.replace(/\$(.*?)\$/g, '<span class="markdown-math-inline">$1</span>');
 
-        // Headers (H1-H6)
-        html = html.replace(/^###### (.*)$/gm, '<h6 class="text-sm font-semibold mt-4 mb-2 text-gray-300">$1</h6>');
-        html = html.replace(/^##### (.*)$/gm, '<h5 class="text-base font-semibold mt-4 mb-2 text-gray-300">$1</h5>');
-        html = html.replace(/^#### (.*)$/gm, '<h4 class="text-lg font-semibold mt-4 mb-2 text-gray-300">$1</h4>');
-        html = html.replace(/^### (.*)$/gm, '<h3 class="text-xl font-semibold mt-4 mb-3 text-gray-200">$1</h3>');
-        html = html.replace(/^## (.*)$/gm, '<h2 class="text-2xl font-bold mt-5 mb-3 text-gray-100">$1</h2>');
-        html = html.replace(/^# (.*)$/gm, '<h1 class="text-3xl font-bold mt-6 mb-4 text-white">$1</h1>');
+    // Inline code
+    html = html.replace(/`(.*?)`/g, '<code class="markdown-code-inline">$1</code>');
 
-        // Blockquotes
-        html = html.replace(/^> (.*)$/gm, '<blockquote class="border-l-4 border-blue-500 pl-4 py-1 italic text-gray-300 my-4">$1</blockquote>');
+    // Newlines to <br> (this should be after block-level elements are handled)
+    html = html.replace(/\n/g, '<br>');
 
-        // Lists (unordered and ordered) - more robust handling
-        html = html.replace(/\n(?= *- |^\d+\. )/g, '@@NEWLINE_HOLDER@@');
-        // Unordered lists
-        html = html.replace(/^- (.*)$/gm, '<li class="mb-1">$1</li>');
+    // Basic bold
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="markdown-strong">$1</strong>');
 
-        // Ordered lists
-        html = html.replace(/^(\d+)\. (.*)$/gm, '<li class="mb-1">$1. $2</li>');
+    // Basic italics
+    html = html.replace(/\*(.*?)\*/g, '<em class="markdown-em">$1</em>');
 
-        // Wrap consecutive <li> elements into a single <ul>
-        html = html.replace(/((?:<li class="mb-1">.*?<\/li>\n?)+)/g, (match, listItems) => {
-            listItems = listItems.trim();
-            return `<ul class="list-none pl-5 mb-2 text-gray-200">${listItems}</ul>`;
-        });
-        html = html.replace(/@@NEWLINE_HOLDER@@/g, '<br>');
-
-        // Links
-        html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">$1</a>');
-
-        // Images
-        html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4 shadow-lg">');
-
-        // Tables (basic: assumes header and at least one row, no alignment parsing)
-        html = html.replace(/\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\n\|\s*---+\s*\|\s*---+\s*\|\s*---+\s*\|\n((?:\|\s*.*?\s*\|\s*.*?\s*\|\s*.*?\s*\|\n)+)/g, (match, header1, header2, header3, rows) => {
-            let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full divide-y divide-gray-600 rounded-lg overflow-hidden">';
-            tableHtml += '<thead class="bg-gray-700"><tr class="text-left text-gray-200">';
-            tableHtml += `<th class="py-2 px-4 font-semibold">${header1}</th>`;
-            tableHtml += `<th class="py-2 px-4 font-semibold">${header2}</th>`;
-            tableHtml += `<th class="py-2 px-4 font-semibold">${header3}</th>`;
-            tableHtml += '</tr></thead>';
-            tableHtml += '<tbody class="bg-gray-800 divide-y divide-gray-700">';
-
-            rows.trim().split('\n').forEach(row => {
-                const cols = row.split('|').map(c => c.trim()).filter(c => c);
-                if (cols.length === 3) {
-                    tableHtml += '<tr class="text-gray-200">';
-                    tableHtml += `<td class="py-2 px-4">${cols[0]}</td>`;
-                    tableHtml += `<td class="py-2 px-4">${cols[1]}</td>`;
-                    tableHtml += `<td class="py-2 px-4">${cols[2]}</td>`;
-                    tableHtml += '</tr>';
-                }
-            });
-
-            tableHtml += '</tbody></table></div>';
-            return tableHtml;
-        });
-
-        // Math Notation (basic: inline $...$ and block $$...$$)
-        html = html.replace(/\$\$(.*?)\$\$/gs, '<div class="math-block text-center my-4 p-3 bg-gray-800 rounded-md overflow-x-auto text-yellow-300 text-sm">$1</div>');
-        html = html.replace(/\$(.*?)\$/g, '<span class="math-inline bg-gray-800 text-yellow-300 px-1 py-0.5 rounded-sm text-sm">$1</span>');
-
-        // Inline code
-        html = html.replace(/`(.*?)`/g, '<code class="bg-gray-700 text-gray-100 px-1 py-0.5 rounded-sm text-sm font-mono">$1</code>');
-
-        // Newlines to <br> (this should be after block-level elements are handled)
-        html = html.replace(/\n/g, '<br>');
-
-        // Basic bold
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-        // Basic italics
-        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-        // Restore code blocks
-        for (let i = 0; i < codeBlocks.length; i++) {
-            const placeholder = `CODE_BLOCK_PLACEHOLDER_${i}__`;
-            const block = codeBlocks[i];
-            const languageClass = block.lang ? `language-${block.lang}` : 'language-markup';
-            const codeHtml = `<div class="code-block-container relative"><pre id="code-block-wrapper" class="line-numbers text-sm p-5 overflow-x-auto"><code id="code-content" class="${languageClass}">${block.code}</code></pre></div>`;
-            html = html.replace(placeholder, codeHtml);
-        }
-
-        return html;
+    // Restore code blocks
+    for (let i = 0; i < codeBlocks.length; i++) {
+        const placeholder = `CODE_BLOCK_PLACEHOLDER_${i}__`;
+        const block = codeBlocks[i];
+        const languageClass = block.lang ? `language-${block.lang}` : 'language-markup';
+        // Don't escape code content - we want to display the actual characters
+        const codeHtml = `<pre class="markdown-pre"><code class="markdown-code ${languageClass}">${block.code}</code></pre>`;
+        html = html.replace(placeholder, codeHtml);
     }
+
+    // 4. Finally, restore the <think> blocks and recursively render their content
+    for (let i = 0; i < thinkBlockData.length; i++) {
+        const placeholder = `__THINK_BLOCK_${i}__`;
+        // Recursively render markdown for the content inside <think>
+        const renderedThinkContent = _renderThinkContentMarkdown(thinkBlockData[i]);
+        const thinkHtml = `<div class="markdown-thought-process"><details><summary class="markdown-thought-summary">Thought Process</summary><div class="markdown-thought-content">${renderedThinkContent}</div></details></div>`;
+        html = html.replace(placeholder, thinkHtml);
+    }
+
+    // Wrap the entire content in a markdown container
+    return `<div class="markdown-container markdown-fade-in">${html}</div>`;
+}
 
     // Helper function to escape HTML special characters
     function escapeHtml(unsafe) {

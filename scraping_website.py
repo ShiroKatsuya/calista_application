@@ -130,7 +130,7 @@ def process_article_with_fallback(url: str, agent_executor=None) -> dict:
         dict: Contains the processing result and method used
     """
     if agent_executor is None:
-        agent_executor = emilia_tool_executor
+        agent_executor = Implementasi_tool_executor
     
     result = {
         'original_url': url,
@@ -152,7 +152,7 @@ def process_article_with_fallback(url: str, agent_executor=None) -> dict:
             # Process with no-tools agent to avoid google_search
             user_question = f"Ringkaslah artikel berikut dan berikan fakta terbaru terkait topik ini:\n{article_text}\n"
             
-            agent_response = emilia_no_tools_agent.invoke({
+            agent_response = Implementasi_no_tools_agent.invoke({
                 "input": user_question, 
                 "chat_history": []
             })
@@ -462,21 +462,21 @@ from langchain_ollama import ChatOllama
 
 
 # Set up the Gemini model with tool-calling capability
-# model_emilia = ChatOllama(model="llama3-2.3b:latest")
+# model_Implementasi = ChatOllama(model="llama3-2.3b:latest")
 
-model_emilia = ChatGoogleGenerativeAI(
+model_Implementasi = ChatGoogleGenerativeAI(
     model="gemini-2.0-flash", 
 )
 
 # Prompt for when we have successful scraping (no tools needed)
-emilia_no_tools_prompt = ChatPromptTemplate.from_messages([
+Implementasi_no_tools_prompt = ChatPromptTemplate.from_messages([
    
     MessagesPlaceholder(variable_name="chat_history"),
     ("user", "{input}")
 ])
 
 # Prompt for fallback search (with tools)
-emilia_tool_prompt = ChatPromptTemplate.from_messages([
+Implementasi_tool_prompt = ChatPromptTemplate.from_messages([
 
     MessagesPlaceholder(variable_name="chat_history"),
     ("user", "{input}"),
@@ -484,12 +484,12 @@ emilia_tool_prompt = ChatPromptTemplate.from_messages([
 ])
 
 # Agent for successful scraping (no tools)
-emilia_no_tools_agent = emilia_no_tools_prompt | model_emilia
+Implementasi_no_tools_agent = Implementasi_no_tools_prompt | model_Implementasi
 
 # Agent for fallback search (with tools)
-emilia_tool_agent = create_tool_calling_agent(model_emilia, web_tools, emilia_tool_prompt)
-emilia_tool_executor = AgentExecutor(
-    agent=emilia_tool_agent, 
+Implementasi_tool_agent = create_tool_calling_agent(model_Implementasi, web_tools, Implementasi_tool_prompt)
+Implementasi_tool_executor = AgentExecutor(
+    agent=Implementasi_tool_agent, 
     tools=web_tools, 
     verbose=True,
     max_iterations=5,

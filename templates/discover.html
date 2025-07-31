@@ -29,7 +29,7 @@
                 <h1 class="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Rekomendasi Berita Oleh [Ganymede]</h1>
                 <p class="text-lg text-gray-400 mt-1">Here's what's new and trending for you.</p>
             </div>
-            <button class="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-full text-sm font-semibold text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-300">
+            <button class="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-full text-sm font-semibold text-white hover:bg-gray-700 hover:text-white transition-colors duration-300">
                 <i class="fa-solid fa-sliders text-cyan-400"></i>
                 <span>Customize</span>
             </button>
@@ -72,7 +72,7 @@
                 <h2 class="text-2xl lg:text-3xl font-bold leading-tight clamp-3">
                     <a href="{{ url_for('article_summary', link=articles[0].link, title=articles[0].title) }}" target="_blank">{{ articles[0].title }}</a>
                 </h2>
-                <p class="mt-2 text-gray-300 clamp-2 hidden sm:block">
+                <p class="mt-2 text-white clamp-2 hidden sm:block">
                     {{ articles[0].pub_date }}
                 </p>
                 <div class="flex items-center text-sm mt-4 text-gray-400 font-medium">
