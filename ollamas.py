@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from datetime import datetime
 from uuid import uuid4
 from langchain.memory.vectorstore_token_buffer_memory import ConversationVectorStoreTokenBufferMemory
@@ -350,40 +351,83 @@ User Query:
         )
         print("RunnableWithMessageHistory Created with Context Awareness.")
 
-        # --- 6. Interaction Loop (Streaming) --- Now: get full text, then yield once
+        # --- 6. Interaction Loop (Streaming) --- Stream LLM response and process audio immediately
         print(f"Using session ID: {_current_session_id}")
         print(f"Input sent to Ollama chain: {input_for_ollama[:200]}...")
 
-        # Instead of streaming and chunk processing, just get the full response
-        response = chain_with_history.invoke(
+        # Stream the LLM response and process audio chunks immediately with optimizations
+        current_text_buffer = ""
+        sentence_end_pattern = re.compile(r'[.!?]\s*')
+        pending_sentences = []  # Queue for sentences to process
+        processing_sentences = set()  # Track sentences being processed
+        
+        # Use stream() instead of invoke() to get streaming response
+        for chunk in chain_with_history.stream(
             {"input": input_for_ollama},
             config={"configurable": {"session_id": _current_session_id}}
-        )
-
-        # The response may be a string or an object with .content or .message
-        if isinstance(response, str):
-            full_response_text = response
-        elif hasattr(response, 'content'):
-            full_response_text = response.content
-        elif isinstance(response, dict):
-            if 'message' in response and 'content' in response['message']:
-                full_response_text = response['message']['content']
-            elif 'response' in response:
-                full_response_text = response['response']
+        ):
+            # Extract text content from chunk
+            chunk_text = ""
+            if isinstance(chunk, str):
+                chunk_text = chunk
+            elif hasattr(chunk, 'content'):
+                chunk_text = chunk.content
+            elif isinstance(chunk, dict):
+                if 'message' in chunk and 'content' in chunk['message']:
+                    chunk_text = chunk['message']['content']
+                elif 'response' in chunk:
+                    chunk_text = chunk['response']
+                else:
+                    chunk_text = str(chunk)
             else:
-                full_response_text = str(response)
-        else:
-            print(f"\n[Debug] Unexpected response type: {type(response)}, {response}")
-            full_response_text = str(response)
-
-        cleaned_text = full_response_text.replace('*', '')
-
-        # Send the full text to stream_voice and yield the result(s)
-        for audio_bytes, subtitle in stream_voice(cleaned_text.strip()):
-            yield audio_bytes, subtitle
+                chunk_text = str(chunk)
+            
+            if chunk_text:
+                current_text_buffer += chunk_text
+                
+                # Check if we have complete sentences to process
+                sentences = sentence_end_pattern.split(current_text_buffer)
+                if len(sentences) > 1:  # We have at least one complete sentence
+                    # Process all complete sentences except the last one (which might be incomplete)
+                    for i in range(len(sentences) - 1):
+                        sentence = sentences[i].strip()
+                        if sentence:
+                            # Clean the sentence
+                            cleaned_sentence = sentence.replace('*', '').strip()
+                            if cleaned_sentence and cleaned_sentence not in processing_sentences:
+                                # Add to processing queue
+                                pending_sentences.append(cleaned_sentence)
+                                processing_sentences.add(cleaned_sentence)
+                    
+                    # Keep the last (potentially incomplete) sentence in buffer
+                    current_text_buffer = sentences[-1]
+                
+                # Process pending sentences immediately (non-blocking)
+                while pending_sentences:
+                    sentence_to_process = pending_sentences.pop(0)
+                    try:
+                        # Stream audio for this sentence immediately
+                        for audio_base64, subtitle in stream_voice(sentence_to_process):
+                            yield audio_base64, subtitle
+                    except Exception as e:
+                        print(f"Error processing sentence: {e}")
+                        yield "", f"Error processing: {sentence_to_process[:50]}..."
+                    finally:
+                        processing_sentences.discard(sentence_to_process)
+        
+        # Process any remaining text in buffer
+        if current_text_buffer.strip():
+            cleaned_remaining = current_text_buffer.replace('*', '').strip()
+            if cleaned_remaining:
+                try:
+                    for audio_base64, subtitle in stream_voice(cleaned_remaining):
+                        yield audio_base64, subtitle
+                except Exception as e:
+                    print(f"Error processing remaining text: {e}")
+                    yield "", f"Error processing remaining text"
 
     except Exception as e:
         print(f"\nUnexpected error during Ollama interaction: {str(e)}")
-        yield b'', f"Error: {str(e)}"
+        yield "", f"Error: {str(e)}"
     finally:
         save_current_conversation_history()

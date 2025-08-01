@@ -1,0 +1,224 @@
+<div class="relative">
+    <!-- cURL Snippets -->
+    <div x-show="lang === 'curl'">
+        <div x-show="type === 'non-streaming'">
+            <pre><code class="language-bash">export CALISTA_API_KEY="your_api_key_here"
+
+curl --location 'http://localhost:5000/api/ollama/generate' \
+    --header 'accept: application/json' \
+    --header 'content-type: application/json' \
+    --header "Authorization: Bearer $CALISTA_API_KEY" \
+    --data '{}'</code></pre>
+        </div>
+        <div x-show="type === 'streaming'">
+            <pre><code class="language-bash">export CALISTA_API_KEY="your_api_key_here"
+
+curl --location 'http://localhost:5000/api/ollama/stream' \
+    --header 'accept: application/json' \
+    --header 'content-type: application/json' \
+    --header "Authorization: Bearer $CALISTA_API_KEY" \
+    --data '{}'</code></pre>
+        </div>
+    </div>
+    <!-- Python Snippets -->
+    <div x-show="lang === 'python'">
+        <div x-show="type === 'non-streaming'">
+            <pre><code class="language-python">
+import os
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.getenv("CALISTA_API_KEY")
+if not API_KEY:
+    raise ValueError("CALISTA_API_KEY environment variable not set")
+
+url = "http://localhost:5000/api/ollama/generate"
+
+payload = {
+    "model": "llama3.2:3b",
+    "prompt": "hello"
+}
+headers = {
+    "accept": "application/json",
+    "content-type": "application/json",
+    "Authorization": f"Bearer {API_KEY}"
+}
+
+response = requests.post(url, json=payload, headers=headers)
+
+data = response.json()
+print(data["response"])
+
+</code></pre>
+        </div>
+        <div x-show="type === 'streaming'">
+            <pre><code class="language-python">import os
+import requests
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+API_KEY = os.getenv("CALISTA_API_KEY")
+if not API_KEY:
+    raise ValueError("CALISTA_API_KEY environment variable not set")
+
+url = "http://localhost:5000/api/ollama/stream"
+
+payload = {
+    "model": "llama3.2:3b",
+    "stream": True,
+    "prompt": "hello"
+}
+headers = {
+    "accept": "application/json",
+    "content-type": "application/json",
+    "Authorization": f"Bearer {API_KEY}"
+}
+
+with requests.post(url, json=payload, headers=headers, stream=True) as response:
+    response.raise_for_status()
+    for chunk in response.iter_lines():
+        if chunk:
+            # Each chunk is a JSON line, e.g. {"response": " some text"}
+            try:
+                import json
+                data = json.loads(chunk.decode('utf-8'))
+                # Print only the 'response' value, without newline
+                print(data.get("response", ""), end="", flush=True)
+            except Exception as e:
+                print(f"\n[Malformed chunk]: {chunk}\nError: {e}")
+</code></pre>
+        </div>
+    </div>
+    <!-- NodeJS Snippets -->
+    <div x-show="lang === 'NodeJS'">
+        <div x-show="type === 'non-streaming'">
+            <pre><code class="language-javascript">
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv = require("dotenv");
+dotenv.config();
+const apiKey = process.env.CALISTA_API_KEY;
+if (!apiKey) {
+    throw new Error('CALISTA_API_KEY environment variable not set');
+}
+const url = 'http://localhost:5000/api/ollama/generate';
+const options = {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+        model: 'llama3.2:3b',
+        prompt: `hello`,
+    }),
+};
+
+fetch(url, options)
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.response) {
+            // Print a cleaner, more direct answer if possible
+            console.log(data.response.trim());
+        } else {
+            console.log(data);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+</code></pre>
+        </div>
+        <div x-show="type === 'streaming'">
+            <pre><code class="language-javascript">
+
+"use strict";
+const dotenv = require("dotenv");
+dotenv.config();
+const apiKey = process.env.CALISTA_API_KEY;
+if (!apiKey) {
+    throw new Error('CALISTA_API_KEY environment variable not set');
+}
+
+const url = 'http://localhost:5000/api/ollama/stream';
+const options = {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+        model: 'llama3.2:3b',
+        prompt: `hello`,
+        stream: true,
+    }),
+};
+
+fetch(url, options)
+    .then(async response => {
+        if (!response.ok) {
+            let errorMsg = `${response}`;
+            try {
+                const data = await response.json();
+                if (data.error) {
+                    errorMsg += `: ${data.error}`;
+                }
+            } catch (e) {
+                // ignore
+            }
+            console.log(errorMsg);
+            return;
+        }
+        if (!response.body) {
+            throw new Error('No response body');
+        }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        function read() {
+            return reader.read().then(({ done, value }) => {
+                if (done) {
+                    if (buffer.trim()) {
+                        try {
+                            const json = JSON.parse(buffer);
+                            if (json.response) {
+                                process.stdout.write(json.response);
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+                    return;
+                }
+                buffer += decoder.decode(value, { stream: true });
+                let lines = buffer.split('\n');
+                buffer = lines.pop(); // last line may be incomplete
+                for (const line of lines) {
+                    if (line.trim()) {
+                        try {
+                            const json = JSON.parse(line);
+                            if (json.response) {
+                                process.stdout.write(json.response);
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+                }
+                return read();
+            });
+        }
+        return read();
+    })
+    .catch(error => {
+        // Print error message to console
+        console.error('Error:', error.message || error);
+    });
+</code></pre>
+        </div>
+    </div>
+</div>

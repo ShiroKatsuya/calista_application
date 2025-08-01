@@ -13,6 +13,7 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-prod
 
 from routes import *
 from routes_aplication import *
+from api_key_model import * # Import the new API key and Ollama routes
 
 if __name__ == '__main__':
     app.run(debug=True)

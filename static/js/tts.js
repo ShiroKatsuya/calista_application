@@ -141,11 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
         streamSpeech(text);
     }
 
+    // Audio context cache for better performance
+    let audioContextCache = new Map();
+    let audioBufferCache = new Map();
+    
     async function streamSpeech(query) {
         // Remove floating subtitle div logic
         // Only use chatContainer for subtitles
-        // chatContainer.innerHTML = ''; // Removed: addMessage appends now
-        // chatContainer.style.display = 'block'; // Removed: addMessage handles visibility
         showTypingIndicator(); // Show typing indicator while waiting for response
         const response = await fetch(`/speech?query=${encodeURIComponent(query)}`);
         const reader = response.body.getReader();
@@ -153,6 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let buffer = '';
         let playing = Promise.resolve();
         let firstChunk = true;
+        let audioQueue = []; // Queue for audio chunks to play
+        
         while (true) {
             const { value, done } = await reader.read();
             if (done) break;
@@ -174,9 +178,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     hideTypingIndicator(); // Hide typing indicator on first chunk
                     firstChunk = false;
                 }
-                // Call addMessage only when the audio is about to play
-                // Pass formattedSubtitle directly to playAudioChunk so it can display it
-                playing = playing.then(() => playAudioChunk(audio, formattedSubtitle));
+                
+                // Add to audio queue for immediate processing
+                audioQueue.push({ audio, subtitle: formattedSubtitle });
+                
+                // Process audio queue immediately (non-blocking)
+                if (audioQueue.length > 0) {
+                    const audioItem = audioQueue.shift();
+                    playing = playing.then(() => playAudioChunkOptimized(audioItem.audio, audioItem.subtitle));
+                }
             }
         }
         await playing;
@@ -188,33 +198,95 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function playAudioChunk(base64Audio, subtitleToDisplay) {
+    function playAudioChunkOptimized(base64Audio, subtitleToDisplay) {
+        // Check if we have cached audio buffer
+        if (audioBufferCache.has(base64Audio)) {
+            const cachedBuffer = audioBufferCache.get(base64Audio);
+            return playCachedAudio(cachedBuffer, subtitleToDisplay);
+        }
+        
         const binaryString = atob(base64Audio);
         const len = binaryString.length;
         const bytes = new Uint8Array(len);
         for (let i = 0; i < len; i++) {
             bytes[i] = binaryString.charCodeAt(i);
         }
+        
         return new Promise((resolve) => {
-            const context = new (window.AudioContext || window.webkitAudioContext)();
+            // Reuse audio context for better performance
+            let context = audioContextCache.get('main');
+            if (!context || context.state === 'closed') {
+                context = new (window.AudioContext || window.webkitAudioContext)();
+                audioContextCache.set('main', context);
+            }
+            
             context.decodeAudioData(bytes.buffer, (buffer) => {
+                // Cache the decoded buffer for future use
+                audioBufferCache.set(base64Audio, buffer);
+                
                 // Display subtitle just before playing audio
-                addMessage(subtitleToDisplay, true, true); // Display the subtitle here
+                addMessage(subtitleToDisplay, true, true);
+                
                 const source = context.createBufferSource();
                 source.buffer = buffer;
                 source.connect(context.destination);
                 source.onended = () => {
-                    context.close();
                     resolve();
                 };
                 source.start(0);
             }, (e) => {
                 // On decode error, skip this chunk
-                context.close();
+                console.error('Audio decode error:', e);
                 resolve();
             });
         });
     }
+    
+    function playCachedAudio(buffer, subtitleToDisplay) {
+        return new Promise((resolve) => {
+            let context = audioContextCache.get('main');
+            if (!context || context.state === 'closed') {
+                context = new (window.AudioContext || window.webkitAudioContext)();
+                audioContextCache.set('main', context);
+            }
+            
+            // Display subtitle just before playing audio
+            addMessage(subtitleToDisplay, true, true);
+            
+            const source = context.createBufferSource();
+            source.buffer = buffer;
+            source.connect(context.destination);
+            source.onended = () => {
+                resolve();
+            };
+            source.start(0);
+        });
+    }
+    
+    // Keep the original function for backward compatibility
+    function playAudioChunk(base64Audio, subtitleToDisplay) {
+        return playAudioChunkOptimized(base64Audio, subtitleToDisplay);
+    }
+    
+    // Memory management functions
+    function cleanupAudioCaches() {
+        // Clear audio buffer cache if it gets too large
+        if (audioBufferCache.size > 50) {
+            audioBufferCache.clear();
+            console.log('Audio buffer cache cleared');
+        }
+        
+        // Close unused audio contexts
+        for (let [key, context] of audioContextCache) {
+            if (context.state === 'suspended') {
+                context.close();
+                audioContextCache.delete(key);
+            }
+        }
+    }
+    
+    // Clean up caches periodically
+    setInterval(cleanupAudioCaches, 30000); // Every 30 seconds
 
     function drawWaves() {
         // Dummy implementation for bug fix

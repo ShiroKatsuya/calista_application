@@ -40,9 +40,9 @@ def speech():
     model_name = os.getenv("MODEL_NAME_GENERAL_MODE") # Using a default model if not set
 
     def generate():
-        for audio_bytes, subtitle in handle_ollama_conversation(query, model_name):
+        for audio_base64, subtitle in handle_ollama_conversation(query, model_name):
             yield json.dumps({
-                'audio': base64.b64encode(audio_bytes).decode('utf-8'),
+                'audio': audio_base64,
                 'subtitle': subtitle
             }) + '\n'
     return Response(stream_with_context(generate()), mimetype='application/jsonlines')

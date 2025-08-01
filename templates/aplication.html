@@ -18,113 +18,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 
-<style>
-    /* Custom styles to match the dark theme and font */
-    body {
-        font-family: 'Inter', sans-serif;
-        background-color: #0d1117; /* A slightly darker, more modern black */
-        color: #c9d1d9; /* text-gray-300 equivalent */
-    }
-    /* Custom focus ring color */
-    .focus-ring-brand {
-        --tw-ring-color: #4f46e5; /* A vibrant indigo for focus */
-    }
-    /* Updated style for the code blocks */
-    pre {
-        background-color: transparent; /* Background is now on the wrapper */
-        padding: 1rem;
-        overflow-x: auto;
-        color: #c9d1d9;
-        font-size: 0.875rem;
-        line-height: 1.5;
-    }
-    code {
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-    }
-    .code-block-container {
-        background-color: #000000;
-        border-radius: 0.5rem;
-        border: 1px solid #30363d;
-    }
-    
-    /* Override Prism.js theme for black background */
-    pre[class*="language-"] {
-        background: #000000 !important;
-        color: #ffffff !important;
-    }
-    
-    code[class*="language-"] {
-        background: #000000 !important;
-        color: #ffffff !important;
-    }
-    
-    /* Ensure syntax highlighting colors work well on black background */
-    /* .token.comment,
-    .token.prolog,
-    .token.doctype,
-    .token.cdata {
-        color: #6a737d !important;
-    }
-    
-    .token.punctuation {
-        color: #d1d5db !important;
-    }
-    
-    .token.property,
-    .token.tag,
-    .token.boolean,
-    .token.number,
-    .token.constant,
-    .token.symbol,
-    .token.deleted {
-        color: #79c0ff !important;
-    }
-    
-    .token.selector,
-    .token.attr-name,
-    .token.string,
-    .token.char,
-    .token.builtin,
-    .token.inserted {
-        color: #a5d6ff !important;
-    }
-    
-    .token.operator,
-    .token.entity,
-    .token.url,
-    .language-css .token.string,
-    .style .token.string {
-        color: #ff7b72 !important;
-    }
-    
-    .token.atrule,
-    .token.attr-value,
-    .token.keyword {
-        color: #ffa657 !important;
-    }
-    
-    .token.function,
-    .token.class-name {
-        color: #d2a8ff !important;
-    }
-    
-    .token.regex,
-    .token.important,
-    .token.variable {
-        color: #ffa198 !important;
-    } */
-    /* Hide scrollbar for cleaner look, but still allow scrolling */
-    pre::-webkit-scrollbar {
-        display: none;
-    }
-    pre {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
-    }
-</style>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='css/aplication.css') }}">
 <body class="antialiased">
-
     <div class="flex max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
         <!-- Konten Utama -->
@@ -159,12 +54,12 @@
                             <p class="text-gray-400 text-sm">Buka tab <span class="font-medium text-indigo-400">API Keys</span> di Portal API dan buat kunci baru.</p>
                         </div>
                     </div>
-                    <a href="https://wa.me/62895806770203" target="_blank" rel="noopener" class="flex items-center space-x-2 text-indigo-400 hover:text-indigo-300">
-                        <span>Klik di sini</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    <button id="create-api-key-btn" type="button" class="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7h1a2 2 0 012 2v5a2 2 0 01-2 2h-1m-6 0H7a2 2 0 01-2-2V9a2 2 0 012-2h1m6 0V7a2 2 0 00-2-2H9a2 2 0 00-2 2v2m6 0h.01M9 12h6" />
                         </svg>
-                    </a>
+                        <span>Buat API Key Baru</span>
+                    </button>
                 </div>
 
                 <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-center space-x-3 mb-4">
@@ -194,7 +89,7 @@
                         <nav class="-mb-px flex space-x-6" aria-label="Tabs">
                             <button @click="lang = 'curl'" :class="{ 'border-white text-white': lang === 'curl', 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500': lang !== 'curl' }" class="whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm transition-colors focus:outline-none">cURL</button>
                             <button @click="lang = 'python'" :class="{ 'border-white text-white': lang === 'python', 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500': lang !== 'python' }" class="whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm transition-colors focus:outline-none">Python</button>
-                            <button @click="lang = 'typescript'" :class="{ 'border-white text-white': lang === 'typescript', 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500': lang !== 'typescript' }" class="whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm transition-colors focus:outline-none">TypeScript</button>
+                            <button @click="lang = 'NodeJS'" :class="{ 'border-white text-white': lang === 'NodeJS', 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500': lang !== 'NodeJS' }" class="whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm transition-colors focus:outline-none">NodeJS</button>
                         </nav>
                     </div>
 
@@ -206,8 +101,8 @@
                         <p x-show="lang === 'python'">
                             <span class="text-white font-semibold">Python</span> menyediakan library yang kuat untuk melakukan permintaan HTTP. Gunakan library <code>requests</code> untuk implementasi sederhana.
                         </p>
-                        <p x-show="lang === 'typescript'">
-                           <span class="text-white font-semibold">TypeScript</span> dapat digunakan dengan <code>fetch</code> di Node.js atau browser. Gunakan variabel lingkungan untuk mengamankan API key Anda.
+                        <p x-show="lang === 'NodeJS'">
+                           <span class="text-white font-semibold">NodeJS</span> dapat digunakan dengan <code>fetch</code> di Node.js atau browser. Gunakan variabel lingkungan untuk mengamankan API key Anda.
                         </p>
                     </div>
 
@@ -232,201 +127,7 @@
                         </div>
                         
                         <!-- Code Snippets -->
-                        <div class="relative">
-                            <!-- cURL Snippets -->
-                            <div x-show="lang === 'curl'">
-                                <div x-show="type === 'non-streaming'">
-<pre><code class="language-bash">export CALISTA="your_api_key"
-
-curl --location 'https://api.calista.ai/chat/completions' \
---header 'accept: application/json' \
---header 'content-type: application/json' \
---header "Authorization: Bearer $CALISTA" \
---data '{
-    "model": "llama3.2:3b_Enhanced",
-    "messages": [
-        {
-            "role": "user",
-            "content": "What are the most popular open-source alternatives to GitHub?"
-        }
-    ]
-}'</code></pre>
-                                </div>
-                                <div x-show="type === 'streaming'">
-<pre><code class="language-bash">export CALISTA="your_api_key"
-
-curl --location 'https://api.calista.ai/chat/completions' \
---header 'accept: application/json' \
---header 'content-type: application/json' \
---header "Authorization: Bearer $CALISTA" \
---data '{
-    "model": "llama3.2:3b_Enhanced",
-    "stream": true,
-    "messages": [
-        {
-            "role": "user",
-            "content": "What are the most popular open-source alternatives to GitHub?"
-        }
-    ]
-}'</code></pre>
-                                </div>
-                            </div>
-                            <!-- Python Snippets -->
-                            <div x-show="lang === 'python'">
-                                <div x-show="type === 'non-streaming'">
-<pre><code class="language-python">import os
-import requests
-
-API_KEY = os.environ.get("CALISTA")
-if not API_KEY:
-    raise ValueError("CALISTA environment variable not set")
-
-url = "https://api.calista.ai/chat/completions"
-
-payload = {
-    "model": "llama3.2:3b_Enhanced",
-    "messages": [
-        {
-            "role": "user",
-            "content": "How do I make a non-streaming API call in Python?"
-        }
-    ]
-}
-headers = {
-    "accept": "application/json",
-    "content-type": "application/json",
-    "Authorization": f"Bearer {API_KEY}"
-}
-
-response = requests.post(url, json=payload, headers=headers)
-
-print(response.json())
-</code></pre>
-                                </div>
-                                <div x-show="type === 'streaming'">
-<pre><code class="language-python">import os
-import requests
-import json
-
-API_KEY = os.environ.get("CALISTA")
-if not API_KEY:
-    raise ValueError("CALISTA environment variable not set")
-
-url = "https://api.calista.ai/chat/completions"
-
-payload = {
-    "model": "llama3.2:3b_Enhanced",
-    "stream": True,
-    "messages": [
-        {
-            "role": "user",
-            "content": "How do I make a streaming API call in Python?"
-        }
-    ]
-}
-headers = {
-    "accept": "application/json",
-    "content-type": "application/json",
-    "Authorization": f"Bearer {API_KEY}"
-}
-
-with requests.post(url, json=payload, headers=headers, stream=True) as response:
-    response.raise_for_status()
-    for chunk in response.iter_lines():
-        if chunk:
-            # Process each chunk (which is a server-sent event)
-            print(chunk.decode('utf-8'))
-</code></pre>
-                                </div>
-                            </div>
-                            <!-- TypeScript Snippets -->
-                            <div x-show="lang === 'typescript'">
-                                <div x-show="type === 'non-streaming'">
-<pre><code class="language-typescript">import fetch from 'node-fetch';
-
-const apiKey = process.env.CALISTA;
-
-if (!apiKey) {
-  throw new Error('CALISTA environment variable not set');
-}
-
-const url = 'https://api.calista.ai/chat/completions';
-
-const options = {
-  method: 'POST',
-  headers: {
-    accept: 'application/json',
-    'content-type': 'application/json',
-    Authorization: `Bearer ${apiKey}`,
-  },
-  body: JSON.stringify({
-    model: 'llama3.2:3b_Enhanced',
-    messages: [
-      { role: 'user', content: 'How do I use TypeScript for API calls?' },
-    ],
-  }),
-};
-
-async function makeRequest() {
-  try {
-    const response = await fetch(url, options);
-    const data = await response.json();
-    console.log(data);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
-
-makeRequest();
-</code></pre>
-                                </div>
-                                <div x-show="type === 'streaming'">
-<pre><code class="language-typescript">import fetch from 'node-fetch';
-
-const apiKey = process.env.CALISTA;
-
-if (!apiKey) {
-  throw new Error('CALISTA environment variable not set');
-}
-
-const url = 'https://api.calista.ai/chat/completions';
-
-const options = {
-  method: 'POST',
-  headers: {
-    accept: 'application/json',
-    'content-type': 'application/json',
-    Authorization: `Bearer ${apiKey}`,
-  },
-  body: JSON.stringify({
-    model: 'llama3.2:3b_Enhanced',
-    stream: true,
-    messages: [
-      { role: 'user', content: 'How do I stream responses in TypeScript?' },
-    ],
-  }),
-};
-
-async function makeStreamingRequest() {
-  try {
-    const response = await fetch(url, options);
-    if (!response.body) {
-        console.log("No response body");
-        return;
-    }
-    for await (const chunk of response.body) {
-      console.log(chunk.toString());
-    }
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
-
-makeStreamingRequest();
-</code></pre>
-                                </div>
-                            </div>
-                        </div>
+                        {% include "Code_Snippets.html" %}
                     </div>
                 </div>
             </section>
@@ -501,101 +202,9 @@ makeStreamingRequest();
             </nav>
         </aside>
     </div>
-    
-    <script>
-        // --- Interactivity Script ---
-
-        // 1. Initialize Feather Icons and Prism.js
-        // We need to call this anytime new icons are added to the DOM,
-        // especially after Alpine.js makes changes.
-        document.addEventListener('alpine:init', () => {
-            // A small delay to ensure the DOM is ready
-            setTimeout(() => {
-                feather.replace();
-                // Initialize Prism.js for syntax highlighting
-                if (typeof Prism !== 'undefined') {
-                    Prism.highlightAll();
-                }
-            }, 50);
-        });
-        // Initial call for static icons and syntax highlighting
-        feather.replace();
-        if (typeof Prism !== 'undefined') {
-            Prism.highlightAll();
-        }
-        
-        // 2. Copy Code to Clipboard (Updated)
-        function copyCode(button) {
-            // Find the active code block to copy
-            const codeBlockContainer = button.closest('.code-block-container');
-            const visibleCodeWrapper = codeBlockContainer.querySelector('.relative > div[x-show]:not([style*="display: none"]) > div[x-show]:not([style*="display: none"])');
-            
-            if (!visibleCodeWrapper) return;
-
-            const textToCopy = visibleCodeWrapper.querySelector('pre code').innerText;
-            
-            const textArea = document.createElement('textarea');
-            textArea.value = textToCopy;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                const icon = button.querySelector('i');
-                icon.setAttribute('data-feather', 'check');
-                feather.replace({ width: '16', height: '16' });
-
-            } catch (err) {
-                console.error('Failed to copy text: ', err);
-                const icon = button.querySelector('i');
-                icon.setAttribute('data-feather', 'x');
-                feather.replace({ width: '16', height: '16' });
-            }
-            document.body.removeChild(textArea);
-            
-            setTimeout(() => {
-                const icon = button.querySelector('i');
-                icon.setAttribute('data-feather', 'copy');
-                feather.replace({ width: '16', height: '16' });
-            }, 2000);
-        }
-
-        // 3. Re-highlight code when tabs are switched
-        document.addEventListener('alpine:updated', () => {
-            // Re-highlight code blocks when Alpine.js updates the DOM
-            setTimeout(() => {
-                if (typeof Prism !== 'undefined') {
-                    Prism.highlightAll();
-                }
-            }, 10);
-        });
-
-        // 4. Copy Page Button
-        document.getElementById('copyPageBtn').addEventListener('click', () => {
-             const codeEl = document.querySelector('#first-call pre code'); // Just copy the first code block
-             const textToCopy = codeEl.innerText;
-             const button = document.getElementById('copyPageBtn');
-             const originalText = button.querySelector('span').innerText;
-
-             const textArea = document.createElement('textarea');
-             textArea.value = textToCopy;
-             document.body.appendChild(textArea);
-             textArea.select();
-             try {
-                 document.execCommand('copy');
-                 button.querySelector('span').innerText = 'Copied Example!';
-             } catch (err) {
-                 console.error('Failed to copy text: ', err);
-                 button.querySelector('span').innerText = 'Failed!';
-             }
-             document.body.removeChild(textArea);
-             
-             setTimeout(() => {
-                 button.querySelector('span').innerText = originalText;
-             }, 2000);
-        });
-
-    </script>
+    <script src="{{ url_for('static', filename='js/aplication.js') }}"></script>
 
 </body>
 
 {% endblock %}
+

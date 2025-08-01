@@ -1,0 +1,102 @@
+    /* Custom styles to match the dark theme and font */
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #0d1117; /* A slightly darker, more modern black */
+        color: #c9d1d9; /* text-gray-300 equivalent */
+    }
+    /* Custom focus ring color */
+    .focus-ring-brand {
+        --tw-ring-color: #4f46e5; /* A vibrant indigo for focus */
+    }
+    /* Updated style for the code blocks */
+    pre {
+        background-color: transparent; /* Background is now on the wrapper */
+        padding: 1rem;
+        overflow-x: auto;
+        color: #c9d1d9;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+    code {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    }
+    .code-block-container {
+        background-color: #000000;
+        border-radius: 0.5rem;
+        border: 1px solid #30363d;
+    }
+    
+    /* Override Prism.js theme for black background */
+    pre[class*="language-"] {
+        background: #000000 !important;
+        color: #ffffff !important;
+    }
+    
+    code[class*="language-"] {
+        background: #000000 !important;
+        color: #ffffff !important;
+    }
+    
+    /* Ensure syntax highlighting colors work well on black background */
+    /* .token.comment,
+    .token.prolog,
+    .token.doctype,
+    .token.cdata {
+        color: #6a737d !important;
+    }
+    
+    .token.punctuation {
+        color: #d1d5db !important;
+    }
+    
+    .token.property,
+    .token.tag,
+    .token.boolean,
+    .token.number,
+    .token.constant,
+    .token.symbol,
+    .token.deleted {
+        color: #79c0ff !important;
+    }
+    
+    .token.selector,
+    .token.attr-name,
+    .token.string,
+    .token.char,
+    .token.builtin,
+    .token.inserted {
+        color: #a5d6ff !important;
+    }
+    
+    .token.operator,
+    .token.entity,
+    .token.url,
+    .language-css .token.string,
+    .style .token.string {
+        color: #ff7b72 !important;
+    }
+    
+    .token.atrule,
+    .token.attr-value,
+    .token.keyword {
+        color: #ffa657 !important;
+    }
+    
+    .token.function,
+    .token.class-name {
+        color: #d2a8ff !important;
+    }
+    
+    .token.regex,
+    .token.important,
+    .token.variable {
+        color: #ffa198 !important;
+    } */
+    /* Hide scrollbar for cleaner look, but still allow scrolling */
+    pre::-webkit-scrollbar {
+        display: none;
+    }
+    pre {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
