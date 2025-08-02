@@ -46,13 +46,13 @@ logger = logging.getLogger(__name__)
 # Model configurations with optimized parameters
 # Initialize models with better configurations
 model_Riset = ChatOllama(
-    model="llama3.2:3b",
+    model="llama3-2.3b:latest",
     streaming=True,
     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
 model_Implementasi = ChatOllama(
-    model="llama3-2.3b:latest", 
+    model="qwen2.5:1.5b", 
     streaming=True,
     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )

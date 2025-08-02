@@ -62,22 +62,22 @@ $(document).ready(function() {
             console.log(`Creating new streaming message for ${sender}`);
             const $messageDiv = $('<div>').addClass('message-bubble fade-in-up p-4 rounded-lg shadow-md mb-4 relative');
 
-            // Apply sender-specific Tailwind classes and margin
-            if (sender === 'user') {
-                $messageDiv.addClass('text-white ml-auto rounded-br-none text-center').css('max-width', '20%');
-            // } else if (sender == 'ai') {
-            //     $messageDiv.addClass('bg-gray-700 text-gray-100 mr-auto rounded-bl-none')
-            } else if (sender === 'supervisor') {
-                $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none')
-            } else if (sender === 'system-error') {
-                $messageDiv.addClass('bg-red-800 text-white mr-auto rounded-bl-none')
-            } else if (sender === 'Riset') {
-                $messageDiv.addClass(' text-white mr-auto rounded-bl-none')
-            } else if (sender === 'Implementasi') {
-                $messageDiv.addClass(' text-white mr-auto rounded-bl-none')
-            } else if (sender === 'Creator') { // Add Creator agent styling
-                $messageDiv.addClass(' text-green-300 mr-auto rounded-bl-none') // Example styling for Creator
-            }
+                    // Apply sender-specific Tailwind classes and margin
+        if (sender === 'user') {
+            $messageDiv.addClass('message-bubble user-message text-white ml-auto rounded-br-none').css('max-width', '80%')
+        // } else if (sender == 'ai') {
+        //     $messageDiv.addClass('bg-gray-700 text-gray-100 mr-auto rounded-bl-none')
+        } else if (sender === 'supervisor') {
+            $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none')
+        } else if (sender === 'system-error') {
+            $messageDiv.addClass('bg-red-800 text-white mr-auto rounded-bl-none')
+        } else if (sender === 'Riset') {
+            $messageDiv.addClass(' text-white mr-auto rounded-bl-none')
+        } else if (sender === 'Implementasi') {
+            $messageDiv.addClass(' text-white mr-auto rounded-bl-none')
+        } else if (sender === 'Creator') { // Add Creator agent styling
+            $messageDiv.addClass(' text-green-300 mr-auto rounded-bl-none') // Example styling for Creator
+        }
 
             // Add sender label for AI/agent messages
             if (sender !== 'user') {
@@ -147,7 +147,7 @@ $(document).ready(function() {
 
         // Apply sender-specific Tailwind classes and margin
         if (sender === 'user') {
-            $messageDiv.addClass('text-white ml-auto rounded-br-none ').css('max-width', '20%');
+            $messageDiv.addClass('message-bubble user-message  text-white ml-auto rounded-br-none').css('max-width', '80%')
         } else if (sender === 'supervisor') {
             $messageDiv.addClass('bg-purple-800 text-white mr-auto rounded-bl-none')
         } else if (sender === 'system-error') {

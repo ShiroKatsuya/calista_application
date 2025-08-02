@@ -485,7 +485,7 @@ def chat_stream():
                     yield f"data: {json.dumps({'sender': 'Supervisor', 'content': f'ROUTE_TO: {next_agent_name} - Routing to {next_agent_name}', 'type': 'complete'})}\n\n"
                     continue
                 elif next_agent_name == "FINISH":
-                    yield f"data: {json.dumps({'sender': 'Supervisor', 'content': 'ROUTE_TO: FINISH - Conversation complete', 'type': 'complete'})}\n\n"
+                    # yield f"data: {json.dumps({'sender': 'Supervisor', 'content': 'ROUTE_TO: FINISH - Conversation complete', 'type': 'complete'})}\n\n"
                     break
                 else:
                     # Default to finish if no clear decision

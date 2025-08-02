@@ -37,6 +37,16 @@
     font-size: 0.85rem;
 }
 
+.user-message {
+    /* User messages should be aligned to the right */
+    margin-left: auto;
+    margin-right: 0;
+    max-width: 70%; /* Allow up to 70% width for longer messages */
+    min-width: fit-content; /* Ensure minimum width fits the content */
+    width: fit-content; /* Size based on content */
+    color: white;
+}
+
 .message-content pre {
     background-color: #1a1a1c;
     padding: 10px;

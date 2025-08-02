@@ -107,13 +107,13 @@ MAX_WINDOW_TURNS = 120000
 MEMORY_DIR = "memory_files"
 
 model_realtime = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
 )
 
 # --- Define a default LLM for fallback ---
-# DEFAULT_OLLAMA_MODEL_NAME = os.getenv("MODEL_NAME_GENERAL_MODE")
+DEFAULT_OLLAMA_MODEL_NAME = os.getenv("MODEL_NAME")
 try:
-    default_llm_for_memory = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=TEMPERATURE)
+    default_llm_for_memory = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=TEMPERATURE)
     print(f"Default LLM for memory fallback initialized: {default_llm_for_memory}")
 except Exception as e:
     print(f"CRITICAL WARNING: Failed to initialize default LLM ('{default_llm_for_memory}'). Memory fallback might fail. Error: {e}")
@@ -290,14 +290,14 @@ Contextual information, potentially including real-time data relevant to the use
             raise ValueError("model_name is required.")
 
         print(f"Initializing Ollama model: {model_name}")
-        # llm = OllamaLLM(
-        #     model=model_name,
-        #     temperature=TEMPERATURE,
-        # )
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
-
+        llm = OllamaLLM(
+            model=model_name,
+            temperature=TEMPERATURE,
         )
+        # llm = ChatGoogleGenerativeAI(
+        #     model="gemini-2.5-flash",
+
+        # )
         print("LLM Initialized.")
 
         needs_search = False

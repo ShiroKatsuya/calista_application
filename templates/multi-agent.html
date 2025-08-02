@@ -17,16 +17,13 @@
             </div>
             <div class="flex border-b border-gray-600">
                 <div class="pb-3 border-b-2 border-blue-500 text-blue-400 font-semibold flex items-center space-x-2">
-
                     <i class="fas fa-magic"></i>
-                    
                     <span>Answer</span>
-                    <button id="start-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition-transform transform hover:scale-105">
+                    <button id="start-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1 px-3 rounded text-sm transition-transform transform hover:scale-105">
                         Start Simulation
                     </button>
                 </div>
             </div>
-            <h1 class="text-sm font-extrabold tracking-wide text-blue-400 drop-shadow-md uppercase mt-2">Code Name <span class="text-white">[<span class="text-blue-500">-Calista-</span>]</span></h1>
   
         </div>
     </div>
@@ -35,11 +32,20 @@
 
     <div class="flex-1 overflow-y-auto" id="responseContainerWrapper">
         {% include "Multi-Agent-System-Animation.html" %}
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
        
             <!-- Dummy conversation -->
             <div id="responseContainer" class="space-y-4">
-                <!-- Multi-Agent Status Visualization always on top -->
+                <!-- User's Latest Message Container -->
+                <div id="user-latest-message-container" class="flex flex-col space-y-2"></div>
+
+                <!-- Thinking Indicator -->
+                <div id="mikir" class="thinking-indicator hidden">
+                    <div class="spinner"></div>
+                    Thinking...
+                </div>
+
+                <!-- Multi-Agent Status Visualization -->
                 <div id="multi-agent-visualization-container" style="display:none;">
                     <div class="w-full max-w-3xl flex flex-col items-center">
                         <!-- Top Icon -->
@@ -72,14 +78,11 @@
                     </div>
                 </div>
                 <!-- Conversation history below -->
-                <div id="conversation-history" class="flex flex-col space-y-2 max-w-5xl"></div>
-                <!-- User message -->
-            
-                <!-- Multi-Agent Status Visualization -->
-
-                    <!-- Wrap the Multi-Agent Status Visualization in a container with id="multi-agent-visualization-container" and hide it by default -->
-                    <!-- This block is now redundant as the visualization is moved to the top -->
-                </div>
+                <div id="conversation-history" class="flex flex-col space-y-2"></div>
+                 
+                <!-- Supervisor system message -->
+       
+            </div>
    
                 <!-- End Multi-Agent Status Visualization -->
 
@@ -88,16 +91,11 @@
                  
         
                 <!-- Supervisor system message -->
-                <div class="system-message text-center text-gray-400 text-sm my-3">
-                    --- Welcome To The Future ---
-                </div>
+   
             </div>
             
             <!-- Thinking Indicator -->
-            <div id="mikir" class="thinking-indicator hidden">
-                <div class="spinner"></div>
-                Thinking...
-            </div>
+     
 
             <!-- Related Questions Section -->
 
@@ -134,13 +132,13 @@
     </div>
 
     <script>
-const agents = ["Analisis_Penyebab", "Analisis_Dampak", "Mengusulkan_Solusi", "Synthesizer"];
+const agents = ["Analisis Penyebab", "Analisis Dampak", "Mengusulkan Solusi", "Synthesizer"];
 const agentStatus = {};
 const agentTimers = {}; // For animation intervals
 const agentColors = {
-    "Analisis_Penyebab": "#fbbf24",
-    "Analisis_Dampak": "#60a5fa",
-    "Mengusulkan_Solusi": "#34d399",
+    "Analisis Penyebab": "#fbbf24",
+    "Analisis Dampak": "#60a5fa",
+    "Mengusulkan Solusi": "#34d399",
     "Synthesizer": "#f472b6"
 };
 
@@ -226,16 +224,16 @@ function loadConversationHistoryAllAgent() {
 }
 
 function appendUserMessage(query) {
-    const conversationHistory = document.getElementById('conversation-history');
+    const userLatestMessageContainer = document.getElementById('user-latest-message-container');
     const userMsgDiv = document.createElement('div');
-    userMsgDiv.className = "message-bubble user-message mt-8 p-4 rounded-lg shadow-md mb-4 relative bg-blue-900 text-white";
+    userMsgDiv.className = "message-bubble user-message mt-8 p-4 rounded-lg shadow-md mb-4 relative text-white";
     userMsgDiv.style.maxWidth = "80%";
     userMsgDiv.style.alignSelf = "flex-end";
     userMsgDiv.innerHTML = `
         <div class="sender-label font-bold mb-1">You:</div>
         <div class="user-message-content">${query}</div>
     `;
-    conversationHistory.appendChild(userMsgDiv);
+    userLatestMessageContainer.appendChild(userMsgDiv);
     setTimeout(scrollToBottom, 50);
 }
 
