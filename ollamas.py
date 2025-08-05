@@ -272,6 +272,7 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
         chat_session_store[session_id] = temp_memory.chat_memory
     return chat_session_store[session_id]
 
+from baseUrl import ollama_url
 
 def handle_ollama_conversation(user_input: str, model_name: str):
     global _current_session_id
@@ -296,6 +297,7 @@ Contextual information, potentially including real-time data relevant to the use
         llm = OllamaLLM(
             model=model_name,
             temperature=TEMPERATURE,
+            base_url=ollama_url
         )
         # llm = ChatGoogleGenerativeAI(
         #     model="gemini-2.5-flash",

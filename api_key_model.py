@@ -91,7 +91,9 @@ def ollama_generate():
         response = ollama.generate(
             model=model,
             prompt=prompt,
-            stream=False
+            stream=False,
+        
+            
         )
         return jsonify({"response": response['response']})
     except Exception as e:

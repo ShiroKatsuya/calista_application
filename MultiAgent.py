@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 # --- Enhanced Models with Better Configuration ---
 
 from os import getenv
+from baseUrl import ollama_url
 nama_model_Riset = getenv("MODEL_RISET")
 nama_model_Implementasi = getenv("MODEL_IMPLEMENTASI")
 nama_model_supervisor = getenv("MODEL_SUPERVISOR")
@@ -48,12 +49,14 @@ nama_model_supervisor = getenv("MODEL_SUPERVISOR")
 model_Riset = ChatOllama(
     model=nama_model_Riset,
     streaming=True,
+    base_url=ollama_url
     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
 model_Implementasi = ChatOllama(
     model=nama_model_Implementasi, 
     streaming=True,
+    base_url=ollama_url
     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
@@ -62,6 +65,7 @@ model_Implementasi = ChatOllama(
 model_supervisor = ChatOllama(
     model=nama_model_supervisor,
     streaming=True,
+    base_url=ollama_url
     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
