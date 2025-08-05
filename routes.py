@@ -9,8 +9,8 @@ from datetime import datetime
 import re
 from langchain_community.utilities import GoogleSerperAPIWrapper
 search = GoogleSerperAPIWrapper()
-
-
+import requests
+import base64
 
 import wave
 from io import BytesIO
@@ -352,45 +352,114 @@ def multi_agent_stream():
 
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
-from google import genai
-from PIL import Image # For handling image files
-import os
 
-import dotenv
-# Load environment variables from .env file
-dotenv.load_dotenv()
 
-model_id = os.getenv("GEMINI_MODEL")
+# from google import genai
+# from PIL import Image # For handling image files
+# import os
+
+# import dotenv
+# # Load environment variables from .env file
+# dotenv.load_dotenv()
+
+# model_id = os.getenv("GEMINI_MODEL")
+
+# @app.route('/explain_image', methods=['POST'])
+# def explain_image():
+#     """Handle image explanation requests"""
+#     data = request.get_json()
+#     image_path = data.get('image_path', '')
+#     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+#     query = "Jelaskan secara singkat dengan fokus pada informasi yang disampaikan oleh gambar"
+
+#     # Open the image file using PIL
+#     try:
+#         img = Image.open(image_path)
+#     except Exception as e:
+#         return jsonify({'error': f'Failed to open image: {str(e)}'}), 400
+
+#     try:
+#         explanation_response = client.models.generate_content(
+#             model=model_id,
+#             # config=generation_config,
+#             contents=[
+#                 img,
+#                 query
+#             ]
+#         )
+#         # Check if explanation_response and explanation_response.text are not None
+#         if explanation_response and hasattr(explanation_response, 'text') and explanation_response.text:
+#             cleaned_response = explanation_response.text.replace('*', '').replace('\n\n', '\n')
+#             return jsonify({'explanation': cleaned_response})
+#         else:
+#             return jsonify({'error': 'No explanation returned from model.'}), 500
+#     except Exception as e:
+#         return jsonify({'error': f'Failed to generate explanation: {str(e)}'}), 500
+
 
 @app.route('/explain_image', methods=['POST'])
 def explain_image():
     """Handle image explanation requests"""
     data = request.get_json()
     image_path = data.get('image_path', '')
-    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
     query = "Jelaskan secara singkat dengan fokus pada informasi yang disampaikan oleh gambar"
 
-    # Open the image file using PIL
+    # Open the image file and convert to base64
     try:
-        img = Image.open(image_path)
+        with open(image_path, 'rb') as image_file:
+            image_data = image_file.read()
+            image_base64 = base64.b64encode(image_data).decode('utf-8')
     except Exception as e:
         return jsonify({'error': f'Failed to open image: {str(e)}'}), 400
 
     try:
-        explanation_response = client.models.generate_content(
-            model=model_id,
-            # config=generation_config,
-            contents=[
-                img,
-                query
-            ]
+        response = requests.post(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": "Bearer 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",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "<YOUR_SITE_URL>",  # Optional. Site URL for rankings on openrouter.ai.
+                "X-Title": "<YOUR_SITE_NAME>",      # Optional. Site title for rankings on openrouter.ai.
+            },
+            data=json.dumps({
+                "model": "openrouter/horizon-beta",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": query
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image_base64}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+            })
         )
-        # Check if explanation_response and explanation_response.text are not None
-        if explanation_response and hasattr(explanation_response, 'text') and explanation_response.text:
-            cleaned_response = explanation_response.text.replace('*', '').replace('\n\n', '\n')
-            return jsonify({'explanation': cleaned_response})
+
+        # Check if the request was successful
+        if response.status_code != 200:
+            return jsonify({'error': f'API request failed with status {response.status_code}: {response.text}'}), 500
+
+        # Parse the JSON response and get the assistant's message content
+        data = response.json()
+        
+        if data.get("choices") and len(data["choices"]) > 0:
+            explanation_response = data["choices"][0]["message"]["content"]
+            # Check if explanation_response is not None
+            if explanation_response:
+                cleaned_response = explanation_response.replace('*', '').replace('\n\n', '\n')
+                return jsonify({'explanation': cleaned_response})
+            else:
+                return jsonify({'error': 'No explanation returned from model.'}), 500
         else:
-            return jsonify({'error': 'No explanation returned from model.'}), 500
+            return jsonify({'error': f'No choices in response. Response: {data}'}), 500
     except Exception as e:
         return jsonify({'error': f'Failed to generate explanation: {str(e)}'}), 500
 

@@ -464,9 +464,13 @@ from langchain_ollama import ChatOllama
 # Set up the Gemini model with tool-calling capability
 # model_Implementasi = ChatOllama(model="llama3-2.3b:latest")
 
-model_Implementasi = ChatGoogleGenerativeAI(
+model_implementasi = ChatGoogleGenerativeAI(
     model="gemini-2.0-flash", 
 )
+
+
+
+
 
 # Prompt for when we have successful scraping (no tools needed)
 Implementasi_no_tools_prompt = ChatPromptTemplate.from_messages([
@@ -484,10 +488,10 @@ Implementasi_tool_prompt = ChatPromptTemplate.from_messages([
 ])
 
 # Agent for successful scraping (no tools)
-Implementasi_no_tools_agent = Implementasi_no_tools_prompt | model_Implementasi
+Implementasi_no_tools_agent = Implementasi_no_tools_prompt | model_implementasi
 
 # Agent for fallback search (with tools)
-Implementasi_tool_agent = create_tool_calling_agent(model_Implementasi, web_tools, Implementasi_tool_prompt)
+Implementasi_tool_agent = create_tool_calling_agent(model_implementasi, web_tools, Implementasi_tool_prompt)
 Implementasi_tool_executor = AgentExecutor(
     agent=Implementasi_tool_agent, 
     tools=web_tools, 

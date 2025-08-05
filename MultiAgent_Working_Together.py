@@ -4,13 +4,13 @@ import json
 
 
 agents = {
-    "Analisis Penyebab": Agent("Analisis Penyebab", model_Analisis_Penyebab, "General Knowledge Agent (Bahasa Indonesia)", 
+    "Analisis Penyebab": Agent("Analisis Penyebab", model_Analisis_Penyebab, "General Knowledge Agent", 
                    ["ilmu pengetahuan", "teknologi", "humaniora", "seni", "bisnis", "riset", "analisis"], web_tools),
-    "Analisis Dampak": Agent("Analisis Dampak", model_Analisis_Dampak, "Technical Implementation Agent (Bahasa Indonesia)", 
+    "Analisis Dampak": Agent("Analisis Dampak", model_Analisis_Dampak, "Technical Implementation Agent", 
                  ["pengkodean", "pemrograman", "implementasi", "teknis", "arsitektur", "pengembangan"], web_tools),
-    "Mengusulkan Solusi": Agent("Mengusulkan Solusi", model_Mengusulkan_Solusi, "Creative Problem Solver (Bahasa Indonesia)", 
+    "Mengusulkan Solusi": Agent("Mengusulkan Solusi", model_Mengusulkan_Solusi, "Creative Problem Solver", 
                      ["kreativitas", "inovasi", "pemecahan masalah", "desain", "strategi", "brainstorming"], web_tools),
-    "Synthesizer": Agent("Synthesizer", model_synthesizer, "Enhanced Response Synthesis Specialist (Bahasa Indonesia)", 
+    "Synthesizer": Agent("Synthesizer", model_synthesizer, "Enhanced Response Synthesis Specialist", 
                         ["sintesis", "integrasi", "ringkasan", "kejelasan", "koherensi", "optimasi"], []),
 }
 
