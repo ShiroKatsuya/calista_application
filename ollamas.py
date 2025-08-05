@@ -26,7 +26,9 @@ query_instruction=(
         "representation optimized for semantic search."
     )
 
-embedder = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+embed = os.getenv("EMBED_MODEL")
+
+embedder = GoogleGenerativeAIEmbeddings(model=embed)
 print("embedder",embedder)
 
 chroma = Chroma(collection_name="demo",
@@ -105,15 +107,16 @@ MEMORY_KEY = "history"
 
 MAX_WINDOW_TURNS = 120000
 MEMORY_DIR = "memory_files"
-
+# --- Initialize Google Generative AI Client ---
+model_realtime = os.getenv("MODEL_REALTIME")
 model_realtime = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
+    model=model_realtime,
 )
 
 # --- Define a default LLM for fallback ---
-DEFAULT_OLLAMA_MODEL_NAME = os.getenv("MODEL_NAME")
+DEFAULT_OLLAMA_MODEL_NAME = os.getenv("MODEL_IVR")
 try:
-    default_llm_for_memory = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=TEMPERATURE)
+    default_llm_for_memory = ChatGoogleGenerativeAI(model=embed, temperature=TEMPERATURE)
     print(f"Default LLM for memory fallback initialized: {default_llm_for_memory}")
 except Exception as e:
     print(f"CRITICAL WARNING: Failed to initialize default LLM ('{default_llm_for_memory}'). Memory fallback might fail. Error: {e}")

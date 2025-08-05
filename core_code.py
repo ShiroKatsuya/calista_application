@@ -115,24 +115,20 @@ web_tools = [
     ),
 ]
 
-# # Models
-# model_Analisis_Penyebab = ChatOllama(model="llama3.2:3b")
-# model_Analisis_Dampak = ChatOllama(model="llama3-2.3b:latest")
-# model_charlie = ChatOllama(model="llama3.2:3b")
-# model_coordinator = ChatOllama(model="llama3.2:3b")
 
 
 
-# model_Analisis_Penyebab = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-# model_Analisis_Dampak = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-# model_Mengusulkan_Solusi = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-# model_synthesizer = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
-model_Analisis_Penyebab = ChatOllama(model="llama3-2.3b:latest")
-model_Analisis_Dampak = ChatOllama(model="llama3.2:3b")
-model_Mengusulkan_Solusi = ChatOllama(model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M")
-# model_coordinator = ChatOllama(model="llama3.2:3b", temperature=0.5)
-model_synthesizer = ChatOllama(model="hf.co/unsloth/gemma-3n-E2B-it-GGUF:Q4_K_M")  # New synthesis model
+from os import getenv
+# Mengambil nama model dari environment variable, jika tidak ada gunakan default
+nama_model_analisis_penyebab = getenv("MODEL_ANALISIS_PENYEBAB")
+nama_model_analisis_dampak = getenv("MODEL_ANALISIS_DAMPAK")
+nama_model_Mengusulkan_Solusi = getenv("MODEL_MENGUSULKAN_SOLUSI")
+nama_model_synthesizer = getenv("MODEL_SYNTHESIZER")
+model_Analisis_Penyebab = ChatOllama(model=nama_model_analisis_penyebab)
+model_Analisis_Dampak = ChatOllama(model=nama_model_analisis_dampak)
+model_Mengusulkan_Solusi = ChatOllama(model=nama_model_Mengusulkan_Solusi)
+model_synthesizer = ChatOllama(model=nama_model_synthesizer)  # New synthesis model
 
 class Agent:
     def __init__(self, name: str, model, description: str, expertise: List[str], tools=None):

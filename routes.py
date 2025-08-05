@@ -37,7 +37,7 @@ def speech():
     import json
     import os
     query = request.args.get('query', '')
-    model_name = os.getenv("MODEL_NAME_GENERAL_MODE") # Using a default model if not set
+    model_name = os.getenv("MODEL_IVR") # Using a default model if not set
 
     def generate():
         for audio_base64, subtitle in handle_ollama_conversation(query, model_name):
@@ -396,6 +396,9 @@ def multi_agent_stream():
 #     except Exception as e:
 #         return jsonify({'error': f'Failed to generate explanation: {str(e)}'}), 500
 
+from os import getenv
+horizon = getenv("HORIZON")
+
 
 @app.route('/explain_image', methods=['POST'])
 def explain_image():
@@ -416,7 +419,7 @@ def explain_image():
         response = requests.post(
             url="https://openrouter.ai/api/v1/chat/completions",
             headers={
-                "Authorization": "Bearer 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",
+                "Authorization": f"Bearer {horizon}" ,
                 "Content-Type": "application/json",
                 "HTTP-Referer": "<YOUR_SITE_URL>",  # Optional. Site URL for rankings on openrouter.ai.
                 "X-Title": "<YOUR_SITE_NAME>",      # Optional. Site title for rankings on openrouter.ai.

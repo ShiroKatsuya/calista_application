@@ -81,7 +81,7 @@ def api_key_required(f):
 @api_key_required
 def ollama_generate():
     data = request.get_json()
-    model = data.get('model', 'llama3.2:3b')
+    model = data.get('model', 'llama3-2.3b:latest')
     prompt = data.get('prompt')
 
     if not prompt:
@@ -102,7 +102,7 @@ def ollama_generate():
 @api_key_required
 def ollama_stream():
     data = request.get_json()
-    model = data.get('model', 'llama3.2:3b')
+    model = data.get('model', 'llama3-2.3b:latest')
     prompt = data.get('prompt')
 
     if not prompt:

@@ -1,6 +1,4 @@
 #! /usr/bin/env python
-
-from google import genai
 from PIL import Image # For handling image files
 import os
 
@@ -9,20 +7,16 @@ import dotenv
 dotenv.load_dotenv()
 import operator
 import os
-import asyncio
 import time
 import json
 import logging
-from typing import Annotated, TypedDict, Union, List, Dict, Optional, Any
-from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
+from typing import Annotated, TypedDict, Union, List, Dict, Any
 import re # Added this import
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from langchain_core.agents import AgentFinish
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage,HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
-from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.tools import Tool
 from langchain_ollama import ChatOllama
 from langgraph.graph import END, StateGraph
@@ -43,16 +37,22 @@ logger = logging.getLogger(__name__)
 
 # --- Enhanced Models with Better Configuration ---
 
+from os import getenv
+nama_model_Riset = getenv("MODEL_RISET")
+nama_model_Implementasi = getenv("MODEL_IMPLEMENTASI")
+nama_model_supervisor = getenv("MODEL_SUPERVISOR")
+
+
 # Model configurations with optimized parameters
 # Initialize models with better configurations
 model_Riset = ChatOllama(
-    model="llama3-2.3b:latest",
+    model=nama_model_Riset,
     streaming=True,
     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
 
 model_Implementasi = ChatOllama(
-    model="qwen2.5:1.5b", 
+    model=nama_model_Implementasi, 
     streaming=True,
     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
@@ -60,7 +60,7 @@ model_Implementasi = ChatOllama(
 
 
 model_supervisor = ChatOllama(
-    model="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M",
+    model=nama_model_supervisor,
     streaming=True,
     # base_url="https://saved-sympathy-mart-period.trycloudflare.com/"
 )
@@ -68,7 +68,6 @@ model_supervisor = ChatOllama(
 
 
 
-model_vision = os.getenv("GEMINI_MODEL")
 
 # import os
 # from dotenv import load_dotenv
@@ -101,20 +100,6 @@ search = GoogleSerperAPIWrapper(
     serper_api_key=SERPER_API_KEY
 )
 
-# model_Riset = ChatGoogleGenerativeAI(
-#     model="gemini-2.5-flash",
-# )
-
-# model_Implementasi = ChatGoogleGenerativeAI(
-#     model="gemini-2.5-flash", 
-
-# )
-
-# model_supervisor = ChatGoogleGenerativeAI(
-#     model="gemini-2.5-flash",
-
-# )
-
 
 if not nebius_api_key:
     raise ValueError("NEBIUS_API_KEY environment variable is not set.")
@@ -126,8 +111,6 @@ client = OpenAI(
     base_url="https://api.studio.nebius.com/v1/",
     api_key=nebius_api_key
 )
-
-
 
 
 search = GoogleSerperAPIWrapper()
