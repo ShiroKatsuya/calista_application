@@ -460,11 +460,12 @@ web_tools = [
 print(web_tools)
 from langchain_ollama import ChatOllama
 from os import getenv
+from baseUrl import ollama_url
 
 name_model_implementasi = getenv("MODEL_IMPLEMENTASI")
 
 # Set up the Gemini model with tool-calling capability
-model_implementasi = ChatOllama(model=name_model_implementasi)
+model_implementasi = ChatOllama(model=name_model_implementasi, base_url=ollama_url)
 
 # model_implementasi = ChatGoogleGenerativeAI(
 #     model="gemini-2.0-flash", 

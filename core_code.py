@@ -120,15 +120,16 @@ web_tools = [
 
 
 from os import getenv
+from baseUrl import ollama_url
 # Mengambil nama model dari environment variable, jika tidak ada gunakan default
 nama_model_analisis_penyebab = getenv("MODEL_ANALISIS_PENYEBAB")
 nama_model_analisis_dampak = getenv("MODEL_ANALISIS_DAMPAK")
 nama_model_Mengusulkan_Solusi = getenv("MODEL_MENGUSULKAN_SOLUSI")
 nama_model_synthesizer = getenv("MODEL_SYNTHESIZER")
-model_Analisis_Penyebab = ChatOllama(model=nama_model_analisis_penyebab)
-model_Analisis_Dampak = ChatOllama(model=nama_model_analisis_dampak)
-model_Mengusulkan_Solusi = ChatOllama(model=nama_model_Mengusulkan_Solusi)
-model_synthesizer = ChatOllama(model=nama_model_synthesizer)  # New synthesis model
+model_Analisis_Penyebab = ChatOllama(model=nama_model_analisis_penyebab, base_url=ollama_url)
+model_Analisis_Dampak = ChatOllama(model=nama_model_analisis_dampak, base_url=ollama_url)
+model_Mengusulkan_Solusi = ChatOllama(model=nama_model_Mengusulkan_Solusi, base_url=ollama_url)
+model_synthesizer = ChatOllama(model=nama_model_synthesizer, base_url=ollama_url)  # New synthesis model
 
 class Agent:
     def __init__(self, name: str, model, description: str, expertise: List[str], tools=None):

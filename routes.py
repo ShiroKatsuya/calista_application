@@ -396,8 +396,7 @@ def multi_agent_stream():
 #     except Exception as e:
 #         return jsonify({'error': f'Failed to generate explanation: {str(e)}'}), 500
 
-from os import getenv
-horizon = getenv("HORIZON")
+
 
 
 @app.route('/explain_image', methods=['POST'])
@@ -419,7 +418,7 @@ def explain_image():
         response = requests.post(
             url="https://openrouter.ai/api/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {horizon}" ,
+                "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}" ,
                 "Content-Type": "application/json",
                 "HTTP-Referer": "<YOUR_SITE_URL>",  # Optional. Site URL for rankings on openrouter.ai.
                 "X-Title": "<YOUR_SITE_NAME>",      # Optional. Site title for rankings on openrouter.ai.

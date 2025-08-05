@@ -1,0 +1,1 @@
+ollama_url = "https://beneath-non-august-stadium.trycloudflare.com/"
