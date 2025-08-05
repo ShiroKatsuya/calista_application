@@ -107,8 +107,8 @@ python main_web.py
 
 ## 📸 Screenshot
 
-_Tampilkan beberapa screenshot aplikasi di sini untuk menarik minat pengguna._  
-**(Tambahkan gambar ke folder `multi_agent.jpg` dan tampilkan di sini)**
+![Multi Agent](multi_agent.jpg)
+
 
 ---
 
