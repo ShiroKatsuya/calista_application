@@ -47,7 +47,7 @@ export MODEL_IMPLEMENTASI="qwen2.5:1.5b"
 export MODEL_SUPERVISOR="hf.co/unsloth/Qwen3-1.7B-GGUF:Q4_K_M"
 export MODEL_REALTIME="gemini-2.5-flash"
 export MODEL_IVR="gemma1b_v1:latest"
-export HORIZON_BETA=""
+export OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY"
 export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
 export SERPER_API_KEY="YOUR_SERPER_API_KEY"
 export NEBIUS_API_KEY="YOUR_NEBIUS_API_KEY"
@@ -67,6 +67,10 @@ Instal dependensi Python yang diperlukan:
 
 ```bash
 pip install -r requirements.txt
+```
+
+```bash
+npm install
 ```
 
 Untuk instalasi `openai-whisper`:

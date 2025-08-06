@@ -3,8 +3,9 @@
     <div x-show="lang === 'curl'">
         <div x-show="type === 'non-streaming'">
             <pre><code class="language-bash">export CALISTA_API_KEY="your_api_key_here"
+BASE_URL="https://fantastic-concluded-np-valium.trycloudflare.com/"
 
-curl --location 'http://localhost:5000/api/ollama/generate' \
+curl --location "${BASE_URL}/api/generate/chat_completionV1" \
     --header 'accept: application/json' \
     --header 'content-type: application/json' \
     --header "Authorization: Bearer $CALISTA_API_KEY" \
@@ -12,8 +13,9 @@ curl --location 'http://localhost:5000/api/ollama/generate' \
         </div>
         <div x-show="type === 'streaming'">
             <pre><code class="language-bash">export CALISTA_API_KEY="your_api_key_here"
+BASE_URL="https://fantastic-concluded-np-valium.trycloudflare.com/"
 
-curl --location 'http://localhost:5000/api/ollama/stream' \
+curl --location "${BASE_URL}/api/generate/chat_completionV1/stream" \
     --header 'accept: application/json' \
     --header 'content-type: application/json' \
     --header "Authorization: Bearer $CALISTA_API_KEY" \
@@ -34,7 +36,9 @@ API_KEY = os.getenv("CALISTA_API_KEY")
 if not API_KEY:
     raise ValueError("CALISTA_API_KEY environment variable not set")
 
-url = "http://localhost:5000/api/ollama/generate"
+BASE_URL = "https://fantastic-concluded-np-valium.trycloudflare.com/"
+
+url = f"{BASE_URL}/api/generate/chat_completionV1"
 
 payload = {
     "model": "llama3.2:3b",
@@ -65,7 +69,9 @@ API_KEY = os.getenv("CALISTA_API_KEY")
 if not API_KEY:
     raise ValueError("CALISTA_API_KEY environment variable not set")
 
-url = "http://localhost:5000/api/ollama/stream"
+BASE_URL = "https://fantastic-concluded-np-valium.trycloudflare.com/"
+
+url = f"{BASE_URL}/api/generate/chat_completionV1/stream"
 
 payload = {
     "model": "llama3.2:3b",
@@ -105,7 +111,8 @@ const apiKey = process.env.CALISTA_API_KEY;
 if (!apiKey) {
     throw new Error('CALISTA_API_KEY environment variable not set');
 }
-const url = 'http://localhost:5000/api/ollama/generate';
+const BASE_URL = "https://fantastic-concluded-np-valium.trycloudflare.com/";
+const url = `${BASE_URL}/api/generate/chat_completionV1`;
 const options = {
     method: 'POST',
     headers: {
@@ -143,8 +150,8 @@ const apiKey = process.env.CALISTA_API_KEY;
 if (!apiKey) {
     throw new Error('CALISTA_API_KEY environment variable not set');
 }
-
-const url = 'http://localhost:5000/api/ollama/stream';
+const BASE_URL = "https://fantastic-concluded-np-valium.trycloudflare.com/";
+const url = `${BASE_URL}/api/generate/chat_completionV1/stream`;
 const options = {
     method: 'POST',
     headers: {
