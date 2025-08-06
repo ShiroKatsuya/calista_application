@@ -424,7 +424,7 @@ def explain_image():
                 "X-Title": "<YOUR_SITE_NAME>",      # Optional. Site title for rankings on openrouter.ai.
             },
             data=json.dumps({
-                "model": "openrouter/horizon-beta",
+                "model": "google/gemma-3-27b-it:free",
                 "messages": [
                     {
                         "role": "user",

@@ -3,9 +3,11 @@ import os
 import uuid
 import time
 from flask import request, jsonify, Response, stream_with_context
-import ollama
+from langchain_ollama import OllamaLLM
 from app import app # Import the app instance
 import json
+from baseUrl import ollama_url
+
 
 API_KEYS_FILE = "api_keys.json"
 
@@ -76,35 +78,34 @@ def api_key_required(f):
     decorated_function.__name__ = f.__name__ # Preserve original function name
     return decorated_function
 
-# Ollama non-streaming endpoint
-@app.route('/api/ollama/generate', methods=['POST'])
+# Ollama non-streaming endpoint using LangChain
+@app.route('/api/generate/chat_completionV1', methods=['POST'])
 @api_key_required
 def ollama_generate():
     data = request.get_json()
-    model = data.get('model', 'llama3-2.3b:latest')
+    model_name = data.get('model', 'llama3-2.3b:latest')
     prompt = data.get('prompt')
 
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
 
     try:
-        response = ollama.generate(
-            model=model,
-            prompt=prompt,
-            stream=False,
+        # Initialize LangChain Ollama LLM
+        llm = OllamaLLM(model=model_name, base_url=ollama_url)
         
-            
-        )
-        return jsonify({"response": response['response']})
+        # Generate response
+        response = llm.invoke(prompt)
+        
+        return jsonify({"response": response})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Ollama streaming endpoint
-@app.route('/api/ollama/stream', methods=['POST'])
+# Ollama streaming endpoint using LangChain
+@app.route('/api/generate/chat_completionV1/stream', methods=['POST'])
 @api_key_required
 def ollama_stream():
     data = request.get_json()
-    model = data.get('model', 'llama3-2.3b:latest')
+    model_name = data.get('model', 'llama3-2.3b:latest')
     prompt = data.get('prompt')
 
     if not prompt:
@@ -112,12 +113,12 @@ def ollama_stream():
 
     def generate():
         try:
-            for chunk in ollama.generate(
-                model=model,
-                prompt=prompt,
-                stream=True
-            ):
-                yield json.dumps({"response": chunk['response']}) + "\n"
+            # Initialize LangChain Ollama LLM
+            llm = OllamaLLM(model=model_name, base_url=ollama_url)
+            
+            # Stream response
+            for chunk in llm.stream(prompt):
+                yield json.dumps({"response": chunk}) + "\n"
         except Exception as e:
             yield json.dumps({"error": str(e)}) + "\n"
 

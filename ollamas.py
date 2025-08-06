@@ -398,7 +398,7 @@ User Query:
                         sentence = sentences[i].strip()
                         if sentence:
                             # Clean the sentence
-                            cleaned_sentence = sentence.replace('*', '').strip()
+                            cleaned_sentence = sentence.replace('*', '').replace('AI:', '').strip()
                             if cleaned_sentence and cleaned_sentence not in processing_sentences:
                                 # Add to processing queue
                                 pending_sentences.append(cleaned_sentence)
@@ -422,7 +422,7 @@ User Query:
         
         # Process any remaining text in buffer
         if current_text_buffer.strip():
-            cleaned_remaining = current_text_buffer.replace('*', '').strip()
+            cleaned_remaining = current_text_buffer.replace('*', '').replace('AI:', '').strip()
             if cleaned_remaining:
                 try:
                     for audio_base64, subtitle in stream_voice(cleaned_remaining):
