@@ -1,1 +1,1 @@
-ollama_url = "https://vacations-agency-chocolate-non.trycloudflare.com/"
+ollama_url = "https://feeding-sink-particular-eh.trycloudflare.com/"
