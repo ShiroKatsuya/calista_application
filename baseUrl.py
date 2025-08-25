@@ -1,1 +1,1 @@
-ollama_url = "https://feeding-sink-particular-eh.trycloudflare.com/"
+ollama_url = "https://trail-engineer-rendered-winston.trycloudflare.com/"
